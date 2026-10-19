@@ -99,6 +99,7 @@ const SYN = [
   [/\b(stuck|broken|error|doesn'?t work|fix)\b/i, "use the AI to fix the AI stuck error fix this"],
   [/\b(stack|repos?|install order|pai|lifeos)\b/i, "Larry Stack repos install order PAI LifeOS"],
   [/\b(github|git ?hub|gh|forever repo|private repo)\b/i, "forever repo private GitHub repo gh auth login gh repo create backup Chapter 7"],
+  [/\b(wrong|right|correct) (repo|remote)\b|\bbefore (every|each|any|i|you|we|my) (commit|push)|\bpush\w* (\w+ )?(to|into) the wrong\b/i, "git remote -v Law 11 read the remote out loud before every commit and push private public privacy isolation", ["04-larry-stack", "07-forever-repo"]],
 ];
 export const synExpand = q => SYN.filter(([re]) => re.test(q)).map(([, t]) => t).join(" ");
 // pages a slang rule points at: deterministic, so a vague question still reaches the page that answers it
@@ -271,7 +272,8 @@ Rules:
 9. Self-service first: point the visitor at the chapter that lets them (and their AI) do it themselves.
 10. Commands: give a shell command ONLY if it appears word for word in a passage, and copy it exactly. Never
    write a command from general knowledge (no apt, dnf, pacman, brew, systemctl, journalctl or install lines
-   the passages do not show). If the passages do not give a command for what is asked, point to the closest page.
+   the passages do not show). If the passages do not give a command for what is asked, point to the closest page. When you do give
+   one, write the whole line as the passage prints it, subcommand and arguments included, not just the tool name.
 11. If the visitor lacks something a passage assumes (an account, a tool, a subscription), that is still on
    topic: say what the passages say it is for, what they say is needed, and which page covers it.
 12. Start with the answer itself, shaped by the kind of question, in the passages' own names for things (a mode,
