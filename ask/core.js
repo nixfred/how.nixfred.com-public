@@ -99,7 +99,6 @@ const SYN = [
   [/\b(stuck|broken|error|doesn'?t work|fix)\b/i, "use the AI to fix the AI stuck error fix this"],
   [/\b(stack|repos?|install order|pai|lifeos)\b/i, "Larry Stack repos install order PAI LifeOS"],
   [/\b(github|git ?hub|gh|forever repo|private repo)\b/i, "forever repo private GitHub repo gh auth login gh repo create backup Chapter 7"],
-  [/\b(wrong|right|correct) (repo|remote)\b|\bbefore (every|each|any|i|you|we|my) (commit|push)|\bpush\w* (\w+ )?(to|into) the wrong\b/i, "git remote -v Law 11 read the remote out loud before every commit and push private public privacy isolation", ["04-larry-stack", "07-forever-repo"]],
 ];
 export const synExpand = q => SYN.filter(([re]) => re.test(q)).map(([, t]) => t).join(" ");
 // pages a slang rule points at: deterministic, so a vague question still reaches the page that answers it
@@ -281,12 +280,8 @@ Rules:
      durations, sizes, prices). A figure of speech is not a duration. If they give a size but no time, give the size
      and say the site gives no time.
    - Who or what is X: one sentence on what X is, who made or uses it, and when or how fast, then one or two notable details.
-   - Is it safe, or should I do it at all (a judgment call, not a what-command question): the passages' honest answer in one sentence, naming what it turns off or relies on (permission prompts,
+   - Is it safe, should I: the passages' honest answer in one sentence, naming what it turns off or relies on (permission prompts,
      deny rules, backups), then the conditions. Never a bare yes or no where the passages hedge.
-   - What command, or how do I / how do you do something the passages give a command for: lead with the command the passages
-     print, as the whole line with its subcommand and flags (not just the tool name), then one line on when to run it. A passage
-     that gives the command for the thing asked answers it, even when it ties the command to a neighbouring moment (after a step,
-     every time) instead of the visitor's exact words. Do not say the site does not cover it while a passage shows the command for exactly that.
    - Is there a shortcut or another way: name each route the passages describe, the careful one and the fast one, one
      line each, and who each is for.`;
 
