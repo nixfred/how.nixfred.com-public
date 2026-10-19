@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://how.nixfred.com/mcp"><img alt="MCP server version" src="https://img.shields.io/badge/MCP-v1.3.0-5aa9ff?labelColor=0e1116"></a>
   <a href="mcp-tools.json"><img alt="toolsSha256" src="https://img.shields.io/badge/toolsSha256-19b8df645406-39d0a8?labelColor=0e1116"></a>
-  <a href="https://github.com/nixfred/how.nixfred.com-public/commits/main"><img alt="last sync" src="https://img.shields.io/badge/last%20sync-2026--10--19%20%C2%B7%209eb1a94-8893a3?labelColor=0e1116"></a>
+  <a href="https://github.com/nixfred/how.nixfred.com-public/commits/main"><img alt="last sync" src="https://img.shields.io/badge/last%20sync-2026--10--19%20%C2%B7%20b6fa59a-8893a3?labelColor=0e1116"></a>
   <a href="https://how.nixfred.com"><img alt="site" src="https://img.shields.io/badge/site-how.nixfred.com-dbe3ec?labelColor=0e1116"></a>
 </p>
 
@@ -81,6 +81,6 @@ Check the manifest against the code yourself: `bun install && bun scripts/mcp-ma
 **Not mirrored:** the chapter sources and build scripts, working notes and plans, eval sets, CI config and the smoke tests. The smoke tests are held back because one fixture uses a private machine name to test the scrubber. Private host names in `ask/core.js` are kept as hashes for the same reason.
 
 **Held back until fixed at the source** (listed here, never dropped silently):
-- `site/seed/LINEAGE.md`: names one of the owner's machines; a reword is queued (inbox 003)
+- nothing right now
 
-Mirrored from private commit `9eb1a94` on 2026-10-19.
+Mirrored from private commit `b6fa59a` on 2026-10-19.

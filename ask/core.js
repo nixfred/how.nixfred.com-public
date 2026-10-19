@@ -184,7 +184,7 @@ export async function retrieve(env, idx, question, { k = LIMITS.topK, page = nul
     const p = idx.chunks[i].p; if ((perPage.get(p) || 0) >= MAX_PER_PAGE) continue;
     perPage.set(p, (perPage.get(p) || 0) + 1); out.push(i);
   }
-  return { hits: out, queries, pickedPages: rw.pages, onTopic: rw.onTopic, rewriteOk: rw.ok, mode, retrieveMs: Date.now() - t0 };
+  return { hits: out, queries, pickedPages: rw.pages, pinned: [...new Set([...rw.pages, ...sp])], syn, onTopic: rw.onTopic, rewriteOk: rw.ok, mode, retrieveMs: Date.now() - t0 };
 }
 
 // ---------------------------------------------------------------- per-page context packing (port of select.pack)
@@ -196,17 +196,29 @@ function dropOverlap(prev, next, maxW = 90, minW = 8) {
   return next;
 }
 const blocksOf = t => { const parts = []; let buf = [], code = false; for (const l of t.split("\n")) { if (l.trim().startsWith("```")) code = !code; if (!code && !l.trim() && buf.length) { parts.push(buf.join("\n").trim()); buf = []; continue; } buf.push(l); } if (buf.length) parts.push(buf.join("\n").trim()); return parts.filter(Boolean); };
-export function pack(idx, hits, queries, budget = LIMITS.budget, headerChars = 140, minLeft = 350) {
+// Pages the rewrite or a slang rule named are the pages the question is about. Packing stays in rank order and each chunk still
+// takes whatever is left, with one change: room is held back for every named page whose best chunk has not been reached yet
+// (at most PIN_CAP chars each, PIN_SHARE of the budget across all of them). Without that, longer pages that merely ranked above
+// them used up the whole budget first (Expert Mode, rank 7 of 8, never reached the model for "a shortcut where the AI builds
+// itself"). When everything fits nothing is held back, so the result is the same as a plain rank-order pack.
+const PIN_CAP = 2400, PIN_SHARE = 0.5;
+export function pack(idx, hits, queries, { budget = LIMITS.budget, headerChars = 140, minLeft = 350, pinned = [] } = {}) {
   const qt = new Set(queries.flatMap(q => tokenize(q))); let left = budget; const pages = new Map();
+  const pin = new Set(pinned), firstOf = new Map();                      // named page -> rank of its best-ranked chunk
+  hits.forEach((ci, r) => { const p = idx.chunks[ci].p; if (pin.has(p) && !firstOf.has(p)) firstOf.set(p, r); });
+  const cap = firstOf.size ? Math.min(PIN_CAP, Math.floor(budget * PIN_SHARE / firstOf.size)) : 0;
+  const hold = new Map([...firstOf.values()].map(r => [r, Math.min(cap, stripBoiler(idx.chunks[hits[r]].t).length + headerChars + 8)]));   // rank -> room held for that chunk
+  let held = 0; for (const h of hold.values()) held += h;
   hits.forEach((ci, r) => {
-    if (left < minLeft) return;
+    if (hold.has(r)) held -= hold.get(r);                                // its turn: the room held for it is free again
+    const lim = left - held; if (lim < minLeft) return;
     const c = idx.chunks[ci]; let g = pages.get(c.p); const head = g ? 0 : headerChars;
     let text = stripBoiler(c.t);
     if (g) for (const [, t] of g.items) text = dropOverlap(t, text);
     if (text.length < 40) return;
-    if (text.length + head + 8 > left) {                       // doesn't fit: keep its most query-like blocks
+    if (text.length + head + 8 > lim) {                       // doesn't fit: keep its most query-like blocks
       const bl = blocksOf(text).map((b, bi) => { const tk = tokenize(b); return { b, bi, s: tk.filter(t => qt.has(t)).length / Math.sqrt(tk.length + 1) + (bi === 0 ? 0.05 : 0) }; });
-      let room = left - head - 8; const keep = [];
+      let room = lim - head - 8; const keep = [];
       for (const x of [...bl].sort((a, b) => b.s - a.s)) if (x.b.length + 8 <= room) { keep.push(x); room -= x.b.length + 8; }
       if (!keep.length) return;
       keep.sort((a, b) => a.bi - b.bi);
@@ -261,7 +273,17 @@ Rules:
    write a command from general knowledge (no apt, dnf, pacman, brew, systemctl, journalctl or install lines
    the passages do not show). If the passages do not give a command for what is asked, point to the closest page.
 11. If the visitor lacks something a passage assumes (an account, a tool, a subscription), that is still on
-   topic: say what the passages say it is for, what they say is needed, and which page covers it.`;
+   topic: say what the passages say it is for, what they say is needed, and which page covers it.
+12. Start with the answer itself, shaped by the kind of question, in the passages' own names for things (a mode,
+   flag, feature, rule type, tool, person), never a vaguer synonym of your own:
+   - How long, how many, how much, which: give every figure the passages state about the thing asked (counts,
+     durations, sizes, prices). A figure of speech is not a duration. If they give a size but no time, give the size
+     and say the site gives no time.
+   - Who or what is X: one sentence on what X is, who made or uses it, and when or how fast, then one or two notable details.
+   - Is it safe, should I: the passages' honest answer in one sentence, naming what it turns off or relies on (permission prompts,
+     deny rules, backups), then the conditions. Never a bare yes or no where the passages hedge.
+   - Is there a shortcut or another way: name each route the passages describe, the careful one and the fast one, one
+     line each, and who each is for.`;
 
 export function messagesFor(question, ctx, reading, history = [], scope = null) {
   const context = ctx.map((p, i) => `[${i + 1}] ${p.title} | ${p.heading_path}\nURL: ${p.url}\n${p.text}`).join("\n\n");
@@ -353,10 +375,11 @@ export async function answer(env, request, question, { history = [], page = null
   const prevUser = [...history].reverse().find(m => m.role === "user")?.content || "";
   const rq = question.length < 60 && prevUser ? `${prevUser}\n${question}` : question;   // short follow-ups keep their thread
   const ret = await retrieve(env, idx, rq, { page });
-  const ctx = pack(idx, ret.hits, ret.queries);
-  const top = ret.hits.map(i => idx.pages[idx.chunks[i].p].url);
-  await onEvent("meta", { mode: ret.mode, scope: scope ? { slug: scope.slug, title: scope.title, url: scope.url } : null, ...(debug ? { top_urls: top, queries: ret.queries, on_topic: ret.onTopic, retrieve_ms: ret.retrieveMs } : {}) });
-  const base = { top_urls: top, queries: ret.queries, retrieve_s: ret.retrieveMs / 1000 };
+  // the slang expansion is part of the query when a long chunk is cut down to its best blocks (it holds the site's own words for the visitor's slang)
+  const ctx = pack(idx, ret.hits, ret.syn ? [...ret.queries, ret.syn] : ret.queries, { pinned: ret.pinned });
+  const top = ret.hits.map(i => idx.pages[idx.chunks[i].p].url), packed = ctx.map(p => p.url);   // top = retrieved, packed = what the model was shown
+  await onEvent("meta", { mode: ret.mode, scope: scope ? { slug: scope.slug, title: scope.title, url: scope.url } : null, ...(debug ? { top_urls: top, packed_urls: packed, queries: ret.queries, on_topic: ret.onTopic, retrieve_ms: ret.retrieveMs } : {}) });
+  const base = { top_urls: top, packed_urls: packed, queries: ret.queries, retrieve_s: ret.retrieveMs / 1000 };
   if (!ret.onTopic && page === null) {                                  // the rewrite's gate: refuse, skip generation
     await onEvent("token", { t: REFUSAL });
     const fin = { answer: REFUSAL, sources: [], refused: true, gated: true, mode: ret.mode, ...base, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
