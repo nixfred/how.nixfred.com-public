@@ -1,0 +1,33 @@
+{
+  "_comment": "Merge into ~/.claude/settings.json (install.sh does this, appending, never replacing your hooks). SessionEnd hooks get 1.5 s by default, so each carries an explicit timeout.",
+  "hooks": {
+    "SessionEnd": [
+      {
+        "matcher": "*",
+        "hooks": [
+          { "type": "command", "command": "bash ~/.claude/hooks/session-end-backup.sh", "timeout": 60 }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          { "type": "command", "command": "bash ~/.claude/hooks/memory-backstop.sh end", "timeout": 10 }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "bash ~/.claude/hooks/memory-backstop.sh start", "timeout": 10 }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          { "type": "command", "command": "bash ~/.claude/hooks/remember-trigger.sh", "timeout": 10 }
+        ]
+      }
+    ]
+  }
+}

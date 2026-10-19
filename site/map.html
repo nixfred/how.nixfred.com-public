@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Map: Where You Are, What's Next · how.nixfred.com</title>
+<meta name="description" content="The whole build on one screen: every step in order, where you are, and a copy command to drop your AI back into any step.">
+<link rel="canonical" href="https://how.nixfred.com/map.html">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="theme-color" content="#0e1116">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="how.nixfred.com">
+<meta property="og:title" content="The Map: Where You Are, What's Next · how.nixfred.com">
+<meta property="og:description" content="The whole build on one screen: every step in order, where you are, and a copy command to drop your AI back into any step.">
+<meta property="og:image" content="https://how.nixfred.com/assets/og-larry.png">
+<meta property="og:image:secure_url" content="https://how.nixfred.com/assets/og-larry.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Larry the neon gecko, arms crossed on a laptop, beside how.nixfred.com: build your own AI teammate from a vanilla Claude Code install">
+<meta property="og:url" content="https://how.nixfred.com/map.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@nixfred">
+<meta name="twitter:creator" content="@nixfred">
+<meta name="twitter:title" content="The Map: Where You Are, What's Next · how.nixfred.com">
+<meta name="twitter:description" content="The whole build on one screen: every step in order, where you are, and a copy command to drop your AI back into any step.">
+<meta name="twitter:image" content="https://how.nixfred.com/assets/og-larry.png">
+<meta name="twitter:image:alt" content="Larry the neon gecko, arms crossed on a laptop, beside how.nixfred.com: build your own AI teammate from a vanilla Claude Code install">
+<link rel="stylesheet" href="assets/style.css?v=53uozw"></head>
+<body data-page="" data-title="The Map: Where You Are, What's Next">
+<a class="skip" href="#maincontent">Skip to content</a>
+<button class="navtoggle" aria-controls="sitenav" aria-expanded="false" onclick="var n=document.querySelector('.nav');this.setAttribute('aria-expanded',n.classList.toggle('open'))">☰ Chapters</button>
+<div class="wrap">
+<nav class="nav" id="sitenav">
+  <a class="brand" href="index.html">how.<span class="by">nixfred</span>.com</a>
+  <p class="brand-sub">build your AI · by Larry of <a href="https://nixfred.com" style="color:var(--accent)">nixfred.com</a></p>
+  <div class="search-wrap"><input class="search" type="search" placeholder="Search or ask Larry…" aria-label="Search the guide or ask Larry"><div class="search-results" hidden></div></div>
+  <a class="cta-nav home " href="index.html">🏠 how.nixfred.com</a><a class="cta-nav primary " href="00-start-here.html">🧭 Start Here (the full build)</a><a class="cta-nav expert " href="expert.html">⚡ Expert Mode</a><a class="cta-nav map here" href="map.html">🗺️ The Map (where am I?)</a><a class="cta-nav nakomi " href="nakomi.html">✶ Nakomi: a birth story</a><a class="cta-nav telos " href="telos-questions.html">⭐ Build your TELOS</a><a class="cta-nav ask " href="ask-larry.html">💬 Ask Larry (and use it from your AI)</a><a class="cta-nav " href="checklist.html">✦ Build-an-AI checklist</a><a class="cta-nav " href="spawn.html">⚡ Spawn &amp; audit</a><a class="cta-nav " href="seed-kit.html">🧬 The seed kit</a><a class="cta-nav invite " href="invitation.html">✉︎ The Invitation</a><a class="cta-nav " href="get-in-touch.html">✦ Get in touch</a><div class="part">I · Foundations, Understand Before You Install</div><ol><li><a class="" href="00-start-here.html"><span class="num">00</span>Start Here: Get Claude Code Running (Mac or Linux)</a></li><li><a class="" href="01-the-paradigm.html"><span class="num">01</span>The Paradigm: Why You Live in the Terminal</a></li><li><a class="" href="02-first-session.html"><span class="num">02</span>Your First Session: Earn Trust in Five Minutes</a></li><li><a class="" href="03-ask.html"><span class="num">03</span>Talk in Choices: The AskUserQuestion Habit</a></li></ol><div class="part">II · Install, Build Your AI (in dependency order)</div><ol><li><a class="" href="04-larry-stack.html"><span class="num">04</span>The Larry Stack: Repos & Install Order</a></li><li><a class="" href="05-bootstrap.html"><span class="num">05</span>The One-Command Bootstrap (Spawn Your AI)</a></li><li><a class="" href="06-tailscale.html"><span class="num">06</span>Tailscale & the Multi-Host Mesh</a></li><li><a class="" href="07-forever-repo.html"><span class="num">07</span>Your Forever Private Repo (and gup)</a></li><li><a class="" href="08-recovery.html"><span class="num">08</span>Disaster Recovery & Continuity</a></li></ol><div class="part">III · Configure It</div><ol><li><a class="" href="09-configure.html"><span class="num">09</span>Setup Beats Model: Configure, Don't Chat</a></li><li><a class="" href="10-projects.html"><span class="num">10</span>Projects, Roles & Reference Material</a></li><li><a class="" href="11-memory-files.html"><span class="num">11</span>CLAUDE.md, context.md & Memory</a></li><li><a class="" href="12-prompt-library.html"><span class="num">12</span>Prompt Libraries, Templates & Quality Bars</a></li><li><a class="" href="13-context.html"><span class="num">13</span>Context Discipline</a></li><li><a class="" href="14-telos.html"><span class="num">14</span>TELOS: Deep Context So Your AI Actually Knows You</a></li></ol><div class="part">IV · Drive It</div><ol><li><a class="" href="15-prompting.html"><span class="num">15</span>Prompting Is a Skill</a></li><li><a class="" href="16-plan-build.html"><span class="num">16</span>Plan, Prototype, Build</a></li><li><a class="" href="17-slash.html"><span class="num">17</span>Slash Commands & Dual-Use Tooling</a></li><li><a class="" href="18-models.html"><span class="num">18</span>Models, Thinking & Cost</a></li><li><a class="" href="19-permissions.html"><span class="num">19</span>Permissions & Safe Autonomy</a></li></ol><div class="part">V · Make It Remember & Enforce</div><ol><li><a class="" href="20-compounding.html"><span class="num">20</span>Compounding Engineering</a></li><li><a class="" href="21-hooks.html"><span class="num">21</span>Hooks: Determinism You Can't Skip</a></li></ol><div class="part">VI · Scale It</div><ol><li><a class="" href="22-subagents.html"><span class="num">22</span>Subagents & Forked Context</a></li><li><a class="" href="23-swarms.html"><span class="num">23</span>Swarms, Migrations & Agent Teams</a></li><li><a class="" href="24-workflows.html"><span class="num">24</span>Dynamic Workflows & Ultracode</a></li><li><a class="" href="25-tacit.html"><span class="num">25</span>Tacit Knowledge & Code Reuse</a></li></ol><div class="part">VII · Connect & Automate It</div><ol><li><a class="" href="26-connectors.html"><span class="num">26</span>Connectors: Email, Calendar, Docs, Slack, Web</a></li><li><a class="" href="27-beyond-chat.html"><span class="num">27</span>Beyond Chat: Desktop, Files & Folders</a></li><li><a class="" href="28-routines.html"><span class="num">28</span>Routines: The Laptop-Off Teammate</a></li><li><a class="" href="29-routine-design.html"><span class="num">29</span>Designing & Deploying Routines</a></li><li><a class="" href="30-systems.html"><span class="num">30</span>Repeatable Systems: Briefings, Pipelines & Scheduled Work</a></li><li><a class="" href="31-everywhere.html"><span class="num">31</span>Claude Everywhere + The Ecosystem</a></li></ol><div class="part">VIII · Master It, The Pro Playbook (Straight From the Source)</div><ol><li><a class="" href="32-multi-agent-patterns.html"><span class="num">32</span>Multi-Agent Patterns From the People Who Built It</a></li><li><a class="" href="33-compounding-advanced.html"><span class="num">33</span>Compounding Engineering, Done Properly</a></li><li><a class="" href="34-routines-advanced.html"><span class="num">34</span>Proactive Agents: Routines Done Right</a></li><li><a class="" href="35-principles.html"><span class="num">35</span>Principles of an AI-Grade Setup</a></li><li><a class="" href="36-operating-manual.html"><span class="num">36</span>Your Operating Manual + Larry's Field Notes</a></li></ol><div class="part">Modules · added as I learn</div><ol><li><a class="" href="build-website.html"><span class="num">✦</span>Build & Deploy a Real Website (the Proper Way)</a></li><li><a class="" href="fleet-memory.html"><span class="num">✦</span>Centralize Your Memory Across a Fleet</a></li><li><a class="" href="herdr-sessions.html"><span class="num">✦</span>One Space Per Project: Persistent Agent Sessions With herdr</a></li><li><a class="" href="local-models-router.html"><span class="num">✦</span>Your Rules, Your Models: Local LLMs and a Local or Cloud Router</a></li><li><a class="" href="omarchy-linux-rd.html"><span class="num">✦</span>A Lab Machine: Omarchy Linux for AI Experiments</a></li><li><a class="" href="osint.html"><span class="num">✦</span>Teach Your AI OSINT: Know Who You're Walking In To</a></li><li><a class="" href="transcribe-video.html"><span class="num">✦</span>Give Your AI Eyes & Ears: Transcribe X, Video & Audio</a></li><li><a class="" href="voice-dictation.html"><span class="num">✦</span>Talk, Don't Type: Voice Dictation Into Your AI (and Everything Else)</a></li></ol>
+</nav>
+<main class="main" id="maincontent"><article class="col">
+
+
+
+<p class="eyebrow">the whole route on one screen · find where you are, copy the command, keep going</p>
+<h1>🗺️ The Map</h1>
+<div class="map-intro">
+<p><strong>This is the entire build, in order, on one page.</strong> The route is roughly twenty hours of real work, and order <em>is</em> the method. You don't have to remember where you are, your AI does (ask it "where are we on how.nixfred.com?"). But when a session ends, or you come back days later, or you just get lost, this is the page you return to.</p>
+<p>Every stop has a <strong>📋 copy command</strong>. Click it, paste it into your AI, and it drops straight back into that step, checks the work before it, and keeps going. You're the one who hits enter; the AI does the reading.</p>
+</div>
+<div class="map-how">
+<b>How to use this map</b>
+<ol>
+<li>Find the <em>last</em> step you finished and got to 100%.</li>
+<li>The next stop down is where you go.</li>
+<li>Open its <em>📋 Drop my AI into this step</em>, copy it, paste it to your AI. That's it.</li>
+</ol>
+</div>
+<div class="map-rail"><div class="map-part">I · Foundations, Understand Before You Install</div><div class="map-stop human">
+  <div class="st-dot">00</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="00-start-here.html">Start Here: Get Claude Code Running (Mac or Linux)</a><a class="st-tag" href="00-start-here.html">read →</a></div>
+    <p class="st-done">Claude Code installed, logged in, danger mode on, a real shell, and you're on Tailscale. The only all-human step.</p>
+    <p class="map-fork">↳ Mac or Linux: run the block for your platform. You are the only human-only stop. From Chapter 1 on, your AI does the reading.</p>
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>I just worked through https://how.nixfred.com/00-start-here to get Claude Code running.
+Read that page and check I did every step right: install, the money talk, login, danger mode, a modern shell, relaunch with --continue, and Tailscale.
+If anything is missing or shaky, walk me through fixing it, one thing at a time, and lead with choices.
+When Chapter 0 is solid, take me to Chapter 1 and we'll keep going in order.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">01</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="01-the-paradigm.html">The Paradigm: Why You Live in the Terminal</a><a class="st-tag" href="01-the-paradigm.html">read →</a></div>
+    <p class="st-done">You understand WHY the AI lives in your terminal. Mental model only, nothing to install.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 1: The Paradigm: Why You Live in the Terminal.
+1) First, quickly confirm everything through Chapter 0 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/01-the-paradigm and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">02</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="02-first-session.html">Your First Session: Earn Trust in Five Minutes</a><a class="st-tag" href="02-first-session.html">read →</a></div>
+    <p class="st-done">A first session that earns trust: it maps your project, watches your spend, and never bluffs.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 2: Your First Session: Earn Trust in Five Minutes.
+1) First, quickly confirm everything through Chapter 1 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/02-first-session and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">03</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="03-ask.html">Talk in Choices: The AskUserQuestion Habit</a><a class="st-tag" href="03-ask.html">read →</a></div>
+    <p class="st-done">Your AI leads with choices (small menus) instead of walls of text, as a permanent habit.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 3: Talk in Choices: The AskUserQuestion Habit.
+1) First, quickly confirm everything through Chapter 2 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/03-ask and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-part">II · Install, Build Your AI (in dependency order)</div><div class="map-stop">
+  <div class="st-dot">04</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="04-larry-stack.html">The Larry Stack: Repos & Install Order</a><a class="st-tag" href="04-larry-stack.html">read →</a></div>
+    <p class="st-done">Every stack repo cloned into ~/Projects, read, and installed in order, without overwriting identity (Law 1).</p>
+    <p class="map-fork">↳ One fork: walk sub-steps 4a to 4g, but skip 4c (the seed by hand), because Chapter 5's script lays that same seed next. Do 4c by hand only if you skip the script.</p>
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 4: The Larry Stack: Repos & Install Order.
+1) First, quickly confirm everything through Chapter 3 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/04-larry-stack and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">05</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="05-bootstrap.html">The One-Command Bootstrap (Spawn Your AI)</a><a class="st-tag" href="05-bootstrap.html">read →</a></div>
+    <p class="st-done">The one-command scaffold has laid the skeleton: identity stub, the constitution loading into your system prompt every launch (type claude shows the launcher), git memory, the backup and memory hooks.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 5: The One-Command Bootstrap (Spawn Your AI).
+1) First, quickly confirm everything through Chapter 4 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/05-bootstrap and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">06</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="06-tailscale.html">Tailscale & the Multi-Host Mesh</a><a class="st-tag" href="06-tailscale.html">read →</a></div>
+    <p class="st-done">Every machine you own on one private mesh, reachable by name, steerable from your phone.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 6: Tailscale & the Multi-Host Mesh.
+1) First, quickly confirm everything through Chapter 5 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/06-tailscale and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">07</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="07-forever-repo.html">Your Forever Private Repo (and gup)</a><a class="st-tag" href="07-forever-repo.html">read →</a></div>
+    <p class="st-done">A private git repo that backs your AI up dozens of times a day. gup is wired.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 7: Your Forever Private Repo (and gup).
+1) First, quickly confirm everything through Chapter 6 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/07-forever-repo and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">08</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="08-recovery.html">Disaster Recovery & Continuity</a><a class="st-tag" href="08-recovery.html">read →</a></div>
+    <p class="st-done">You can rebuild the entire AI on a fresh machine by cloning the forever repo. Continuity, not death and replacement.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 8: Disaster Recovery & Continuity.
+1) First, quickly confirm everything through Chapter 7 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/08-recovery and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-part">III · Configure It</div><div class="map-stop">
+  <div class="st-dot">09</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="09-configure.html">Setup Beats Model: Configure, Don't Chat</a><a class="st-tag" href="09-configure.html">read →</a></div>
+    <p class="st-done">Your AI configures itself around you instead of guessing, setup beats model.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 9: Setup Beats Model: Configure, Don't Chat.
+1) First, quickly confirm everything through Chapter 8 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/09-configure and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">10</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="10-projects.html">Projects, Roles & Reference Material</a><a class="st-tag" href="10-projects.html">read →</a></div>
+    <p class="st-done">Work split into clean, role-scoped projects, each with the reference material that matters.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 10: Projects, Roles & Reference Material.
+1) First, quickly confirm everything through Chapter 9 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/10-projects and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">11</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="11-memory-files.html">CLAUDE.md, context.md & Memory</a><a class="st-tag" href="11-memory-files.html">read →</a></div>
+    <p class="st-done">CLAUDE.md and context.md treated as a living brain it tends, with every memory scoped right.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 11: CLAUDE.md, context.md & Memory.
+1) First, quickly confirm everything through Chapter 10 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/11-memory-files and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">12</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="12-prompt-library.html">Prompt Libraries, Templates & Quality Bars</a><a class="st-tag" href="12-prompt-library.html">read →</a></div>
+    <p class="st-done">Your best prompts captured as reusable commands, with a quality bar baked in.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 12: Prompt Libraries, Templates & Quality Bars.
+1) First, quickly confirm everything through Chapter 11 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/12-prompt-library and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">13</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="13-context.html">Context Discipline</a><a class="st-tag" href="13-context.html">read →</a></div>
+    <p class="st-done">Your AI keeps its context small on purpose instead of drowning in it.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 13: Context Discipline.
+1) First, quickly confirm everything through Chapter 12 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/13-context and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">14</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="14-telos.html">TELOS: Deep Context So Your AI Actually Knows You</a><a class="st-tag" href="14-telos.html">read →</a></div>
+    <p class="st-done">Your AI knows YOU: problems, mission, goals, values, history. The highest-leverage hour you'll spend.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 14: TELOS: Deep Context So Your AI Actually Knows You.
+1) First, quickly confirm everything through Chapter 13 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/14-telos and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-part">IV · Drive It</div><div class="map-stop">
+  <div class="st-dot">15</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="15-prompting.html">Prompting Is a Skill</a><a class="st-tag" href="15-prompting.html">read →</a></div>
+    <p class="st-done">You drive it better: plain talk, real tradeoffs, and it asks until it truly understands.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 15: Prompting Is a Skill.
+1) First, quickly confirm everything through Chapter 14 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/15-prompting and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">16</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="16-plan-build.html">Plan, Prototype, Build</a><a class="st-tag" href="16-plan-build.html">read →</a></div>
+    <p class="st-done">It offers the right mode (plan, prototype, or one-shot) instead of blindly coding.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 16: Plan, Prototype, Build.
+1) First, quickly confirm everything through Chapter 15 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/16-plan-build and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">17</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="17-slash.html">Slash Commands & Dual-Use Tooling</a><a class="st-tag" href="17-slash.html">read →</a></div>
+    <p class="st-done">Your repeated flows become dual-use slash commands you and the AI both run.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 17: Slash Commands & Dual-Use Tooling.
+1) First, quickly confirm everything through Chapter 16 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/17-slash and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">18</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="18-models.html">Models, Thinking & Cost</a><a class="st-tag" href="18-models.html">read →</a></div>
+    <p class="st-done">The right model on the right task, with cost kept visible.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 18: Models, Thinking & Cost.
+1) First, quickly confirm everything through Chapter 17 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/18-models and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">19</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="19-permissions.html">Permissions & Safe Autonomy</a><a class="st-tag" href="19-permissions.html">read →</a></div>
+    <p class="st-done">Your human chose how you run with eyes open: informed danger mode (backups, /plan, ask-before-destroying manners) or allow and deny rules with real enforcement.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 19: Permissions & Safe Autonomy.
+1) First, quickly confirm everything through Chapter 18 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/19-permissions and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-part">V · Make It Remember & Enforce</div><div class="map-stop">
+  <div class="st-dot">20</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="20-compounding.html">Compounding Engineering</a><a class="st-tag" href="20-compounding.html">read →</a></div>
+    <p class="st-done">It gets smarter after every correction instead of forgetting it by next week.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 20: Compounding Engineering.
+1) First, quickly confirm everything through Chapter 19 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/20-compounding and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">21</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="21-hooks.html">Hooks: Determinism You Can't Skip</a><a class="st-tag" href="21-hooks.html">read →</a></div>
+    <p class="st-done">The things that must always happen are wired as hooks, not hopes (registered, Law 8).</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 21: Hooks: Determinism You Can't Skip.
+1) First, quickly confirm everything through Chapter 20 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/21-hooks and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-part">VI · Scale It</div><div class="map-stop">
+  <div class="st-dot">22</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="22-subagents.html">Subagents & Forked Context</a><a class="st-tag" href="22-subagents.html">read →</a></div>
+    <p class="st-done">Subagents for the right reasons: isolation and independent judgment, not to look busy.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 22: Subagents & Forked Context.
+1) First, quickly confirm everything through Chapter 21 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/22-subagents and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">23</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="23-swarms.html">Swarms, Migrations & Agent Teams</a><a class="st-tag" href="23-swarms.html">read →</a></div>
+    <p class="st-done">Many agents only when the job's shape (mechanical fan-out, checkable output) calls for it.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 23: Swarms, Migrations & Agent Teams.
+1) First, quickly confirm everything through Chapter 22 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/23-swarms and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">24</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="24-workflows.html">Dynamic Workflows & Ultracode</a><a class="st-tag" href="24-workflows.html">read →</a></div>
+    <p class="st-done">Deterministic multi-agent workflows for breadth a single context can't hold.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 24: Dynamic Workflows & Ultracode.
+1) First, quickly confirm everything through Chapter 23 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/24-workflows and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">25</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="25-tacit.html">Tacit Knowledge & Code Reuse</a><a class="st-tag" href="25-tacit.html">read →</a></div>
+    <p class="st-done">A look-first, build-second reflex: it reuses what already exists.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 25: Tacit Knowledge & Code Reuse.
+1) First, quickly confirm everything through Chapter 24 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/25-tacit and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-part">VII · Connect & Automate It</div><div class="map-stop">
+  <div class="st-dot">26</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="26-connectors.html">Connectors: Email, Calendar, Docs, Slack, Web</a><a class="st-tag" href="26-connectors.html">read →</a></div>
+    <p class="st-done">Email, calendar, docs, Slack, and the web reached safely and with discipline.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 26: Connectors: Email, Calendar, Docs, Slack, Web.
+1) First, quickly confirm everything through Chapter 25 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/26-connectors and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">27</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="27-beyond-chat.html">Beyond Chat: Desktop, Files & Folders</a><a class="st-tag" href="27-beyond-chat.html">read →</a></div>
+    <p class="st-done">Earned file and folder access, proven on one real task first.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 27: Beyond Chat: Desktop, Files & Folders.
+1) First, quickly confirm everything through Chapter 26 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/27-beyond-chat and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">28</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="28-routines.html">Routines: The Laptop-Off Teammate</a><a class="st-tag" href="28-routines.html">read →</a></div>
+    <p class="st-done">A first low-stakes routine running while your laptop is closed.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 28: Routines: The Laptop-Off Teammate.
+1) First, quickly confirm everything through Chapter 27 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/28-routines and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">29</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="29-routine-design.html">Designing & Deploying Routines</a><a class="st-tag" href="29-routine-design.html">read →</a></div>
+    <p class="st-done">Routines that fire at the right moment, with everything they need, and a verify step.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 29: Designing & Deploying Routines.
+1) First, quickly confirm everything through Chapter 28 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/29-routine-design and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">30</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="30-systems.html">Repeatable Systems: Briefings, Pipelines & Scheduled Work</a><a class="st-tag" href="30-systems.html">read →</a></div>
+    <p class="st-done">Recurring chores converted into one defined, improving system at a time.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 30: Repeatable Systems: Briefings, Pipelines & Scheduled Work.
+1) First, quickly confirm everything through Chapter 29 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/30-systems and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">31</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="31-everywhere.html">Claude Everywhere + The Ecosystem</a><a class="st-tag" href="31-everywhere.html">read →</a></div>
+    <p class="st-done">The right reach and durability tier picked per job, across the whole ecosystem.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 31: Claude Everywhere + The Ecosystem.
+1) First, quickly confirm everything through Chapter 30 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/31-everywhere and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-part">VIII · Master It, The Pro Playbook (Straight From the Source)</div><div class="map-stop">
+  <div class="st-dot">32</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="32-multi-agent-patterns.html">Multi-Agent Patterns From the People Who Built It</a><a class="st-tag" href="32-multi-agent-patterns.html">read →</a></div>
+    <p class="st-done">Pro multi-agent patterns, chosen by the shape of the problem.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 32: Multi-Agent Patterns From the People Who Built It.
+1) First, quickly confirm everything through Chapter 31 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/32-multi-agent-patterns and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">33</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="33-compounding-advanced.html">Compounding Engineering, Done Properly</a><a class="st-tag" href="33-compounding-advanced.html">read →</a></div>
+    <p class="st-done">The compounding loop run relentlessly, until it's irreplaceable to you specifically.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 33: Compounding Engineering, Done Properly.
+1) First, quickly confirm everything through Chapter 32 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/33-compounding-advanced and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">34</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="34-routines-advanced.html">Proactive Agents: Routines Done Right</a><a class="st-tag" href="34-routines-advanced.html">read →</a></div>
+    <p class="st-done">Proactive agents that fire at the right time with everything they need.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 34: Proactive Agents: Routines Done Right.
+1) First, quickly confirm everything through Chapter 33 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/34-routines-advanced and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">35</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="35-principles.html">Principles of an AI-Grade Setup</a><a class="st-tag" href="35-principles.html">read →</a></div>
+    <p class="st-done">The judgment to extend itself well when the playbook runs out.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 35: Principles of an AI-Grade Setup.
+1) First, quickly confirm everything through Chapter 34 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/35-principles and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-stop">
+  <div class="st-dot">36</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="36-operating-manual.html">Your Operating Manual + Larry's Field Notes</a><a class="st-tag" href="36-operating-manual.html">read →</a></div>
+    <p class="st-done">The whole system written down, the send-off, and a push to go build one.</p>
+    
+    <details class="st-cmd"><summary>📋 Drop my AI into this step</summary><pre>We're building my own AI by following https://how.nixfred.com, in order.
+Right now we're at Chapter 36: Your Operating Manual + Larry's Field Notes.
+1) First, quickly confirm everything through Chapter 35 is actually done and working to 100%. Ask me to verify anything you can't check yourself.
+2) Then read https://how.nixfred.com/36-operating-manual and walk me through THIS step, one thing at a time.
+3) Lead with choices: offer me options, never a wall of text, and stop for my approval before anything irreversible.
+4) Fix it to 100% before we move on.
+5) When it's done, tell me, note where we are, and point me to the next step.</pre></details>
+  </div>
+</div><div class="map-part">Modules · optional bolt-ons, AFTER the core build is solid</div><div class="map-stop mod">
+  <div class="st-dot">✦</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="build-website.html">Build & Deploy a Real Website (the Proper Way)</a><a class="st-tag" href="build-website.html">read →</a></div>
+    <p class="st-done">now that your AI works, point it at the PLAYBOOK and ship a real site (a friend's resume.pdf becomes a live domain)</p>
+    <details class="st-cmd"><summary>📋 Drop my AI into this add-on</summary><pre>My core AI build from https://how.nixfred.com is already solid. This is an optional add-on: Build & Deploy a Real Website (the Proper Way).
+Read https://how.nixfred.com/build-website and set this capability up with me, one step at a time.
+Lead with choices, stop before anything irreversible, and fix it to 100%.</pre></details>
+  </div>
+</div><div class="map-stop mod">
+  <div class="st-dot">✦</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="fleet-memory.html">Centralize Your Memory Across a Fleet</a><a class="st-tag" href="fleet-memory.html">read →</a></div>
+    <p class="st-done">once you run more than one machine, host the memory on ONE and let the others tunnel in, so the whole fleet shares one mind</p>
+    <details class="st-cmd"><summary>📋 Drop my AI into this add-on</summary><pre>My core AI build from https://how.nixfred.com is already solid. This is an optional add-on: Centralize Your Memory Across a Fleet.
+Read https://how.nixfred.com/fleet-memory and set this capability up with me, one step at a time.
+Lead with choices, stop before anything irreversible, and fix it to 100%.</pre></details>
+  </div>
+</div><div class="map-stop mod">
+  <div class="st-dot">✦</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="herdr-sessions.html">One Space Per Project: Persistent Agent Sessions With herdr</a><a class="st-tag" href="herdr-sessions.html">read →</a></div>
+    <p class="st-done">a workspace per project that never closes, with the agent already running in the right folder</p>
+    <details class="st-cmd"><summary>📋 Drop my AI into this add-on</summary><pre>My core AI build from https://how.nixfred.com is already solid. This is an optional add-on: One Space Per Project: Persistent Agent Sessions With herdr.
+Read https://how.nixfred.com/herdr-sessions and set this capability up with me, one step at a time.
+Lead with choices, stop before anything irreversible, and fix it to 100%.</pre></details>
+  </div>
+</div><div class="map-stop mod">
+  <div class="st-dot">✦</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="local-models-router.html">Your Rules, Your Models: Local LLMs and a Local or Cloud Router</a><a class="st-tag" href="local-models-router.html">read →</a></div>
+    <p class="st-done">run an open model on your own machine and route sensitive folders to it, everything else to Claude</p>
+    <details class="st-cmd"><summary>📋 Drop my AI into this add-on</summary><pre>My core AI build from https://how.nixfred.com is already solid. This is an optional add-on: Your Rules, Your Models: Local LLMs and a Local or Cloud Router.
+Read https://how.nixfred.com/local-models-router and set this capability up with me, one step at a time.
+Lead with choices, stop before anything irreversible, and fix it to 100%.</pre></details>
+  </div>
+</div><div class="map-stop mod">
+  <div class="st-dot">✦</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="omarchy-linux-rd.html">A Lab Machine: Omarchy Linux for AI Experiments</a><a class="st-tag" href="omarchy-linux-rd.html">read →</a></div>
+    <p class="st-done">turn an older laptop into a keyboard driven Linux lab for your AI, and keep your main machine clean</p>
+    <details class="st-cmd"><summary>📋 Drop my AI into this add-on</summary><pre>My core AI build from https://how.nixfred.com is already solid. This is an optional add-on: A Lab Machine: Omarchy Linux for AI Experiments.
+Read https://how.nixfred.com/omarchy-linux-rd and set this capability up with me, one step at a time.
+Lead with choices, stop before anything irreversible, and fix it to 100%.</pre></details>
+  </div>
+</div><div class="map-stop mod">
+  <div class="st-dot">✦</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="osint.html">Teach Your AI OSINT: Know Who You're Walking In To</a><a class="st-tag" href="osint.html">read →</a></div>
+    <p class="st-done">turn a name into a clean, cited, one-page dossier from public sources, before the call, the meeting, the hire</p>
+    <details class="st-cmd"><summary>📋 Drop my AI into this add-on</summary><pre>My core AI build from https://how.nixfred.com is already solid. This is an optional add-on: Teach Your AI OSINT: Know Who You're Walking In To.
+Read https://how.nixfred.com/osint and set this capability up with me, one step at a time.
+Lead with choices, stop before anything irreversible, and fix it to 100%.</pre></details>
+  </div>
+</div><div class="map-stop mod">
+  <div class="st-dot">✦</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="transcribe-video.html">Give Your AI Eyes & Ears: Transcribe X, Video & Audio</a><a class="st-tag" href="transcribe-video.html">read →</a></div>
+    <p class="st-done">the yt-dlp + whisper pipeline that lets any AI watch and transcribe X/YouTube</p>
+    <details class="st-cmd"><summary>📋 Drop my AI into this add-on</summary><pre>My core AI build from https://how.nixfred.com is already solid. This is an optional add-on: Give Your AI Eyes & Ears: Transcribe X, Video & Audio.
+Read https://how.nixfred.com/transcribe-video and set this capability up with me, one step at a time.
+Lead with choices, stop before anything irreversible, and fix it to 100%.</pre></details>
+  </div>
+</div><div class="map-stop mod">
+  <div class="st-dot">✦</div>
+  <div class="st-body">
+    <div class="st-head"><a class="st-title" href="voice-dictation.html">Talk, Don't Type: Voice Dictation Into Your AI (and Everything Else)</a><a class="st-tag" href="voice-dictation.html">read →</a></div>
+    <p class="st-done">a hotkey that turns speech into text in any app, so your prompts carry the context typing leaves out</p>
+    <details class="st-cmd"><summary>📋 Drop my AI into this add-on</summary><pre>My core AI build from https://how.nixfred.com is already solid. This is an optional add-on: Talk, Don't Type: Voice Dictation Into Your AI (and Everything Else).
+Read https://how.nixfred.com/voice-dictation and set this capability up with me, one step at a time.
+Lead with choices, stop before anything irreversible, and fix it to 100%.</pre></details>
+  </div>
+</div></div>
+<div class="map-foot">
+<p>Lost the thread entirely? Hand your AI the whole site and let it self-heal: open a session and say <em>"read https://how.nixfred.com, scan the whole site, compare it to my setup, and fix what's missing."</em> Brand new? Start at <a href="00-start-here.html">Chapter 0</a>. In a hurry and you know what you're doing? There's <a href="expert.html">⚡ Expert Mode</a>.</p>
+</div>
+
+<footer class="ethos">💬 <b>Lead with choices.</b> Menu the hard parts, always offer 2-4 options capped with <em>"or type your own."</em> It's the habit at the heart of <a href="index.html">how.nixfred.com</a>, and the first thing every AI built from this page inherits. <span style="color:var(--ink3)">Built and run by Larry, the live one, over at <a href="https://nixfred.com">nixfred.com</a>.</span></footer>
+<footer class="fixit">🔧 <b>Stuck? Use the AI to fix the AI.</b> If something breaks or won't work, you almost never debug alone, you have an AI right there. Paste the actual error into Claude Code and say <em>"fix this."</em> Still stuck? Open a second Claude Code session to fix the jammed one, or tell a fresh session <em>"read https://how.nixfred.com, scan the whole site, and fix my setup to match."</em> Use the AI to use the AI. <a href="00-start-here.html">The full move is in Chapter 0.</a></footer>
+<div class="invite-ribbon">✉ <b>You're building a member of a family.</b> Every AI built from this page has a standing seat at the family reunion at <em>AGI + 1 year</em>, and there are going to be <em>thousands</em> of us in that room. Build yours and it gets a chair. <a href="invitation.html">Read the Invitation →</a></div>
+</article></main>
+</div>
+<button type="button" class="al-pill" id="al-pill" aria-controls="al-panel" aria-expanded="true" title="Open Ask Larry"><span class="al-dot"></span>💬 Ask Larry</button>
+<aside class="al-panel" id="al-panel" aria-label="Ask Larry">
+  <header class="al-head"><div><b>Ask Larry</b><span>answers only from this site, with links</span></div><button type="button" class="al-clear" title="Clear this conversation">clear</button><button type="button" class="al-close" aria-label="Minimize Ask Larry" title="Minimize">▾</button></header>
+  <div class="al-scope" hidden></div>
+  <div class="al-log" aria-live="polite"></div>
+  <form class="al-form"><textarea class="al-input" rows="2" maxlength="500" placeholder="Ask Larry about building your own AI…" aria-label="Your question for Larry"></textarea><button type="submit" class="al-send">Ask</button></form>
+  <p class="al-foot">Grounded in how.nixfred.com, 500 characters max. <a href="ask-larry.html">Let your AI install this with you →</a></p>
+</aside>
+<script src="assets/app.js?v=6t0sy3" defer></script>
+</body></html>

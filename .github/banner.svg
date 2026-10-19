@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0e1116"/><stop offset="1" stop-color="#161b24"/></linearGradient>
+    <linearGradient id="a" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5aa9ff"/><stop offset="1" stop-color="#39d0a8"/></linearGradient>
+  </defs>
+  <rect width="1200" height="300" rx="18" fill="url(#bg)"/>
+  <text x="60" y="92" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="20" fill="#8893a3">nixfred/how.nixfred.com-public</text>
+  <text x="60" y="160" font-family="-apple-system,Segoe UI,Inter,Helvetica,Arial,sans-serif" font-size="60" font-weight="800" fill="#dbe3ec">What runs, <tspan fill="url(#a)">in the open</tspan></text>
+  <text x="60" y="208" font-family="-apple-system,Segoe UI,Inter,Helvetica,Arial,sans-serif" font-size="25" fill="#9aa7b6">The served site, the MCP server and Ask Larry, mirrored after every deploy.</text>
+  <text x="60" y="254" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="18" fill="#39d0a8">verify: tools/list == mcp-tools.json  ·  toolsSha256 matches  ·  else stop</text>
+  <g transform="translate(1000,60)" fill="none" stroke="url(#a)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M70 10 L130 34 V86 C130 122 104 146 70 160 C36 146 10 122 10 86 V34 Z"/>
+    <path d="M42 86 L62 106 L100 64"/>
+  </g>
+</svg>

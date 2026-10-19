@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://how.nixfred.com/sitemap.xml
+LLMs: https://how.nixfred.com/llms.txt

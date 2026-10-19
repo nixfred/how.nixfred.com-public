@@ -1,0 +1,16 @@
+{
+  "name": "how-nixfred-com",
+  "version": "0.1.0",
+  "private": true,
+  "description": "how.nixfred.com, Larry's field guide: take a vanilla Claude Code install and build it into your own AI.",
+  "scripts": {
+    "build": "bun build.ts && bun scripts/ask-index.ts && bun scripts/mcp-manifest.ts",
+    "audit": "bun audit.ts",
+    "serve": "python3 -m http.server 8099 -d site",
+    "test:ask": "bun test/ask-smoke.ts",
+    "eval": "bun eval/eval-live.ts"
+  },
+  "dependencies": {
+    "marked": "^18.0.4"
+  }
+}

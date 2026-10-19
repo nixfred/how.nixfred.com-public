@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# gup, git add + auto-message + commit + push, in one word.
+# The companion to your forever private repo. From how.nixfred.com.
+#
+# Install:  curl -fsSL https://how.nixfred.com/gup -o ~/bin/gup && chmod +x ~/bin/gup
+#           (make sure ~/bin is on your PATH)
+# Use:      gup                 commit + push, auto message from changed files
+#           gup "your message"  commit + push with your message
+#           gup -n   (or wgup)  preview only, show what would commit, change nothing
+set -uo pipefail
+
+git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "gup: not inside a git repo"; exit 1; }
+cd "$(git rev-parse --show-toplevel)"
+
+preview=0
+case "${1:-}" in -n|--dry-run|wgup) preview=1; shift;; esac
+msg="${1:-}"
+
+if [ -z "$(git status --porcelain)" ]; then echo "gup: nothing to commit, working tree clean"; exit 0; fi
+
+# Law 11: always know where you're pushing. Read the remote out loud.
+remote="$(git remote get-url origin 2>/dev/null || echo '(no remote set)')"
+echo "→ remote: $remote"
+echo "→ branch: $(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
+git status --short
+
+# auto-generate a searchable message from the changed files
+if [ -z "$msg" ]; then
+  n="$(git status --porcelain | wc -l | tr -d ' ')"
+  files="$(git status --porcelain | sed 's/^...//' | xargs -n1 basename 2>/dev/null | sort -u | paste -sd', ' - | cut -c1-72)"
+  msg="update ${n} file(s): ${files}"
+fi
+
+if [ "$preview" = 1 ]; then echo "[preview] would commit: \"$msg\" (no changes made)"; exit 0; fi
+
+git add -A
+git commit -q -m "$msg" || { echo "gup: commit failed"; exit 1; }
+# Don't let a stalled network hang the push forever (macOS has no `timeout`):
+# abort an HTTPS push stalled below ~1KB/s for 20s, and a dead SSH push after ~30s.
+export GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=20
+export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh} -o ConnectTimeout=15 -o ServerAliveInterval=10 -o ServerAliveCountMax=3"
+if git remote get-url origin >/dev/null 2>&1; then
+  git push -q && echo "✓ committed + pushed: $msg" || { echo "gup: push failed (committed locally)"; exit 1; }
+else
+  echo "✓ committed (no remote to push to): $msg"
+fi
