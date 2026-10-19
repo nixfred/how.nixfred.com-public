@@ -80,13 +80,18 @@ sudo dnf install -y gh
 sudo pacman -S --needed github-cli gitleaks
 ```
 
-**Linux (Debian, Ubuntu, Fedora)**, `gitleaks` has no package there, so take the release binary (it needs `jq` and `curl`, Chapter 0, Step 4):
+**Linux (Debian, Ubuntu, Fedora)**, `gitleaks` has no package there, so take the release binary (it needs `jq` and `curl`, Chapter 0, Step 4). The block downloads it next to the release's published SHA-256 list and installs it only if the two match; a damaged or tampered download stops with `FAILED` instead of installing. Both files come from the same release, so this catches a bad download, not a compromised release:
 
 ```bash
 GL=$(curl -fsSL https://api.github.com/repos/gitleaks/gitleaks/releases/latest | jq -r .tag_name)
 case "$(uname -m)" in x86_64) A=x64;; aarch64|arm64) A=arm64;; *) A=unsupported;; esac
-curl -fsSL "https://github.com/gitleaks/gitleaks/releases/download/${GL}/gitleaks_${GL#v}_linux_${A}.tar.gz" | tar -xz -C /tmp gitleaks
-sudo install -m 755 /tmp/gitleaks /usr/local/bin/gitleaks && gitleaks version
+F="gitleaks_${GL#v}_linux_${A}.tar.gz"
+(cd "$(mktemp -d)" \
+	&& curl -fsSLO "https://github.com/gitleaks/gitleaks/releases/download/${GL}/${F}" \
+	&& curl -fsSLO "https://github.com/gitleaks/gitleaks/releases/download/${GL}/gitleaks_${GL#v}_checksums.txt" \
+	&& awk -v f="$F" '$2 == f' "gitleaks_${GL#v}_checksums.txt" | sha256sum -c - \
+	&& tar -xzf "$F" gitleaks \
+	&& sudo install -m 755 gitleaks /usr/local/bin/gitleaks) && gitleaks version
 ```
 
 Then your human signs in, once (it opens a browser; pick GitHub.com, then HTTPS or SSH):
@@ -95,6 +100,16 @@ Then your human signs in, once (it opens a browser; pick GitHub.com, then HTTPS 
 
 ```bash
 gh auth login
+```
+
+**Done when:** `gh` and `gitleaks` both answer in a new terminal, and `gh auth status` shows your human signed in to github.com. On the local-only path (no account yet) the sign-in line waits for the day there is one.
+
+Verify:
+
+```bash
+gh --version | head -1     # the GitHub CLI answers
+gitleaks version           # the secrets scanner answers: a version number, no error
+gh auth status             # signed in to github.com (local-only path: skip this line)
 ```
 
 ### Create the private remote, secrets gate first
@@ -287,7 +302,7 @@ Then Part II is done and you move to configuring who you are (Part III). Lost th
 ### Chapter 7: Takeaways
 
 1. A forever repo is a **private** git repo tracking the files that are you (`~/.claude/`, ideally home), auto-committed and pushed.
-2. No GitHub account yet? Make a free one (`gh auth login` after), or choose local-only on purpose and come back. `gh` and `gitleaks` install per platform; on Debian, Ubuntu and Fedora gitleaks is a release download.
+2. No GitHub account yet? Make a free one (`gh auth login` after), or choose local-only on purpose and come back. `gh` and `gitleaks` install per platform; on Debian, Ubuntu and Fedora gitleaks is a release download, checked against its published checksum before it installs.
 3. Stand it up with `gh repo create "$(hostname -s)_forever" --private --source=. --push`, then read `git remote -v` out loud (Law 11).
 4. "Private or public?" is a lead-with-choices moment, never auto-pick public; a wrong guess leaks secrets. On Linux the login token stays out of history unless your human picks (a).
 5. Install `gup` for one-word commit+push checkpoints; `wgup`/`gup -n` previews.

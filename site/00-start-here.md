@@ -157,7 +157,7 @@ brew install --cask iterm2
 
 Then open iTerm2 (hit `Cmd+Space`, type "iTerm", Enter) and keep going from there. Keep Apple Terminal around as a backup if you like; the shell setup below makes both behave identically, so it never matters which one you reach for.
 
-**Mac, switch from zsh to bash (and make it permanent).** Since macOS Catalina your default shell is **zsh**, but this whole guide, nixbash, the stack, the scripts, is **bash-first**. Apple also ships an ancient bash (3.2, from 2007) at `/bin/bash`, so install a modern one and make it your real login shell. Run this from your current zsh window:
+**Mac, switch from zsh to bash (and make it permanent).** Since macOS Catalina your default shell is **zsh**, but this whole guide, nixbash, the stack, the scripts, is **bash-first**. Apple also ships an ancient bash (3.2, from 2007) at `/bin/bash`, so install a modern one and make it your real login shell. Run this from your current zsh window. It is safe to run twice: the lines that add to `/etc/shells` or `~/.bash_profile` check first and skip what is already there:
 
 **Mac:**
 
@@ -165,18 +165,18 @@ Then open iTerm2 (hit `Cmd+Space`, type "iTerm", Enter) and keep going from ther
 # 1. install a modern bash (5.x) with Homebrew:
 brew install bash
 
-# 2. allow it as a login shell (works on Apple Silicon AND Intel via brew --prefix):
-echo "$(brew --prefix)/bin/bash" | sudo tee -a /etc/shells
+# 2. allow it as a login shell (works on Apple Silicon AND Intel via brew --prefix); added only if it is not there yet:
+grep -qsxF "$(brew --prefix)/bin/bash" /etc/shells || echo "$(brew --prefix)/bin/bash" | sudo tee -a /etc/shells
 
 # 3. make it your default shell, permanently (survives reboots and new windows):
 chsh -s "$(brew --prefix)/bin/bash"
 
-# 4. carry your PATH into bash: Homebrew, and ~/.local/bin where the Claude Code installer put claude
-echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bash_profile
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bash_profile
+# 4. carry your PATH into bash: Homebrew, and ~/.local/bin where the Claude Code installer put claude (each line added only if missing):
+grep -qsF 'brew shellenv' ~/.bash_profile || echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bash_profile
+grep -qsF '.local/bin' ~/.bash_profile || echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bash_profile
 
-# 5. silence macOS's "the default shell is now zsh" nag:
-echo 'export BASH_SILENCE_DEPRECATION_WARNING=1' >> ~/.bash_profile
+# 5. silence macOS's "the default shell is now zsh" nag (added only if missing):
+grep -qsF 'BASH_SILENCE_DEPRECATION_WARNING' ~/.bash_profile || echo 'export BASH_SILENCE_DEPRECATION_WARNING=1' >> ~/.bash_profile
 ```
 
 Now **fully quit Terminal (or iTerm2) and reopen it**, the shell only switches on a brand-new session. The check at the bottom of this step confirms it took. If you ever want zsh back: `chsh -s /bin/zsh`. (You won't.)

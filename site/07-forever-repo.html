@@ -87,15 +87,26 @@
 <p><strong>Linux (Arch):</strong></p>
 <pre><code class="language-bash">sudo pacman -S --needed github-cli gitleaks
 </code></pre>
-<p><strong>Linux (Debian, Ubuntu, Fedora)</strong>, <code>gitleaks</code> has no package there, so take the release binary (it needs <code>jq</code> and <code>curl</code>, Chapter 0, Step 4):</p>
+<p><strong>Linux (Debian, Ubuntu, Fedora)</strong>, <code>gitleaks</code> has no package there, so take the release binary (it needs <code>jq</code> and <code>curl</code>, Chapter 0, Step 4). The block downloads it next to the release&#39;s published SHA-256 list and installs it only if the two match; a damaged or tampered download stops with <code>FAILED</code> instead of installing. Both files come from the same release, so this catches a bad download, not a compromised release:</p>
 <pre><code class="language-bash">GL=$(curl -fsSL https://api.github.com/repos/gitleaks/gitleaks/releases/latest | jq -r .tag_name)
 case &quot;$(uname -m)&quot; in x86_64) A=x64;; aarch64|arm64) A=arm64;; *) A=unsupported;; esac
-curl -fsSL &quot;https://github.com/gitleaks/gitleaks/releases/download/${GL}/gitleaks_${GL#v}_linux_${A}.tar.gz&quot; | tar -xz -C /tmp gitleaks
-sudo install -m 755 /tmp/gitleaks /usr/local/bin/gitleaks &amp;&amp; gitleaks version
+F=&quot;gitleaks_${GL#v}_linux_${A}.tar.gz&quot;
+(cd &quot;$(mktemp -d)&quot; \
+	&amp;&amp; curl -fsSLO &quot;https://github.com/gitleaks/gitleaks/releases/download/${GL}/${F}&quot; \
+	&amp;&amp; curl -fsSLO &quot;https://github.com/gitleaks/gitleaks/releases/download/${GL}/gitleaks_${GL#v}_checksums.txt&quot; \
+	&amp;&amp; awk -v f=&quot;$F&quot; &#39;$2 == f&#39; &quot;gitleaks_${GL#v}_checksums.txt&quot; | sha256sum -c - \
+	&amp;&amp; tar -xzf &quot;$F&quot; gitleaks \
+	&amp;&amp; sudo install -m 755 gitleaks /usr/local/bin/gitleaks) &amp;&amp; gitleaks version
 </code></pre>
 <p>Then your human signs in, once (it opens a browser; pick GitHub.com, then HTTPS or SSH):</p>
 <p><strong>Mac or Linux:</strong></p>
 <pre><code class="language-bash">gh auth login
+</code></pre>
+<p><strong>Done when:</strong> <code>gh</code> and <code>gitleaks</code> both answer in a new terminal, and <code>gh auth status</code> shows your human signed in to github.com. On the local-only path (no account yet) the sign-in line waits for the day there is one.</p>
+<p>Verify:</p>
+<pre><code class="language-bash">gh --version | head -1     # the GitHub CLI answers
+gitleaks version           # the secrets scanner answers: a version number, no error
+gh auth status             # signed in to github.com (local-only path: skip this line)
 </code></pre>
 <h3>Create the private remote, secrets gate first</h3>
 <pre><code class="language-bash"># 1. ~/.claude should already be a git repo (the bootstrap, Chapter 5, did this).
@@ -234,7 +245,7 @@ command -v gup gitleaks                                             # both on th
 <h3>Chapter 7: Takeaways</h3>
 <ol>
 <li>A forever repo is a <strong>private</strong> git repo tracking the files that are you (<code>~/.claude/</code>, ideally home), auto-committed and pushed.</li>
-<li>No GitHub account yet? Make a free one (<code>gh auth login</code> after), or choose local-only on purpose and come back. <code>gh</code> and <code>gitleaks</code> install per platform; on Debian, Ubuntu and Fedora gitleaks is a release download.</li>
+<li>No GitHub account yet? Make a free one (<code>gh auth login</code> after), or choose local-only on purpose and come back. <code>gh</code> and <code>gitleaks</code> install per platform; on Debian, Ubuntu and Fedora gitleaks is a release download, checked against its published checksum before it installs.</li>
 <li>Stand it up with <code>gh repo create &quot;$(hostname -s)_forever&quot; --private --source=. --push</code>, then read <code>git remote -v</code> out loud (Law 11).</li>
 <li>&quot;Private or public?&quot; is a lead-with-choices moment, never auto-pick public; a wrong guess leaks secrets. On Linux the login token stays out of history unless your human picks (a).</li>
 <li>Install <code>gup</code> for one-word commit+push checkpoints; <code>wgup</code>/<code>gup -n</code> previews.</li>
