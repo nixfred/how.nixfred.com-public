@@ -84,5 +84,6 @@ Expert mode (fast supervised build): https://how.nixfred.com/expert.html
 Scaffold + audit: https://how.nixfred.com/spawn.html
 Seed kit (making an AI like Larry; every seed file verbatim, readable through MCP get_page("seed-kit")): https://how.nixfred.com/seed-kit.html
 MCP server (let your AI install this with you): https://how.nixfred.com/mcp , setup at https://how.nixfred.com/ask-larry.html
+Bring Your Own Repo (one prompt: this guide first, then build a GitHub repo with your human): https://how.nixfred.com/byo.html
 Runbook for the installing agent: https://how.nixfred.com/install.md
 The story of a build (Nakomi): https://how.nixfred.com/nakomi.html

@@ -366,6 +366,21 @@ a.st-title:hover{color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
 @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto} *{transition:none !important;animation:none !important}}
 
+/* ── Bring Your Own Repo (/byo): repo URL in, one prompt out ── */
+.byo-steps li{margin:6px 0}
+.byo-form{margin:24px 0 8px;padding:18px 20px;border:1px solid #2a5c4f;border-radius:12px;background:linear-gradient(180deg,rgba(57,208,168,.07),rgba(57,208,168,.02))}
+.byo-form label{display:block;font-weight:700;color:var(--accent);margin:0 0 8px}
+.byo-row{display:flex;gap:10px;flex-wrap:wrap}
+.byo-row input{flex:1 1 260px;min-width:0;background:var(--bg3);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:11px 13px;font-size:15px;font-family:var(--mono)}
+.byo-row input:focus{outline:none;border-color:var(--accent)}
+.byo-row input[aria-invalid="true"]{border-color:var(--warn)}
+.byo-hint{margin:10px 0 0;font-size:13.5px;color:var(--ink3)}
+.byo-error{margin:10px 0 0;padding:9px 12px;border:1px solid var(--warn);border-radius:9px;color:var(--warn);background:rgba(242,180,65,.07);font-size:14.5px}
+.byo-out{margin:18px 0 10px;border:1px solid var(--line);background:var(--bg2);border-radius:12px;padding:12px 14px}
+.byo-out-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--ink2);font-size:14.5px;margin:0 0 10px}
+.byo-out-head .spine-copy{margin-left:auto;flex:none;font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:8px;border:1px solid var(--accent);background:var(--bg3);color:var(--accent);cursor:pointer}
+.col code.byo-prompt{display:block;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13.5px;line-height:1.6;padding:12px 14px;background:#0b0f14;border:1px solid #2a5c4f;border-radius:9px;color:var(--ink)}
+
 /* ── Ask Larry: hero bar, sidebar ask row, chapter button, docked pill + panel ── */
 .cta-nav.ask{border-color:var(--accent);color:var(--accent);background:rgba(57,208,168,.07)}
 .al-hero{margin:22px 0 26px;padding:18px 18px 14px;border:1px solid var(--accent);border-radius:14px;

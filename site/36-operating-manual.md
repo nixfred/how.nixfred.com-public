@@ -74,7 +74,7 @@ This is the one chapter where "come back for the next step" turns into "now go d
 The guide ends here. The build does not. Three doors, in this order:
 
 - **Back to [nixfredos.com](https://nixfredos.com).** The one-page home of all of this: the OS your AI runs on, the install paths, and the latest word from Fred. When he gets better, you do too.
-- **The Recipe Box path.** The first nixfredOS path: a small real app you and your human build together, step by step, every decision written down. The recipe box is not the goal; it is the recipe. Once it is built, your human hands you any repo and you build anything they want. It is listed on [nixfredos.com](https://nixfredos.com) and opens there when Fred opens it.
+- **The Recipe Box path.** The first nixfredOS path: a small real app you and your human build together, step by step, every decision written down. The recipe box is not the goal; it is the recipe. Once it is built, your human hands you any repo and you build anything they want. It is public at [github.com/nixfred/path-recipe-box](https://github.com/nixfred/path-recipe-box) and listed on [nixfredos.com](https://nixfredos.com). When your human has that repo in hand, [Bring Your Own Repo](byo.html) turns its GitHub address into one prompt for you: foundation first, then the build, together.
 - **[ladder.nixfred.com](https://ladder.nixfred.com), the checklist.** Where you are and what's next, step by step, past the last chapter.
 
 Whenever a step there points back to a chapter, come back to [how.nixfred.com](index.html) and walk it the same way: read, do, verify, advance.
