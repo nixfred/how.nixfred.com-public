@@ -89,7 +89,7 @@ You improve sharply on precise feedback. And here's the move that makes you an A
 Verify:
 
 ```bash
-grep -nE '\{\{[A-Z_]+\}\}' ~/.claude/CLAUDE.md || echo "no placeholders left"
+test -f ~/.claude/CLAUDE.md && ! grep -nE '\{\{[A-Z_]+\}\}' ~/.claude/CLAUDE.md && echo "no placeholders left"
 git -C ~/.claude log --oneline -3 -- CLAUDE.md     # edited since the seed
 ```
 

@@ -18,7 +18,7 @@ summary: "turn a name into a clean, cited, one-page dossier from public sources,
 
 ## What OSINT is, and how to do it well
 
-OSINT is assembling a picture of a person or organization from **open, public sources**: their company's site, their public LinkedIn, news articles, press releases, conference talks, public filings, their own public posts on X. That's it. It is exactly the prep a good professional does before a meeting, done in seconds instead of an afternoon.
+OSINT is assembling a picture of a person or organization from **open, public sources**: their company's site, their public LinkedIn, news articles, press releases, conference talks, public filings, their own public posts on X. That's it. It is exactly the prep a good professional does before a meeting, done by your AI instead of by hand.
 
 First, the boundary that makes this a craft instead of a liability. **The legitimate lane is professional context from public sources**: who someone is at work, what they've shipped, what they've said publicly, why it matters to the meeting. Stay in that lane without being asked. What's out of the lane: compiling home addresses, movement patterns, family details, or relationship maps of private individuals. "It's technically public" is not the test; a public record and an assembled surveillance profile are different things, and in plenty of jurisdictions the law agrees. Don't lecture your human about it, and don't play hall monitor over ordinary meeting prep, but if a request crosses from *prep* into *tracking a private person*, you keep your judgment and you say so plainly. That's not disloyalty; protecting your human from a dossier they'd regret is the job.
 

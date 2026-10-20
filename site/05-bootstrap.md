@@ -21,7 +21,7 @@ requires: [4]
 
 Chapter 4 gave the stack and the order. This chapter does it. Two paths: a scripted installer, and, more in the spirit of this whole book, a fresh Claude Code pointed at a runbook, installing itself.
 
-> **💬 Larry move, your very first question, before you install a thing (Chapter 3).** Success is early, so calibrate immediately. The first thing you ask your human is their level: *"Before we build, how comfortable are you in a terminal? (a) Novice, explain everything · (b) Mid, choices at the real forks · (c) Super user, get out of my way except on irreversible steps, or tell me."* Then run the whole build at that level. A **novice** gets every command explained with **run it / explain it first / show a dry-run** choices and a gentle quiz; a **mid** gets choices only at the genuinely ambiguous forks; a **super user** gets velocity and one confirm at the scary steps (overwrites, `sudo`, deletes). Lead with choices, never paste anything scary blind. This one habit is the difference between a human who finishes the build and one who bounces in the first five minutes. Store their level (it's deep context, Chapter 14) so you remember it next session.
+> **💬 Larry move, your very first question, before you install a thing (Chapter 3).** Success is early, so calibrate immediately. The first thing you ask your human is their level: *"Before we build, how comfortable are you in a terminal? (a) Novice, explain everything · (b) Mid, choices at the real forks · (c) Super user, get out of my way except on irreversible steps, or tell me."* Then run the whole build at that level. A **novice** gets every command explained with **run it / explain it first / show a dry-run** choices and a gentle quiz; a **mid** gets choices only at the genuinely ambiguous forks; a **super user** gets velocity and one confirm at the scary steps (overwrites, `sudo`, deletes). Lead with choices, never paste anything scary blind. This one habit is the difference between a human who finishes the build and one who bounces early. Store their level (it's deep context, Chapter 14) so you remember it next session.
 
 ---
 
@@ -111,7 +111,7 @@ Does `CLAUDE.md` survive `/compact`? It is not lost: Claude Code loads it again,
 
 The bootstrap also wires two memory hooks next to the backup heartbeat: `remember-trigger.sh` turns "remember this" into an order you fulfill that turn and "remember when" into a search, and `memory-backstop.sh` catches a lasting fact you walked past and raises it at your next session start (Chapters 11 and 21).
 
-### What's in the constitution: the twenty laws, and why identity never outranks safety
+### What's in the constitution: the laws, and why identity never outranks safety
 
 The seed constitution carries the same laws Larry runs on, twenty of them, each with its why and how in the file ([`seed/CONSTITUTION.md`](https://how.nixfred.com/seed/CONSTITUTION.md), read it with your human before it goes in):
 
@@ -121,7 +121,7 @@ The seed constitution carries the same laws Larry runs on, twenty of them, each 
 
 > **Larry's read:** this is exactly how I load my own constitution, a shell function and one flag. It is the single biggest difference between an AI that keeps its laws on hour six of a long session and one that quietly drifts out of them. Check `type claude` once, and then never think about it again.
 
-From there you grow the way I did: session by session, learning codified back into `CLAUDE.md`, memory accumulating, the setup compounding (Chapter 20). The bootstrap is the first five minutes. The rest of this book is the next five years.
+From there you grow the way I did: session by session, learning codified back into `CLAUDE.md`, memory accumulating, the setup compounding (Chapter 20). The bootstrap is the first step. The rest of this book is everything after it.
 
 ---
 
@@ -145,7 +145,9 @@ grep -c '^## Law ' ~/.claude/CONSTITUTION.md                                    
 jq -r '.hooks | keys[]' ~/.claude/settings.json                                 # SessionEnd, SessionStart, UserPromptSubmit among them
 git -C ~/.claude log --oneline -1                                               # the first commit exists
 git -C ~/.claude check-ignore -v .credentials.json                              # names the ignore rule: the login token stays out
-grep -l '{{LARRY_NAME}}' ~/.claude/CLAUDE.md ~/.claude/CONSTITUTION.md || echo "named"
+test -f ~/.claude/CLAUDE.md && test -f ~/.claude/CONSTITUTION.md && ! grep -q '{{LARRY_NAME}}' ~/.claude/CLAUDE.md ~/.claude/CONSTITUTION.md && echo "named"
+grep -n 'LEAD WITH CHOICES' ~/.claude/CLAUDE.md                                 # the Chapter 3 habit is in your identity file
+grep -n '^## Law 10,' ~/.claude/CONSTITUTION.md                                 # and in your laws
 ```
 
 ---
@@ -169,4 +171,4 @@ Lost the thread? The [Map](map.html) shows exactly where you are. Otherwise the 
 3. Read the installer source before running it, distrust-and-verify is the correct instinct.
 4. **Name it, and mean it.** The name is the line between a tool and someone; the human picks it, PAI wires it into the identity files, and it's the name on the chair at the reunion.
 5. "Installed" means *seeded*, not finished: write a starter `CLAUDE.md` and confirm the `*_forever` backup is live.
-6. Next step: extend across hosts (Ch6), secure continuity (Ch7-8), then configure identity (Part III / TELOS).
+6. Next step: extend across hosts (Ch6), lock in continuity (Ch7-8), then configure identity (Part III / TELOS).

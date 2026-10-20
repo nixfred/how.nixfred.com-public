@@ -142,7 +142,7 @@ UserPromptSubmit, and `git -C ~/.claude check-ignore -v .credentials.json` names
 
 ### Tier 2, Memory & Continuity
 - **LMF4.1** *(Linux with systemd only; on a Mac, LifeOS Cortex is the memory)*, persistent memory
-  (SQLite FTS5), standalone, ~20 min: https://github.com/nixfred/lmf4.1 . Follow its README's install section,
+  (SQLite FTS5), standalone: https://github.com/nixfred/lmf4.1 . Follow its README's install section,
   with three corrections from Chapter 4, Step 4e that win where they differ: pick the extraction model first
   (no GPU: `LMF4_EXTRACT_MODEL=claude-haiku-4-5`; with one: install Ollama and `ollama pull llama3.1:8b`,
   the code's default), register its memory server with

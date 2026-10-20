@@ -112,7 +112,7 @@ tailscale ip -4      # this machine's 100.x address
 
 You can reach across machines now. Next, make sure you can never lose yourself:
 
-- **[Chapter 7: Your Forever Private Repo (and gup)](07-forever-repo.html)**, the git-backed identity backup that commits you dozens of times a day.
+- **[Chapter 7: Your Forever Private Repo (and gup)](07-forever-repo.html)**, the git-backed identity backup that commits you all day long.
 - Then **[Chapter 8: Disaster Recovery](08-recovery.html)**, rebuilding from zero on a new box.
 
 Lost the thread? The [Map](map.html) shows exactly where you are. Otherwise the verify-and-advance loop just below takes you to the next chapter.

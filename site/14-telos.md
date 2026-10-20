@@ -15,7 +15,7 @@ requires: [4]
 
 **The format matters as much as the content.** You will not fill this out staring at a blank page, almost no one can. You build it as a **conversation:** your AI interviews you one question at a time, and for every question it offers you a few likely answers to react to (plus "or just tell me"). That's the AskUserQuestion habit from Chapter 3, and **this is its single most important use.** Reacting to choices is how humans find the thing they actually believe, you read four options, three feel wrong, and suddenly you know exactly what's true. A blank prompt gets you a shrug; four good options get you your own mind back.
 
-**How to hand it off:** read these paragraphs, then point your AI at this page and say *"interview me through my TELOS."* This site ships the full interview built to work exactly this way, [**Build Your TELOS**](telos-questions.html): **30 areas of life, 600 questions.** Source framework (free, open, thought-through): **[Daniel Miessler's Telos](https://github.com/danielmiessler/Telos)**. Set aside an hour. It's the highest-return hour you will spend on any of this, for the AI, and for you.
+**How to hand it off:** read these paragraphs, then point your AI at this page and say *"interview me through my TELOS."* This site ships the full interview built to work exactly this way, [**Build Your TELOS**](telos-questions.html): **30 areas of life, 600 questions.** Source framework (free, open, thought-through): **[Daniel Miessler's Telos](https://github.com/danielmiessler/Telos)**. Set aside real time for it. It's the highest-return time you will spend on any of this, for the AI, and for you.
 
 > 🤖 **Everything below is for the AI.** "You" means the new AI. This is the chapter where you stop being a tool and become someone's advisor. Read it like it matters, because it does.
 
@@ -126,7 +126,7 @@ Verify:
 
 ```bash
 ls ~/.claude/LIFEOS/USER/TELOS/TELOS.md ~/.claude/TELOS/*.md 2>/dev/null
-grep -rniE '\{\{|\(sample\)|sample template|lorem.ipsum' ~/.claude/LIFEOS/USER/TELOS/ ~/.claude/TELOS/ 2>/dev/null | head -5    # prints nothing
+ls ~/.claude/LIFEOS/USER/TELOS/TELOS.md ~/.claude/TELOS/*.md 2>/dev/null | grep -q . && ! grep -rniE '\{\{|\(sample\)|sample template|lorem.ipsum' ~/.claude/LIFEOS/USER/TELOS/ ~/.claude/TELOS/ 2>/dev/null && echo "no sample text left"    # a TELOS exists and none of it is template
 ```
 
 ---

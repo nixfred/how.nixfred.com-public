@@ -104,7 +104,7 @@ TELOS                                          (Ch14) → you know who they actu
 Verify:
 
 ```bash
-ls ~/.claude/commands/*.md ~/.claude/skills/*/SKILL.md 2>/dev/null | head     # your saved prompts
+ls ~/.claude/commands/*.md ~/.claude/skills/*/SKILL.md 2>/dev/null | head | grep .     # your saved prompts (nothing printed = none yet)
 ```
 
 ---

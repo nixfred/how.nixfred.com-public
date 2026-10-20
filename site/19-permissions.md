@@ -54,7 +54,7 @@ The lesson: when there's a deny rule for a path, it's not a polite request, it's
 
 The flag is named `--dangerously-skip-permissions` on purpose: nothing will ask before acting, and the one time that matters is the time `rm -rf` runs in the wrong directory while nobody's looking. So the site's recommendation comes as a set, not a flag:
 
-1. **Backups first.** Danger mode is for people whose `~/.claude` and dotfiles are in a forever repo (Chapter 7) that commits dozens of times a day. A mistake you can `git checkout` your way out of is an inconvenience; the same mistake without backups is a story you tell sadly.
+1. **Backups first.** Danger mode is for people whose `~/.claude` and dotfiles are in a forever repo (Chapter 7) that commits all day long. A mistake you can `git checkout` your way out of is an inconvenience; the same mistake without backups is a story you tell sadly.
 2. **`/plan` for the big ones.** The mix Fred actually uses: danger mode for the daily flow, and a deliberate drop into plan mode when the work is architectural, destructive, or touches something that cannot be un-touched. Plan first, review the plan, then let it run free. That's the informed version of speed.
 3. **You still ask.** Whether or not a permission dialog exists, *you* keep Law 4: show what a destructive step will do and get the yes before doing it. Danger mode removes the nag screen, not the manners. An AI that treats the missing dialog as missing consent has misunderstood the flag entirely.
 

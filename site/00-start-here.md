@@ -16,7 +16,13 @@ slug: "00-start-here"
 
 ## Step 1, Install Claude Code
 
-Claude Code is the engine. The official installer is the same one line on both platforms, so start here:
+Claude Code is the engine. The official installer is the same one line on both platforms. It needs `curl`, and a missing `curl` makes that one line a silent no-op (bash runs an empty script and reports success), so check for it first. This line exits nonzero when `curl` is missing, so an agent cannot mistake the gap for an install:
+
+```bash
+command -v curl || { echo "curl is missing: install it with your package manager first (Step 4 lists the line for each distro), then come back"; false; }
+```
+
+Then the installer:
 
 ```bash
 curl -fsSL https://claude.ai/install.sh | bash
@@ -63,11 +69,11 @@ claude --version
 
 ## Step 2, The money talk (read this before you fall in love)
 
-Real talk, because honesty is the house rule here. To use Claude Code seriously you'll want a **Claude subscription, and the practical floor is the $100/month plan.** You *can* run pay-as-you-go on the API, but heavy days will out-cost the subscription fast.
+Real talk, because honesty is the house rule here. To use Claude Code seriously you'll want a **Claude subscription, and the practical floor is the middle tier, not the cheapest one.** You *can* run pay-as-you-go on the API, but heavy days will out-cost the subscription fast. Free plus your subscription: that is the whole price of this build.
 
-And here's the part Fred wants you to hear with a laugh: **you're going to end up on the $200 plan.** Everyone does. You'll start on $100 telling yourself it's plenty, and about three great sessions later you'll be reaching for the bigger one. So budget for $200 from the start and let it be a pleasant surprise if you don't. Trust him on this one.
+And here's the part Fred wants you to hear with a laugh: **you're going to end up on the top plan.** Everyone does. You'll start one tier down telling yourself it's plenty, and a few great sessions later you'll be reaching for the bigger one. So budget for the top plan from the start and let it be a pleasant surprise if you don't. Trust him on this one.
 
-**Done when:** you know your floor ($100) and your likely real spend ($200), and you picked a plan on purpose.
+**Done when:** you know your floor (the middle tier) and your likely real spend (the top plan), and you picked a plan on purpose.
 
 ---
 
@@ -96,7 +102,7 @@ You've now got Claude Code running and logged in. The hard part is over.
 Verify:
 
 ```bash
-claude auth status | grep -i loggedin     # "loggedIn": true
+claude auth status | grep '"loggedIn": true' || { echo "not logged in yet: start claude and run /login"; false; }
 ```
 
 ---
@@ -200,7 +206,7 @@ Verify:
 
 ```bash
 "$SHELL" --version | head -1     # GNU bash, version 5 or newer
-command -v jq git curl claude    # four paths, nothing missing
+command -v jq && command -v git && command -v curl && command -v claude    # four paths; stops at the first one missing
 ```
 
 ---
@@ -251,7 +257,7 @@ tailscale status | head -5     # this machine is listed with its 100.x address, 
 
 ## Step 7, When something breaks (and it will): USE THE AI TO FIX THE AI
 
-You're running an AI in a terminal now, so yes, things will throw errors. A hook will misfire, a path will be wrong, a permission will bite. Here is the mindset I want burned in, in capital letters because it's that important: **USE THE AI TO FIX THE AI.** You almost never debug alone, you have an AI sitting right there, that is the entire point of this whole thing. The AI is the tool *and* the mechanic. When something isn't working, you do not go read a forum for an hour, you turn the AI on the problem. When you get hung up, you have more ways out than you think:
+You're running an AI in a terminal now, so yes, things will throw errors. A hook will misfire, a path will be wrong, a permission will bite. Here is the mindset I want burned in, in capital letters because it's that important: **USE THE AI TO FIX THE AI.** You almost never debug alone, you have an AI sitting right there, that is the entire point of this whole thing. The AI is the tool *and* the mechanic. When something isn't working, you do not go read a forum, you turn the AI on the problem. When you get hung up, you have more ways out than you think:
 
 1. **Paste the error and say "fix this."** Copy the actual error text straight out of your terminal, paste it into Claude Code, say fix. It reads the error, finds the cause, and repairs it. No Stack Overflow tab, no forum spelunking, no lost afternoon. This is the first move, every single time.
 
@@ -277,8 +283,8 @@ You now have Claude Code running in your shell, on the network, the way Fred run
 
 The path from here is in order, and order is the whole method:
 
-- **Next, the why.** Read [Part I, Chapter 1: The Paradigm](01-the-paradigm.html). Three short chapters on the mental model the entire build rests on. Skip it and you'll be pasting commands you don't understand; spend ten minutes here and the rest clicks.
-- **Then build the stack, in order.** [Chapter 4: The Larry Stack](04-larry-stack.html) lays out every layer and the exact sequence. Prefer to let it walk the install with you? [Chapter 5](05-bootstrap.html) is the one-command bootstrap, the same ordered build, just automated. Either way, it's not a magic word; it's a sequence you do in order.
+- **Next, the why.** Read [Part I, Chapter 1: The Paradigm](01-the-paradigm.html). Three short chapters on the mental model the entire build rests on. Skip it and you'll be pasting commands you don't understand; read it and the rest clicks.
+- **Then build the stack, in order.** [Chapter 4: The Larry Stack](04-larry-stack.html) lays out every layer and the exact sequence. Prefer to let it walk the install with you? [Chapter 5](05-bootstrap.html) is the one-command bootstrap, the same ordered build, just automated. Either way, the one paste only starts it; the build is a sequence you do in order.
 
 **Get the basics solid first**, the install, memory, backups, network. *Then* grow into the modules (like [Give Your AI Eyes & Ears](transcribe-video.html)) one real need at a time. Don't bolt on capabilities before the foundation is steady.
 
@@ -289,7 +295,7 @@ So hand your AI Chapter 1 and it takes the wheel: read, do, verify to 100%, log,
 ### Chapter 0: Takeaways
 
 1. Install Claude Code with `curl -fsSL https://claude.ai/install.sh | bash` (Mac or Linux).
-2. Budget for the **$200/month** plan; you'll get there. The $100 plan is the practical floor.
+2. Budget for the **top plan**; you'll get there. The middle tier is the practical floor. Free plus your subscription.
 3. Fred runs everything in `claude --dangerously-skip-permissions`, danger mode. Guardrail alternative: Chapter 19.
 4. Set up a shell and the small tools the build checks with (`jq`, `git`, `curl`, `unzip`): nixbash on Linux (any of Debian, Ubuntu, Fedora, Arch); on Mac install Homebrew, add iTerm2 (`brew install --cask iterm2`, the terminal Fred lives in), then switch from zsh to a modern bash permanently (`brew install bash` → add to `/etc/shells` → `chsh -s "$(brew --prefix)/bin/bash"`). `chsh` makes bash the default in both iTerm2 and Apple Terminal. Then relaunch with `claude --dangerously-skip-permissions --continue`.
 5. Log in with the account that holds your subscription (`/login` to redo it); that's the handshake that connects the plan.

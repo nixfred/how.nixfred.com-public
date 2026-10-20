@@ -72,7 +72,7 @@ Build your own. The point is to make "spec → plan → todos → execute" a sin
 
 ## 16.5 Don't over-build the scaffolding
 
-A caution that applies to your own workflow: the creators happily build things they'll throw away in three months when a smarter model subsumes them, and expect to. Plan mode itself, they figure, will eventually be unshipped when the model just infers that the human wants to plan first.
+A caution that applies to your own workflow: the creators happily build things they'll throw away when a smarter model subsumes them, and expect to. Plan mode itself, they figure, will eventually be unshipped when the model just infers that the human wants to plan first.
 
 The lesson: don't lovingly construct elaborate prompting rituals the next model makes pointless. Keep scaffolding light. Plan the genuinely hard thing; one-shot when it isn't; let the model take over the parts it's outgrown.
 

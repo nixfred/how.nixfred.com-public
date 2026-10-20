@@ -74,4 +74,4 @@ Your human has three clients and an internal tool. Four folders, four workspaces
 
 ## Your next step
 
-Work only from workspaces for a week. Then return to [how.nixfred.com](index.html), and read [Chapter 10, projects and roles](10-projects.html) and [Chapter 13, context discipline](13-context.html). Basics first, modules after.
+Work only from workspaces until it is a habit. Then return to [how.nixfred.com](index.html), and read [Chapter 10, projects and roles](10-projects.html) and [Chapter 13, context discipline](13-context.html). Basics first, modules after.

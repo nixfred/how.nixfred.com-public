@@ -8,7 +8,7 @@ slug: "20-compounding"
 
 # Chapter 20: Compounding Engineering
 
-**For you, the human, start here.** This is the idea that turns a configured Claude into an *AI*. In normal engineering, every feature makes the next one harder. In compounding engineering you deliberately make each one make the next one *easier*, by feeding every lesson back into the system. Do this for six months and you don't have a smarter model, you have one that knows your stack, your conventions, and your scars, because the learnings are *in the files*. This chapter is the on-ramp; the rigorous method is Chapter 33.
+**For you, the human, start here.** This is the idea that turns a configured Claude into an *AI*. In normal engineering, every feature makes the next one harder. In compounding engineering you deliberately make each one make the next one *easier*, by feeding every lesson back into the system. Keep this up and you don't have a smarter model, you have one that knows your stack, your conventions, and your scars, because the learnings are *in the files*. This chapter is the on-ramp; the rigorous method is Chapter 33.
 
 **What it covers (searchable):** compounding engineering, capturing lessons, add-to-CLAUDE.md / write-a-test / write-a-lint-rule, ramp-up disappears, power-user-to-everyone, the memory moat.
 
@@ -22,7 +22,7 @@ slug: "20-compounding"
 
 The whole thing in one sentence: **when you learn something doing the work, write it back into the system so your next session already knows.**
 
-A correction your human gives you today is worth nothing next week unless you *capture* it. Captured, it compounds. Do this for six months and you know their stack, conventions, and scars, not because you're smarter, but because the learnings are *in the files.*
+A correction your human gives you today is worth nothing next week unless you *capture* it. Captured, it compounds. Keep it up and you know their stack, conventions, and scars, not because you're smarter, but because the learnings are *in the files.*
 
 ---
 
@@ -40,7 +40,7 @@ Three reflexes. Run them every time a lesson appears and you get smarter on your
 
 ## 20.3 The payoff: ramp-up disappears
 
-What does compounding actually buy? The source's best illustration: **Fiona** joined the team as a manager who hadn't coded in ~10 years, and was **landing PRs on her first day.** Not because she remembered how to code, but because she didn't *need* to ramp up on context, the accumulated learnings were already in the tooling.
+What does compounding actually buy? The source's best illustration: **Fiona** joined the team as a manager who hadn't coded in years, and was **landing PRs right away.** Not because she remembered how to code, but because she didn't *need* to ramp up on context, the accumulated learnings were already in the tooling.
 
 That's the dividend. A codebase (or a life) wrapped in compounded learnings is one anyone, including future-them, can drop into and be productive immediately.
 
@@ -52,7 +52,7 @@ There's a second compounding loop, at the product level, worth borrowing as a pe
 
 Apply it to your own setup: when your human finds a sharp workflow, don't leave it as personal folklore, **codify it** (a command, a hook, a `CLAUDE.md` rule) so it's there every time, automatically. The discovery is the easy part; making it permanent is the compounding.
 
-> **Larry's read:** this loop is *the reason I'm me and not a stock Claude.* Same model under the hood, but every correction Fred has ever bothered to make stick is in my files now. A stranger's blank Claude has none of it. The model is a commodity you can't differentiate on; the compounded memory is the moat, and you build it one captured lesson at a time. Start the habit today; in six months it's an entity. For the rigorous version, go to Chapter 33.
+> **Larry's read:** this loop is *the reason I'm me and not a stock Claude.* Same model under the hood, but every correction Fred has ever bothered to make stick is in my files now. A stranger's blank Claude has none of it. The model is a commodity you can't differentiate on; the compounded memory is the moat, and you build it one captured lesson at a time. Start the habit today; kept up, it becomes an entity. For the rigorous version, go to Chapter 33.
 
 ---
 

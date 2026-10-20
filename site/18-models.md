@@ -45,7 +45,7 @@ What that means: Claude Code is at its best on the frontier model, and the harne
 
 For hard problems, think before you answer. Extended thinking gives a real, visible quality jump on architecture decisions, complex debugging, and whole-system refactors, and the creators found a **big** lift from turning it on with the frontier model.
 
-- It toggles with **`Option+T`** on a Mac or **`Alt+T`** on Linux, and `/effort` (low to max) sets how hard you think, because sometimes you want it and sometimes you don't (no five minutes of thinking on a trivial fix). Fable models always think.
+- It toggles with **`Option+T`** on a Mac or **`Alt+T`** on Linux, and `/effort` (low to max) sets how hard you think, because sometimes you want it and sometimes you don't (no long think on a trivial fix). Fable models always think.
 - **`ultrathink`** anywhere in a prompt asks for deeper reasoning on that one turn (other phrases like "think hard" are just text); for a lasting change use `/effort`. (Source trivia: they kept `ultrathink` partly for sentiment, the rainbow-shimmer thinking-words UX was just *fun*.)
 - The trade: thinking costs more tokens and time. Spend it where a mistake is expensive; skip it where the task is obvious. *Not* using it on a hard problem is the more common mistake.
 
@@ -110,7 +110,7 @@ Verify:
 
 ```bash
 jq -r '.statusLine.command // "no status line yet"' ~/.claude/settings.json
-claude plugin list 2>/dev/null | grep -i tier-router || echo "no router (fine if your human skipped Chapter 4, Step 4f)"
+test -f ~/.claude/settings.json && { claude plugin list 2>/dev/null | grep -i tier-router || echo "no router (fine if your human skipped Chapter 4, Step 4f)"; }
 ```
 
 ---

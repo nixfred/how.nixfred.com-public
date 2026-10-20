@@ -100,7 +100,7 @@ Verify:
 
 ```bash
 jq -r '.hooks | to_entries[] | "\(.key): \([.value[].hooks[]? | .command] | join(" | "))"' ~/.claude/settings.json
-echo '{"prompt":"remember that hooks are wired"}' | bash ~/.claude/hooks/remember-trigger.sh | head -2     # prints the LAW 16 order
+test -f ~/.claude/hooks/remember-trigger.sh && echo '{"prompt":"remember that hooks are wired"}' | bash ~/.claude/hooks/remember-trigger.sh | head -2 | grep .     # prints the LAW 16 order
 ```
 
 ---

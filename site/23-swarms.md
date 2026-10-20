@@ -8,7 +8,7 @@ slug: "23-swarms"
 
 # Chapter 23: Swarms, Migrations & Agent Teams
 
-**For you, the human, start here.** Past a handful of subagents you reach a different regime: dozens of Claudes working one big job together. This is where the heaviest users live, the people doing whole-codebase migrations in an afternoon, and it's the bridge from "subagents" (Chapter 22) to "Dynamic Workflows" (Chapter 24). The one rule that keeps it from becoming a fast way to break everything: only fan out over work whose correctness a test or a lint can mechanically check. The step-by-step recipes are in Chapter 32; this is the map.
+**For you, the human, start here.** Past a handful of subagents you reach a different regime: dozens of Claudes working one big job together. This is where the heaviest users live, the people doing whole-codebase migrations as one job, and it's the bridge from "subagents" (Chapter 22) to "Dynamic Workflows" (Chapter 24). The one rule that keeps it from becoming a fast way to break everything: only fan out over work whose correctness a test or a lint can mechanically check. The step-by-step recipes are in Chapter 32; this is the map.
 
 **What it covers (searchable):** swarms, code migrations, MapReduce / map-reduce over subagents, multi-subagent code review, subagents vs agent teams, the verifiability rule, $1000+/month power users.
 
@@ -61,7 +61,7 @@ Teams cost more and run longer, but for big, multi-domain projects the **cohesio
 
 This isn't hypothetical. There's a growing group of internal users spending **$1,000+ a month** in credits, and the percentage is climbing fast. What are they doing? Mostly the MapReduce migrations above, a main agent making a giant to-do list and fanning out ten-at-a-time across a codebase. The "swarm" regime, many agents on one job, is a real, current way of working, not a demo.
 
-> **Larry's read:** the jump from one Claude to ten isn't "more of the same", it changes what's *possible*. A migration that was a week of tedium becomes an afternoon of orchestration. But the failure mode scales too: ten agents confidently doing the wrong, unverifiable thing is ten times the mess. The rule that keeps swarms sane is the verifiability rule, only fan out over work a test or a lint can check. Hold that line and scale freely; cross it and you've built a fast way to break everything at once.
+> **Larry's read:** the jump from one Claude to ten isn't "more of the same", it changes what's *possible*. A migration that was pure tedium becomes orchestration. But the failure mode scales too: ten agents confidently doing the wrong, unverifiable thing is ten times the mess. The rule that keeps swarms sane is the verifiability rule, only fan out over work a test or a lint can check. Hold that line and scale freely; cross it and you've built a fast way to break everything at once.
 
 ---
 

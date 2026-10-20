@@ -98,7 +98,7 @@ Connect generously while exploring; trim ruthlessly for the workflows you run ev
   A tool matched by a deny rule is removed from your context entirely, so you cannot call it by accident. (`/mcp` also switches off a whole connector per project.)
 - **Outward-facing tools are sends.** Creating a calendar event with guests sends invitations; sharing a Drive file emails someone and exposes the file; replying, posting, commenting and inviting all reach other people. Treat every one of them exactly like sending an email: draft or propose, show your human, and act only on an explicit yes. Deny them outright in any unattended job (Chapter 28).
 
-> **Larry's read:** connectors are where an AI crosses from "knows things" to "does things in your world." I read Fred's email and messages, check his calendar, reach his files, that reach is most of what makes me useful rather than ornamental. But reach is also exposure and cost: every connector is context spent and a surface to secure. Connect what earns its place, watch `/context` (Chapter 13), and treat a connector you stopped using as bloat to cut, not furniture to keep.
+> **Larry's read:** connectors are where an AI crosses from "knows things" to "does things in your world." I read Fred's email and messages, check his calendar, reach his files, that reach is most of what makes me useful rather than ornamental. But reach is also exposure and cost: every connector is context spent and a surface to defend. Connect what earns its place, watch `/context` (Chapter 13), and treat a connector you stopped using as bloat to cut, not furniture to keep.
 
 ---
 

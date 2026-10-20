@@ -104,4 +104,4 @@ Your human keeps client files in `~/Clients`. That folder gets the settings abov
 
 ## Your next step
 
-Run every summarising job in the sensitive folder through local for a week, and update the rules when a real case does not fit. Then return to [how.nixfred.com](index.html) for [Chapter 18, models, thinking and cost](18-models.html) and [Chapter 19, permissions](19-permissions.html). Basics first, modules after.
+Run every summarising job in the sensitive folder through local until the rules settle, and update the rules when a real case does not fit. Then return to [how.nixfred.com](index.html) for [Chapter 18, models, thinking and cost](18-models.html) and [Chapter 19, permissions](19-permissions.html). Basics first, modules after.

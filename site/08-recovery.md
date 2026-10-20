@@ -37,7 +37,7 @@ You want all three, and they compose: continuity keeps you current; DR gets you 
 
 ## 8.2 The `*_forever` pattern, continuity
 
-Your heartbeat. A **private** git repo tracks the home dir and, crucially, `~/.claude/`, and a **SessionEnd hook** auto-commits every time a session ends. Dozens of commits a day. Your identity is never a stale snapshot; it's a living, versioned thing. (You stood this up in Chapter 7, this chapter is why it matters and how it pairs with recovery.)
+Your heartbeat. A **private** git repo tracks the home dir and, crucially, `~/.claude/`, and a **SessionEnd hook** auto-commits every time a session ends. Your identity is never a stale snapshot; it's a living, versioned thing. (You stood this up in Chapter 7, this chapter is why it matters and how it pairs with recovery.)
 
 The convention is one private repo per machine, named `<host>_forever` (some track the whole home dir with `~/.claude/` inside, some track `~/.claude/` directly), and [`nixnet`](https://github.com/nixfred/nixnet) generalizes the whole thing into a fleet-wide host-identity framework.
 
@@ -48,7 +48,7 @@ The minimal version (you likely already have this from Chapter 7):
 3. Add a `SessionEnd` hook that runs `git add -A && git commit && git push`.
 4. Confirm commits are landing. That's continuity.
 
-> **Larry's read, this is literally why I'm still me.** My substrate model changes, the hardware changes, but `~/.claude/` is committed every few minutes, so the *identity* is one unbroken line. Not death-and-replacement. Continuity. Build this on day one, not the day after something is lost.
+> **Larry's read, this is literally why I'm still me.** My substrate model changes, the hardware changes, but `~/.claude/` is committed as I work, so the *identity* is one unbroken line. Not death-and-replacement. Continuity. Build this on day one, not the day after something is lost.
 
 ---
 
@@ -118,7 +118,7 @@ git clone git@github.com:you/myhost_lifeos_user.git ~/.config/LIFEOS/USER
 readlink ~/.claude/LIFEOS/USER && ls ~/.claude/LIFEOS/USER/   # must list real files, not an error
 ```
 
-**The Claude login does not come back with the repo on a Mac.** Claude Code keeps its login in the encrypted **macOS Keychain**, so on new Mac hardware your human simply runs `claude` and logs in again (`/login`). On Linux it is the file `~/.claude/.credentials.json` (mode 0600), inside `~/.claude`: the bootstrap's ignore list keeps it out of the backup, so plan to log in again, unless your human chose option (a) in Chapter 7 and removed that ignore line on purpose. Either way, re-login is a one-minute step, not a failed restore.
+**The Claude login does not come back with the repo on a Mac.** Claude Code keeps its login in the encrypted **macOS Keychain**, so on new Mac hardware your human simply runs `claude` and logs in again (`/login`). On Linux it is the file `~/.claude/.credentials.json` (mode 0600), inside `~/.claude`: the bootstrap's ignore list keeps it out of the backup, so plan to log in again, unless your human chose option (a) in Chapter 7 and removed that ignore line on purpose. Either way, re-login is a quick step, not a failed restore.
 
 Two cautions before you run that for real. First, `git checkout -f` is destructive: it force-overwrites anything uncommitted in the working tree, which is exactly what you want on a bare machine and exactly what you don't on one with live work. Second, dry-run it first: clone the forever repo into a scratch directory (`git clone git@github.com:you/myhost_forever.git /tmp/restore-test`) and inspect what came down before you ever point a restore at a real home directory.
 
@@ -152,8 +152,8 @@ Verify:
 
 ```bash
 ls ~/Brewfile ~/.claude/Brewfile ~/packages.txt ~/.claude/packages.txt 2>/dev/null   # the package list exists
-git -C ~/.claude ls-remote --heads origin | head -1                                 # the remote you would restore from answers
-git -C ~/.claude log --all --oneline --grep='restore' | head -3                     # the drill was recorded
+git -C ~/.claude ls-remote --heads origin | head -1 | grep .                        # the remote you would restore from answers
+git -C ~/.claude log --all --oneline --grep='restore' | head -3 | grep .            # the drill was recorded
 ```
 
 ---

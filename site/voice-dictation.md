@@ -6,7 +6,7 @@ summary: "a hotkey that turns speech into text in any app, so your prompts carry
 
 # Talk, Don't Type: Voice Dictation Into Your AI (and Everything Else)
 
-**For you, the human, start here.** Typed prompts stay short because typing is slow, and short prompts get shallow answers. Talking is several times faster, so a spoken prompt naturally carries the background, the constraints and the "oh, and also" that make an answer good. This module gets a dictation tool onto a hotkey that works in every app on your computer: your AI, email, documents, the terminal. The killer demo: hold a key, ramble for two minutes about a real problem, let go, and watch your AI turn it into a plan that is better than anything you would have typed.
+**For you, the human, start here.** Typed prompts stay short because typing is slow, and short prompts get shallow answers. Talking is several times faster, so a spoken prompt naturally carries the background, the constraints and the "oh, and also" that make an answer good. This module gets a dictation tool onto a hotkey that works in every app on your computer: your AI, email, documents, the terminal. The killer demo: hold a key, ramble for a bit about a real problem, let go, and watch your AI turn it into a plan that is better than anything you would have typed.
 
 **What it covers (searchable):** Wispr Flow, Privacy Mode, zero data retention, HIPAA BAA, superwhisper, built-in macOS Dictation, on-device dictation, voxtype on Linux, Claude Code `/voice`, microphone and accessibility permissions, custom dictionary, cloud vs local audio.
 
@@ -32,7 +32,7 @@ Their answer picks the tool. Do not skip this; audio is data.
 
 ## The tools (checked September 2026)
 
-**Wispr Flow, cloud, best accuracy and formatting.** Mac, Windows, iPhone and Android. No official Linux app. Free tier is limited to 2,000 words a week on desktop; Pro is $15 a month or $12 a month billed yearly (see [wisprflow.ai/pricing](https://wisprflow.ai/pricing)). Transcription always happens in the cloud. For choice (b), turn on **Privacy Mode** and turn off cloud storage, which Wispr describes as zero data retention ([data controls](https://wisprflow.ai/data-controls)). A HIPAA BAA is available ([details](https://docs.wisprflow.ai/articles/4218718535-hipaa-compliance-healthcare-use)). Whether that satisfies your human's own professional rules is their call, not yours; say so.
+**Wispr Flow, cloud, best accuracy and formatting.** Mac, Windows, iPhone and Android. No official Linux app. Free tier is limited; Pro is a paid plan (current limits and prices at [wisprflow.ai/pricing](https://wisprflow.ai/pricing)). Transcription always happens in the cloud. For choice (b), turn on **Privacy Mode** and turn off cloud storage, which Wispr describes as zero data retention ([data controls](https://wisprflow.ai/data-controls)). A HIPAA BAA is available ([details](https://docs.wisprflow.ai/articles/4218718535-hipaa-compliance-healthcare-use)). Whether that satisfies your human's own professional rules is their call, not yours; say so.
 
 **On-device on a Mac.** Built-in macOS Dictation is free and runs on-device on Apple silicon (System Settings, Keyboard, Dictation). superwhisper has a free local tier and a paid Pro plan and runs its models on the Mac. Use one of these for choice (c).
 
@@ -65,7 +65,7 @@ Then, on any platform:
 
 1. Test in three apps: your prompt box, an email, a document.
 2. Add your human's names, company names and jargon to the tool's custom dictionary.
-3. Have them dictate a one minute brief about a real task into you, and compare your answer with their usual typed prompt.
+3. Have them dictate a short brief about a real task into you, and compare your answer with their usual typed prompt.
 
 ## Lead with choices (Chapter 3)
 
@@ -83,4 +83,4 @@ Your human holds the hotkey and says: *"I need to answer this client about why t
 
 ## Your next step
 
-Make speaking the default: every prompt longer than a sentence gets dictated for a week. Then go back to [how.nixfred.com](index.html) and pair it with [Chapter 3, talking in choices](03-ask.html). Basics first, modules after.
+Make speaking the default: every prompt longer than a sentence gets dictated until it is a habit. Then go back to [how.nixfred.com](index.html) and pair it with [Chapter 3, talking in choices](03-ask.html). Basics first, modules after.

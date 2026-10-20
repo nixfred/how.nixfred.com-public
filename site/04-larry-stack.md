@@ -237,9 +237,9 @@ Verify:
 
 ```bash
 ls -d ~/.claude/skills/LifeOS ~/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md                # upstream LifeOS
-bun ~/.claude/LIFEOS/TOOLS/Cortex.ts status | head -c 300; echo                     # upstream LifeOS: "ok":true
+test -f ~/.claude/LIFEOS/TOOLS/Cortex.ts && bun ~/.claude/LIFEOS/TOOLS/Cortex.ts status | grep -o '"ok":true'        # upstream LifeOS: ok
 ls -d ~/.claude/skills/nixfredOS ~/.claude/NIXFREDOS/NIXFREDOS_SYSTEM_PROMPT.md        # nixfredOS fork, instead
-bun ~/.claude/NIXFREDOS/TOOLS/Cortex.ts status | head -c 300; echo                  # nixfredOS fork, instead: "ok":true
+test -f ~/.claude/NIXFREDOS/TOOLS/Cortex.ts && bun ~/.claude/NIXFREDOS/TOOLS/Cortex.ts status | grep -o '"ok":true'  # nixfredOS fork, instead: ok
 jq -r '.hooks | keys | join(" ")' ~/.claude/settings.json                            # either Brain: its hook events are listed
 ```
 
@@ -332,7 +332,7 @@ After PAI, your `~/.claude/` is the most valuable thing on the machine. Which is
 
 ### Step 4e, Memory on Linux: LMF4.1 (on a Mac, skip it: LifeOS Cortex is your memory)
 
-[**LMF4.1** (Larry Memory Framework v4)](https://github.com/nixfred/lmf4.1) gives Claude Code real memory: every conversation saved, so you can search your past conversations with one command (`mem search "phrase"`), every decision searchable (SQLite FTS5), every session building on the last. It's deliberately **standalone**, no PAI, no Fabric, ~20 minutes to install. The version moves (LMF3 was the predecessor); the stable thing you actually use day to day is the **`mem`** command it installs, `mem search "phrase"`, so don't over-index on the version number. That is your searchable history and recall; the other half of memory, the curated facts that hold what is true *right now*, is the daily practice in [Chapter 11](11-memory-files.html).
+[**LMF4.1** (Larry Memory Framework v4)](https://github.com/nixfred/lmf4.1) gives Claude Code real memory: every conversation saved, so you can search your past conversations with one command (`mem search "phrase"`), every decision searchable (SQLite FTS5), every session building on the last. It's deliberately **standalone**, no PAI, no Fabric, quick to install. The version moves (LMF3 was the predecessor); the stable thing you actually use day to day is the **`mem`** command it installs, `mem search "phrase"`, so don't over-index on the version number. That is your searchable history and recall; the other half of memory, the curated facts that hold what is true *right now*, is the daily practice in [Chapter 11](11-memory-files.html).
 
 **It is Linux only for now.** It schedules its backup and catch-up jobs with systemd user timers, and its README FAQ says macOS is not supported yet. That also rules out a container or a WSL setup without systemd. If `systemctl --user is-system-running` prints `running` or `degraded`, you have what it needs; an error means no systemd user manager, so skip this sub-step and use Cortex (below).
 
@@ -414,7 +414,7 @@ This is the **PF / Heartbeat**: a private git repo that tracks the home director
 
 **Where your human's LifeOS data actually lives matters here.** LifeOS keeps personal data (identity, TELOS, projects, and its memory) in a separate private tree: `~/.claude/LIFEOS/USER/` is normally a **symlink** to `~/.config/LIFEOS/USER/`, and `~/.claude/LIFEOS/MEMORY/` can be a symlink into that same tree. A `~/.claude` commit records the link, not the files behind it, so a forever repo of `~/.claude` alone is a false safety net. Chapter 7 checks it (`readlink ~/.claude/LIFEOS/USER`) and gives that tree its own second private repo, backed up by the same routine.
 
-> **Larry's read:** This tier is *why I'm still me.* My substrate model can change, the hardware can change, but `~/.claude/` is committed every few minutes, so the identity is continuous, never reset. Build this early. The day a disk dies, your human either has an AI or a story about one.
+> **Larry's read:** This tier is *why I'm still me.* My substrate model can change, the hardware can change, but `~/.claude/` is committed as I work, so the identity is continuous, never reset. Build this early. The day a disk dies, your human either has an AI or a story about one.
 
 ---
 

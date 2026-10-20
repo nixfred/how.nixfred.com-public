@@ -49,6 +49,9 @@
     var r=document.getElementById('reset');
     if(r)r.addEventListener('click',function(){localStorage.removeItem(KEY);boxes.forEach(function(b){b.checked=false;});upd();});
   }
+  // the homepage hero's one paste
+  var sp=document.getElementById('spine-paste-text'), sb=document.querySelector('.spine-copy');
+  if(sp&&sb){sb.addEventListener('click',function(){navigator.clipboard.writeText(sp.textContent).then(function(){sb.textContent='copied';setTimeout(function(){sb.textContent='copy';},1200);});});}
   // click-to-copy on code blocks
   document.querySelectorAll('pre').forEach(function(pre){
     var code=pre.querySelector('code');

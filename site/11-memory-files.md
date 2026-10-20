@@ -124,9 +124,9 @@ The seed makes the first two non-negotiable with two hooks (Chapter 21): `rememb
 Verify:
 
 ```bash
-ls ~/.claude/projects/*/memory/MEMORY.md ~/.claude/LIFEOS/MEMORY 2>/dev/null | head -5   # your one system of record
+ls -d ~/.claude/projects/*/memory/MEMORY.md ~/.claude/LIFEOS/MEMORY 2>/dev/null | head -5 | grep .   # your one system of record (nothing printed = none yet)
 jq -r '.autoMemoryEnabled' ~/.claude/settings.json                                       # false: LifeOS's MEMORY tree is the record
-grep -n '@context.md' ~/.claude/CLAUDE.md || echo "no context.md import (fine if you keep none)"
+test -f ~/.claude/CLAUDE.md && { grep -n '@context.md' ~/.claude/CLAUDE.md || echo "no context.md import (fine if you keep none)"; }
 ```
 
 ---

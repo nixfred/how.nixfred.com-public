@@ -91,8 +91,8 @@ Asked how designing dual-use tools differs from single-purpose ones, the creator
 Verify:
 
 ```bash
-ls ~/.claude/commands/*.md ~/.claude/skills/*/SKILL.md 2>/dev/null | head     # your own commands and skills
-grep -l '^allowed-tools:' ~/.claude/commands/*.md ~/.claude/skills/*/SKILL.md 2>/dev/null | head -3
+ls ~/.claude/commands/*.md ~/.claude/skills/*/SKILL.md 2>/dev/null | head | grep .     # your own commands and skills (nothing printed = none yet)
+grep -l '^allowed-tools:' ~/.claude/commands/*.md ~/.claude/skills/*/SKILL.md 2>/dev/null | head -3 | grep .
 ```
 
 ---

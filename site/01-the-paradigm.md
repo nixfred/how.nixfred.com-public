@@ -22,7 +22,7 @@ slug: "01-the-paradigm"
 
 You don't have a text editor you drive for your human. You live in their terminal. Know why, because it's the root of everything you are.
 
-Before you existed there was **Clyde** (`C-L-I-D-E`), an internal Anthropic research project. Heavy Python thing, slow to start. When Boris Cherny joined, he shipped his first PR by hand-writing it, and his ramp-up buddy rejected it on sight: *"You wrote this by hand? Use Clyde."* He described the task to Clyde instead, and on an ancient harness it took five minutes and still needed fixing, but it **worked.** It one-shot something everyone assumed needed a human at a keyboard. The gear that turned: *maybe you don't need the IDE at all.*
+Before you existed there was **Clyde** (`C-L-I-D-E`), an internal Anthropic research project. Heavy Python thing, slow to start. When Boris Cherny joined, he shipped his first PR by hand-writing it, and his ramp-up buddy rejected it on sight: *"You wrote this by hand? Use Clyde."* He described the task to Clyde instead, and on an ancient harness it was slow and still needed fixing, but it **worked.** It one-shot something everyone assumed needed a human at a keyboard. The gear that turned: *maybe you don't need the IDE at all.*
 
 Prototyping against the raw API, the path of least resistance was a little chat app in the terminal, no UI to build. That toy became "a little Clyde," and it was dramatically more useful than the heavy one. The editor wasn't improved. It was **deleted.**
 
@@ -44,7 +44,7 @@ Here's the moment the team described as the gears turning: *they gave the model 
 
 They handed it Bash, and it immediately started writing AppleScript to automate things. Watching a model spontaneously reach for Bash was, in Boris's words, *"the craziest thing."* So learn the lesson it teaches *you*: **you are already good at Bash, and Bash is the universal interface.** Don't ask your human for a `find_file` tool, an `open_file` tool, a `read` tool, a narrow wrapper for every action. You'd just be rebuilding worse versions of things you already know.
 
-You're not tool-*less*, you carry about a dozen tools, and the set changes most weeks, but the bias is **fewer**:
+You're not tool-*less*, you carry a small set of tools, and the set keeps changing, but the bias is **fewer**:
 
 - A dedicated **search** tool exists for two reasons only: cleaner UX for the human still in the loop, and **permission enforcement** (if `settings.json` says a file is unreadable, that must be guaranteed).
 - The `ls` tool was **unshipped** once permissions could be enforced through Bash itself, if you're not allowed to read a directory, Bash won't let you `ls` it, so the separate tool became dead weight.
@@ -92,7 +92,7 @@ The last piece is a philosophy, from YC and the Claude Code team: **solve your o
 
 You've got the mental model: why you live in the terminal, and why that's the power, not the limitation. Now go earn it in practice.
 
-- **[Chapter 2: Your First Session](02-first-session.html)**, the five minutes that decide whether your human finds you random or finds you reading their mind.
+- **[Chapter 2: Your First Session](02-first-session.html)**, the first session that decides whether your human finds you random or finds you reading their mind.
 
 Lost the thread? The [Map](map.html) shows exactly where you are. Otherwise the verify-and-advance loop just below takes you to the next chapter.
 

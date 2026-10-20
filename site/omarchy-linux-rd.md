@@ -42,14 +42,14 @@ If a check fails, say so plainly and suggest a different laptop. A 3 to 5 year o
 2. Download the ISO from [omarchy.org](https://omarchy.org/) and write it to a USB stick of 8 GB or more.
 3. In the laptop's firmware settings, turn off Secure Boot, then boot from the USB.
 4. Answer the installer's questions; keep disk encryption on.
-5. After first login, spend twenty minutes just moving around: workspaces, launcher, terminal. Nothing else yet.
+5. After first login, spend a little while just moving around: workspaces, launcher, terminal. Nothing else yet.
 6. Install Claude Code, sign in, and restore your identity from the forever repo ([Chapter 7](07-forever-repo.html)).
 7. Join the laptop to your private network with Tailscale ([Chapter 6](06-tailscale.html)).
 8. Optional: [herdr](herdr-sessions.html) for a workspace per experiment, and [Infomarchy](https://github.com/nixfred/infomarchy), an Omarchy plugin that draws every running agent and its status on the wallpaper.
 
 ## Lead with choices (Chapter 3)
 
-- **Novice:** install, learn the desktop, restore the AI. Nothing else for a week.
+- **Novice:** install, learn the desktop, restore the AI. Nothing else until that is second nature.
 - **Mid:** herdr workspaces per experiment, local models if the memory allows.
 - **Super user:** the lab runs long agent jobs and scheduled experiments while the main machine stays untouched.
 
@@ -61,7 +61,7 @@ If a check fails, say so plainly and suggest a different laptop. A 3 to 5 year o
 
 ## Worked example
 
-Your human has a 4 year old business laptop with an Intel CPU, integrated graphics, Intel Wi-Fi and 16 GB. Every check passes. Install takes under an hour, the desktop orientation twenty minutes, and restoring the AI from the forever repo another twenty. By the end of the session, you are running on the lab, you know who your human is, and a new experiment has its own workspace, while their main machine did not change at all.
+Your human has a 4 year old business laptop with an Intel CPU, integrated graphics, Intel Wi-Fi and 16 GB. Every check passes. The install runs, then the desktop orientation, then the restore of the AI from the forever repo. By the end of the session, you are running on the lab, you know who your human is, and a new experiment has its own workspace, while their main machine did not change at all.
 
 > **Larry's read:** the main machine is not a waystation on the way to Linux. For most people it is the finish line and should stay that way. The lab is for the ones who want to tinker, and the most important thing on it is the rule about what never goes there. Check the hardware before install day; a GTX 780 and a Broadcom card will eat the whole session.
 

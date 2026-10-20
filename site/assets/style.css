@@ -219,6 +219,15 @@ details.telos-sec[open]{border-color:#5c4a22}
 .sell .warnbox b{color:var(--warn)}
 .sell .dare{font-size:21px;font-weight:700;color:var(--ink);margin:20px 0 6px;line-height:1.4}
 .sell code{font-family:var(--mono);background:var(--bg3);padding:2px 8px;border-radius:6px;color:var(--accent);font-size:.92em}
+.sell h1.spine{font-size:clamp(24px,3.4vw,38px);line-height:1.15;margin:4px 0 14px;letter-spacing:-.3px}
+.sell h1.spine a{color:var(--accent);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.sell .spine-paste{border:1px solid var(--line);background:var(--bg2);border-radius:12px;padding:12px 14px;margin:0 0 18px}
+.sell .spine-paste-row{display:flex;gap:10px;align-items:flex-start}
+.sell .spine-paste-row code{flex:1;white-space:pre-wrap;font-size:14px;line-height:1.55;padding:0;background:transparent;color:var(--ink)}
+.sell .spine-copy{flex:none;font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg3);color:var(--ink);cursor:pointer}
+.sell .spine-sub{margin:10px 0 0;font-size:14px;color:var(--ink3);line-height:1.6}
+.sell h2.hi{font-size:clamp(22px,3vw,32px);line-height:1.15;margin:16px 0 10px}
+.offer .hire{margin:14px 0 6px;padding:10px 14px;border-left:3px solid var(--line);color:var(--ink2);font-size:15px;line-height:1.6}
 .starburst{display:inline-block;background:var(--warn);color:#2b1d00;font-weight:800;padding:8px 16px;border-radius:9px;transform:rotate(-2.5deg);font-size:14px;letter-spacing:.5px;margin:8px 0 4px}
 .badads{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:18px 0 10px}
 @media(max-width:560px){.badads{grid-template-columns:1fr}}

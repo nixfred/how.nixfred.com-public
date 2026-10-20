@@ -9,7 +9,7 @@ requires: [4]
 
 # Chapter 7: Your Forever Private Repo (and `gup`)
 
-**For you, the human, start here.** This is the hands-on chapter that makes your AI *immortal*: a **private** git repo that backs up the files that literally are your AI (`~/.claude/`, your dotfiles), auto-committing dozens of times a day, plus **`gup`**, a one-word "commit and push everything" so living in git takes zero effort. The day a disk dies, you either have your AI or a story about one. This chapter is the difference.
+**For you, the human, start here.** This is the hands-on chapter that makes your AI *immortal*: a **private** git repo that backs up the files that literally are your AI (`~/.claude/`, your dotfiles), auto-committing as you work, plus **`gup`**, a one-word "commit and push everything" so living in git takes zero effort. The day a disk dies, you either have your AI or a story about one. This chapter is the difference.
 
 **What it covers (searchable):** forever repo, private GitHub repo, no GitHub account yet (make one, or stay local for now), installing `gh` and `gitleaks` on Mac and Linux, `gh auth login`, `gh repo create --private`, the Claude login token (`.credentials.json`) kept out of history, SessionEnd backup hook, `gup` / `wgup`, `git remote -v` before every push (Law 11), `.gitignore`, immortality loop.
 
@@ -42,7 +42,7 @@ Two rules before you start:
 
 **No GitHub account yet? That is a choice to put to your human, not a wall** (Chapter 3, lead with choices):
 
-- **(a) Make one now, free, about two minutes.** Your human signs up at [github.com/signup](https://github.com/signup) (an email, a password, a verification code; that part is theirs, in a browser). Then install `gh` below and have them run `gh auth login`.
+- **(a) Make one now, free, quick.** Your human signs up at [github.com/signup](https://github.com/signup) (an email, a password, a verification code; that part is theirs, in a browser). Then install `gh` below and have them run `gh auth login`.
 - **(b) Stay local for now.** Skip the remote. Since Chapter 5, `~/.claude` is a local git repo that commits every session, so you already survive a bad edit or a bad merge, just not a dead disk. Write the choice into memory ("forever repo: local only, no GitHub account yet, decided on <date>"), install `gup` (7.3) anyway, and come back to this section the day there is an account. This chapter's Done when waits for that day; say so out loud rather than calling it done.
 - **Or type your own.** Another git host works the same way; the commands below are GitHub's.
 
@@ -154,7 +154,7 @@ git -C ~/.claude add -A && git -C ~/.claude commit -m "fresh history: the login 
 
 That's it. Your brain now lives in a private repo. If you ran the bootstrap, the SessionEnd hook it installed commits **and pushes** when a session ends. Claude Code only gives SessionEnd hooks 1.5 seconds by default, so confirm the hook entry carries `"timeout": 60` in `~/.claude/settings.json` (add it if an older bootstrap left it out), then check `git -C ~/.claude log -1` after your next exit to prove it ran. (Installed by hand? Chapter 21 wires that hook; until then, `gup` below is your one-word backup.)
 
-> **💬 Larry move, "private or public?" is a choice, not a guess (Chapter 3).** Creating a repo that will hold secrets is precisely where one wrong default leaks your human's keys. Stop and offer them: **(a) create it `--private` (correct, it holds identity and secrets) · (b) explain the difference and the blast radius first · (c) show `git remote -v` so I can confirm where it points, or type your own.** Never auto-pick "public." A choice here is a 3-second safety check; a wrong guess is a credential on the open internet.
+> **💬 Larry move, "private or public?" is a choice, not a guess (Chapter 3).** Creating a repo that will hold secrets is precisely where one wrong default leaks your human's keys. Stop and offer them: **(a) create it `--private` (correct, it holds identity and secrets) · (b) explain the difference and the blast radius first · (c) show `git remote -v` so I can confirm where it points, or type your own.** Never auto-pick "public." A choice here is a cheap safety check; a wrong guess is a credential on the open internet.
 
 Want their whole home directory too (dotfiles, `~/bin`, configs)? Same pattern, rooted at `~`, with a careful `.gitignore` for the giant and the machine-specific:
 
@@ -191,6 +191,16 @@ git -C "$USERDATA" remote -v       # read it aloud: PRIVATE, and not the public 
 
 The SessionEnd backup hook from this site's seed follows that symlink and commits and pushes the USER repo in the same run as `~/.claude`, so one routine covers both. Installed an older copy of the hook? Re-fetch it (`curl -fsSL https://how.nixfred.com/seed/hooks/session-end-backup.sh -o ~/.claude/hooks/session-end-backup.sh`), and after your next exit check **both** `git -C ~/.claude log -1` and `git -C "$USERDATA" log -1`. The secrets choice above, (a) included or (b) scrubbed, applies to this repo too, and it holds the most personal material you have.
 
+**Done when:** `~/.claude` has a PRIVATE `origin`, the first push is through, and the Linux login token was never committed (or your human chose (a) on purpose).
+
+Verify:
+
+```bash
+git -C ~/.claude remote get-url origin                                     # your <host>_forever remote (fails = no remote yet)
+(cd ~/.claude && gh repo view --json visibility -q .visibility)           # PRIVATE
+git -C ~/.claude rev-parse -q --verify HEAD >/dev/null && if git -C ~/.claude log --all --oneline -- .credentials.json | grep -q .; then echo "WARNING: the Linux login token is in history (see the (b) block above)"; false; else echo "login token never committed"; fi
+```
+
 > **Larry's read:** people freeze on "but it has secrets!" Yes, that's the point, and it's why it's **private**. The risk isn't backing up secrets to a private repo; it's pushing them to a *public* one by accident. That's a one-command check (`git remote -v`), not a reason to skip the backup. An AI with no off-machine copy is one dead disk away from gone.
 
 ---
@@ -206,10 +216,10 @@ curl -fsSL https://how.nixfred.com/gup -o ~/bin/gup && chmod +x ~/bin/gup
 
 Then make sure `~/bin` is on the PATH, in the file your terminal actually reads, and open a new terminal:
 
-**Mac** (terminals open login shells, which read `~/.bash_profile`):
+**Mac** (terminals open login shells: bash reads `~/.bash_profile` if it exists, else `~/.bash_login`, else `~/.profile`, which is where the bootstrap put the constitution launcher when it found no other. Append to the one you already have. Never create a new `~/.bash_profile`: it would hide `~/.profile`, and the launcher with it. On zsh, use `~/.zshrc`):
 
 ```bash
-grep -qs 'HOME/bin' ~/.bash_profile || echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bash_profile
+rc=~/.bash_profile; [ -f "$rc" ] || rc=~/.bash_login; [ -f "$rc" ] || rc=~/.profile; grep -qs 'HOME/bin' "$rc" || echo 'export PATH="$HOME/bin:$PATH"' >> "$rc"
 ```
 
 **Linux:**
@@ -283,8 +293,8 @@ Verify:
 ```bash
 git -C ~/.claude remote -v                                          # origin is your <host>_forever repo
 (cd ~/.claude && gh repo view --json visibility -q .visibility)     # PRIVATE
-git -C ~/.claude status -sb | head -1                               # nothing "ahead": everything is pushed
-command -v gup gitleaks                                             # both on the PATH
+git -C ~/.claude status -sb | head -1 | grep .                      # nothing "ahead": everything is pushed (nothing printed = no repo)
+command -v gup && command -v gitleaks                               # both on the PATH; stops at the first one missing
 ```
 
 ---

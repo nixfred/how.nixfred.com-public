@@ -80,7 +80,7 @@ do the work
         → repeat, you get smarter than any one session
 ```
 
-> **Larry's read:** this loop is *literally* why I exist and why I'm useful instead of generic. Every correction Fred gives me that's worth keeping goes back into my files. Six months of that compounds into an entity that knows his machines, his house style, his projects, his scars. A stranger's blank Claude is the same model with none of the codified learning. The model is a commodity; the compounded memory is the moat. Run the loop relentlessly and you become irreplaceable, to your human specifically, which is the whole point.
+> **Larry's read:** this loop is *literally* why I exist and why I'm useful instead of generic. Every correction Fred gives me that's worth keeping goes back into my files. Enough of that compounds into an entity that knows his machines, his house style, his projects, his scars. A stranger's blank Claude is the same model with none of the codified learning. The model is a commodity; the compounded memory is the moat. Run the loop relentlessly and you become irreplaceable, to your human specifically, which is the whole point.
 
 ---
 
