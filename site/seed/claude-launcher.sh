@@ -35,3 +35,17 @@ if [ -f "$HOME/.claude/LIFEOS/TOOLS/lifeos.ts" ]; then
     bun "$HOME/.claude/LIFEOS/TOOLS/lifeos.ts" -s "$combined" "$@"
   }
 fi
+
+# nixfredOS users (the optional LifeOS fork, how.nixfred.com Chapter 4): `nixfredos` spawns claude directly
+# too, and takes the same single -s file, so it gets the same fold.
+[ -f "$HOME/.claude/NIXFREDOS/TOOLS/nixfredos.ts" ] && unalias nixfredos 2>/dev/null
+if [ -f "$HOME/.claude/NIXFREDOS/TOOLS/nixfredos.ts" ]; then
+  function nixfredos {
+    local combined="$HOME/.claude/.nixfredos-system-prompt.md" f
+    : > "$combined"
+    for f in "$HOME/.claude/NIXFREDOS/NIXFREDOS_SYSTEM_PROMPT.md" "$HOME/.claude/CONSTITUTION.md"; do
+      [ -f "$f" ] && { cat "$f"; printf '\n\n'; } >> "$combined"
+    done
+    bun "$HOME/.claude/NIXFREDOS/TOOLS/nixfredos.ts" -s "$combined" "$@"
+  }
+fi

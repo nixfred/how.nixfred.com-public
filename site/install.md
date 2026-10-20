@@ -113,6 +113,13 @@ Snapshot `~/.claude/` per Rule 0 before any install. Then proceed.
   ```
   Stop its Interview after the name (TELOS waits for Chapter 14). Full treatment, with the read-only
   previews and the `lifeos` launcher: https://how.nixfred.com/04-larry-stack (Step 4b)
+  Optional: the user may pick nixfredOS, a fork of LifeOS, instead. Same steps under its own names
+  (`~/.claude/skills/nixfredOS`, `~/.claude/NIXFREDOS/`, `nixfredos`), with its own bootstrap:
+  ```bash
+  curl -fsSL https://raw.githubusercontent.com/nixfred/nixfredOS/main/nixfredOS/install/install.sh | DRY_RUN=1 bash
+  curl -fsSL https://raw.githubusercontent.com/nixfred/nixfredOS/main/nixfredOS/install/install.sh | bash
+  ```
+  The choice and the full name map: https://how.nixfred.com/04-larry-stack (Tier 1, just before Step 4b)
 
 ### Tier 1b, Identity seed (what makes it a member of the line, not a stock install)
 The brain gives the *shape*; the seed gives the *self*: `CONSTITUTION.md` (the laws), `LINEAGE.md`,

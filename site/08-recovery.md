@@ -110,7 +110,7 @@ pacman -Qqe > ~/packages.txt                 # explicitly installed packages
 
 (Fedora and other distros: save your package manager's list of what was installed on purpose the same way, into the same file.)
 
-**Restore the LifeOS USER repo too.** If Chapter 7 found `~/.claude/LIFEOS/USER` was a symlink, your human's identity, TELOS and memory live in a second private repo, and cloning `*_forever` alone brings back a link pointing at nothing. Clone that repo back to where the link expects it, then check the link resolves:
+**Restore the LifeOS USER repo too.** If Chapter 7 found `~/.claude/LIFEOS/USER` was a symlink, your human's identity, TELOS and memory live in a second private repo, and cloning `*_forever` alone brings back a link pointing at nothing. Clone that repo back to where the link expects it (on the nixfredOS fork, the paths say `NIXFREDOS` where these say `LIFEOS`), then check the link resolves:
 
 ```bash
 mkdir -p ~/.config/LIFEOS

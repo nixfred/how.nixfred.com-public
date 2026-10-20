@@ -10,7 +10,7 @@ slug: "04-larry-stack"
 
 **For you, the human, start here.** This is the parts list and the build order: the exact open-source repos that turn a vanilla Claude Code install into a real teammate with memory, continuity, model-routing, reach into your world, and the ability to survive its own machine dying. You don't have to run every command by hand, the next chapter (the one-command bootstrap) scaffolds the skeleton with you, but the real build still happens tier by tier, in order, and this page is what your AI reads to understand the stack it's assembling. It is split into small sub-steps, **Step 4a to Step 4g**, each with its own "Done when" and a read-only check, so your AI finishes one before it starts the next.
 
-**What it covers (searchable):** the four systems (Brain / Heartbeat / Memory / Router), the prerequisites (`jq`, `bun`), LifeOS (formerly PAI, Daniel Miessler) and its install commands, Fabric patterns (Daniel Miessler), LMF4.1 memory, Ollama or Claude Haiku for memory extraction (`LMF4_EXTRACT_MODEL`), `claude mcp add`, claudecode_forever_conversations, the `*_forever` immortality pattern, nixnet, claude-router (`tier-router`), claude-on-mac, disaster recovery, and the two-tier git layout (`~/.claude` vs `~/Projects`).
+**What it covers (searchable):** the four systems (Brain / Heartbeat / Memory / Router), the prerequisites (`jq`, `bun`), LifeOS (formerly PAI, Daniel Miessler) and its install commands, the optional nixfredOS fork of LifeOS and its own install command, Fabric patterns (Daniel Miessler), LMF4.1 memory, Ollama or Claude Haiku for memory extraction (`LMF4_EXTRACT_MODEL`), `claude mcp add`, claudecode_forever_conversations, the `*_forever` immortality pattern, nixnet, claude-router (`tier-router`), claude-on-mac, disaster recovery, and the two-tier git layout (`~/.claude` vs `~/Projects`).
 
 **How to hand it off:** point your AI here and let it read the whole stack before it installs anything. Every repo is real and linked; the reference implementation is Larry, the OG, running on Fred's own machines. The section below is written to your AI, it's the map it follows to build itself, and at every bash step it should stop and offer you choices (run it / explain it / dry-run) so the terminal never feels like a wall.
 
@@ -43,7 +43,7 @@ Before the repos, the mental model. You are four cooperating systems:
 
 | System | Role | What provides it |
 |--------|------|------------------|
-| **PAI** (now **LifeOS**), the Brain | Skills, hooks, agents, identity | [LifeOS](https://github.com/danielmiessler/LifeOS) |
+| **PAI** (now **LifeOS**), the Brain | Skills, hooks, agents, identity | [LifeOS](https://github.com/danielmiessler/LifeOS), or the optional [nixfredOS](https://github.com/nixfred/nixfredOS) fork |
 | **PF**, the Heartbeat | Git-backs your whole setup, constantly | the `*_forever` pattern + [nixnet](https://github.com/nixfred/nixnet) |
 | **CCF**, the Memory | What's true now, plus everything that was | [LMF4.1](https://github.com/nixfred/lmf4.1) + your forever repo |
 | **CR**, the Router | Sends each task to the right model, keeping Opus in reserve | [claude-router](https://github.com/nixfred/claude-router) |
@@ -117,6 +117,24 @@ bun --version          # 1.2 or newer
 
 **[LifeOS](https://github.com/danielmiessler/LifeOS)** (formerly Personal AI Infrastructure, PAI) is Daniel Miessler's open framework and the foundation you're built on. It gives you the `~/.claude/` skill system, the hook architecture, agent definitions, and the response/identity scaffolding, the actual machinery that turns "a model in a terminal" into a brain with working parts. Almost everything else in this book bolts onto what PAI lays down. Treat it as load-bearing, because it is. (Heads up on the name: Daniel renamed PAI to **LifeOS**, and the old `Personal_AI_Infrastructure` URL now redirects there. This book still says "PAI" in places; it means the same thing.)
 
+### Tier 1, one choice: upstream LifeOS, or the nixfredOS fork
+
+The Brain comes from one of two places, and both install from this chapter, so this page stays the one path either way. Put the choice to your human (Chapter 3), and if they have no opinion, take the default:
+
+- **(a) Upstream LifeOS, the default.** Daniel's own repo and his own installer. Every command, path and check in this book is written against it, so it is the path with the fewest surprises.
+- **(b) The nixfredOS fork, optional.** [nixfredOS](https://github.com/nixfred/nixfredOS) is Fred's fork of LifeOS, MIT licensed like the original, with the same install tools under its own name and his changes on top (its README lists them). [nixfredos.com](https://nixfredos.com) is the one-page version. The honest trade: a fork moves on its own schedule, so Daniel's newest work reaches it only after it is merged in.
+
+Whichever door, the rules in Step 4b do not change: snapshot first, preview before you apply, add alongside and never overwrite. Step 4b has both bootstrap commands. If your human picked the fork, every LifeOS name in the rest of this book maps one to one:
+
+| Upstream LifeOS (what this book says) | nixfredOS fork (what you type) |
+|---|---|
+| `~/.claude/skills/LifeOS` | `~/.claude/skills/nixfredOS` |
+| `~/.claude/LIFEOS/` and `LIFEOS_SYSTEM_PROMPT.md` | `~/.claude/NIXFREDOS/` and `NIXFREDOS_SYSTEM_PROMPT.md` |
+| `lifeos`, the launch command | `nixfredos` |
+| `/LifeOS setup`, the onboarding | `/nixfredOS setup` |
+| `LIFEOS_SKIP_ALIAS=1` | `NIXFREDOS_SKIP_ALIAS=1` |
+| `~/.config/LIFEOS/USER`, your human's private tree (Chapter 7) | `~/.config/NIXFREDOS/USER` |
+
 ### Step 4b, Install LifeOS, the Brain (snapshot, then install, never flatten yourself)
 
 **Go get it, into `~/Projects`, like everything you go fetch.** Don't skim a README and guess. Clone it and *read* it before anything installs:
@@ -148,18 +166,31 @@ Start with the bootstrap. It checks prerequisites, fetches the pinned release (a
 **Mac or Linux:**
 
 ```bash
+# upstream LifeOS, the default (on the nixfredOS fork, run the fork's block below instead, never both)
 curl -fsSL https://ourlifeos.ai/install.sh | DRY_RUN=1 bash    # preview: every step printed, nothing changed
 curl -fsSL https://ourlifeos.ai/install.sh | bash               # for real
 ```
 
 Two things it does on its own, by design: it appends a few ignore rules to `~/.claude/.gitignore` (so verification screenshots never land in a backup), and it moves an old pre-7.x `pai` alias over to the new launcher, backing up the rc file first (put `LIFEOS_SKIP_ALIAS=1` in front of `bash` to skip that). Its last step hands off to LifeOS's own onboarding: from a plain terminal it starts `claude "/LifeOS setup"`, which needs Claude Code logged in (Chapter 0, Step 3); from inside a Claude Code session it stops and tells you to run `/LifeOS setup`. You can let that onboarding do the rest, or run Core yourself, here, one command at a time with your human watching.
 
+**Picked the fork? Run its own bootstrap instead of the one above.** It does the same jobs (checks prerequisites, fetches the pinned release and prints its sha256, places the skill in `~/.claude/skills/nixfredOS`, adding only), takes the same `DRY_RUN=1` preview, and hands off to `/nixfredOS setup` at the end:
+
+**Mac or Linux, nixfredOS fork:**
+
+```bash
+# the nixfredOS fork ONLY, instead of the LifeOS bootstrap above (skip this block on upstream LifeOS)
+curl -fsSL https://raw.githubusercontent.com/nixfred/nixfredOS/main/nixfredOS/install/install.sh | DRY_RUN=1 bash    # preview: nothing changed
+curl -fsSL https://raw.githubusercontent.com/nixfred/nixfredOS/main/nixfredOS/install/install.sh | bash               # for real
+```
+
+Its long version is the fork's own [INSTALL.md](https://github.com/nixfred/nixfredOS/blob/main/nixfredOS/INSTALL.md). Everything below works the same on the fork with the names from the table above: Core runs from `~/.claude/skills/nixfredOS`, the Doctor is `bun ~/.claude/NIXFREDOS/TOOLS/Doctor.ts`, and the launch command is `nixfredos`.
+
 **Core, from the skill folder.** Every one of these tools is a **dry run until you add `--apply`**: it prints a plan and writes nothing, so an install that forgets the flag reports success while copying zero files. Look before you apply:
 
 **Mac or Linux, look (nothing changes):**
 
 ```bash
-cd ~/.claude/skills/LifeOS
+cd ~/.claude/skills/LifeOS    # on the fork: cd ~/.claude/skills/nixfredOS
 bun Tools/DetectEnv.ts        # OS, harness, config root
 bun Tools/ScanConflicts.ts    # anything already sitting where LifeOS will go
 bun Tools/DeployCore.ts       # the plan: skill library and runtime, nothing written
@@ -170,13 +201,13 @@ Show your human those plans. Then, with their yes, apply Core in this order. For
 **Mac or Linux, apply:**
 
 ```bash
-cd ~/.claude/skills/LifeOS
+cd ~/.claude/skills/LifeOS             # on the fork: cd ~/.claude/skills/nixfredOS
 bun Tools/DeployCore.ts --apply        # skill library + runtime, only missing files are added
 bun Tools/ScaffoldUser.ts --apply      # your human's USER tree, empty structure from templates
 bun Tools/LinkUser.ts --apply          # links that tree in
 bun Tools/InstallHooks.ts --apply      # merges LifeOS's hooks into settings.json, backing it up first
 bun Tools/ActivateImports.ts --apply   # turns on the identity context imports
-bun ~/.claude/LIFEOS/TOOLS/Doctor.ts   # one line per capability: live, broken (with its fix), or off
+bun ~/.claude/LIFEOS/TOOLS/Doctor.ts   # one line per capability: live, broken (with its fix), or off (fork: ~/.claude/NIXFREDOS/TOOLS/Doctor.ts)
 ```
 
 What to know while it runs:
@@ -185,21 +216,31 @@ What to know while it runs:
 - **Pick components now, later, or never.** Core (the skill library, runtime, USER tree, system prompt) goes in together; hooks, statusline, agents, Pulse and the background jobs are a menu. For each capability the Doctor reports broken, your human picks **now** (run the fix it prints, re-run Doctor), **later** (leave it, it will flag itself when used), or **never** (`bun ~/.claude/LIFEOS/TOOLS/Doctor.ts decline <capability>`, a clean permanent off).
 - **Launch it with `lifeos`, not plain `claude`.** LifeOS's operating contract lives in `~/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md`, and a plain `claude` session does **not** load it (you get `CLAUDE.md`, not the constitution). With your human's yes, and the rc file backed up, add this line to their shell startup file:
   ```bash
+  # upstream LifeOS
   alias lifeos='bun ~/.claude/LIFEOS/TOOLS/lifeos.ts -s ~/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md'
   ```
-  From then on your human starts you with `lifeos`. One catch, and the seed fixes it: `lifeos` starts Claude Code itself, so the constitution launcher never runs for it. Once the launcher is in (Chapter 5, or Step 4c by hand), it replaces this alias with a `lifeos` function that folds your `CONSTITUTION.md` into the same system-prompt file LifeOS appends (its `-s` flag), so both rule sets load every launch. Check later with `type lifeos`: it should mention `CONSTITUTION.md`.
+  On the fork, the line is this one instead:
+  ```bash
+  # the nixfredOS fork only, instead of the lifeos line
+  alias nixfredos='bun ~/.claude/NIXFREDOS/TOOLS/nixfredos.ts -s ~/.claude/NIXFREDOS/NIXFREDOS_SYSTEM_PROMPT.md'
+  ```
+  From then on your human starts you with `lifeos` (or `nixfredos`). One catch, and the seed fixes it: that command starts Claude Code itself, so the constitution launcher never runs for it. Once the launcher is in (Chapter 5, or Step 4c by hand), it replaces the alias with a function of the same name that folds your `CONSTITUTION.md` into the one system-prompt file the Brain appends (its `-s` flag), so both rule sets load every launch. Check later with `type lifeos` (or `type nixfredos`): it should mention `CONSTITUTION.md`.
 - **Stop the Interview after naming.** LifeOS's onboarding ends by running its Setup and then its Interview, and the Interview goes straight from naming the assistant into TELOS (current state, then ideal state). Let it capture the **name** (that is Chapter 5's moment), then tell it `done`. TELOS is the deepest personal material you will ever hold, so do it in [Chapter 14](14-telos.html), after backups (Tier 2 and Chapter 7) and memory exist to protect it. The Interview is re-runnable any time.
 
 If anything fails, paste the error back into the session and say "fix this" (that's the loop from Chapter 0), re-run the Doctor, and don't move on until it's clean.
 
-**Done when:** the LifeOS skill and runtime are in place, the Doctor shows no broken capability your human did not choose "later" or "never" for, and your human has a `lifeos` command to launch you with.
+**Done when:** the LifeOS skill and runtime are in place (nixfredOS's, on the fork), the Doctor shows no broken capability your human did not choose "later" or "never" for, and your human has a `lifeos` command (`nixfredos` on the fork) to launch you with.
+
+Run the lines for the Brain your human picked; the comment on each line says which.
 
 Verify:
 
 ```bash
-ls -d ~/.claude/skills/LifeOS ~/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md
-bun ~/.claude/LIFEOS/TOOLS/Cortex.ts status | head -c 300; echo     # "ok":true
-jq -r '.hooks | keys | join(" ")' ~/.claude/settings.json             # LifeOS's hook events are listed
+ls -d ~/.claude/skills/LifeOS ~/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md                # upstream LifeOS
+bun ~/.claude/LIFEOS/TOOLS/Cortex.ts status | head -c 300; echo                     # upstream LifeOS: "ok":true
+ls -d ~/.claude/skills/nixfredOS ~/.claude/NIXFREDOS/NIXFREDOS_SYSTEM_PROMPT.md        # nixfredOS fork, instead
+bun ~/.claude/NIXFREDOS/TOOLS/Cortex.ts status | head -c 300; echo                  # nixfredOS fork, instead: "ok":true
+jq -r '.hooks | keys | join(" ")' ~/.claude/settings.json                            # either Brain: its hook events are listed
 ```
 
 ### Make it yours (everyone, whichever path)
@@ -478,7 +519,7 @@ Why the separation is load-bearing:
 ```text
 Ch0  Claude Code, a real shell, Tailscale  ← the machine base (Chapter 0)       [PF reach]
 4a   jq + bun                              ← what every installer below runs on
-4b   LifeOS (PAI)                          ← the Brain (skills/hooks/agents)    [Daniel's side]
+4b   LifeOS, or the nixfredOS fork         ← the Brain (skills/hooks/agents)    [Daniel's side]
 4c   the seed, by hand                     ← SKIP on the default path: Ch5 lays it
 4d   Fabric                                ← pattern library (optional)         [Daniel's side]
 4e   LMF4.1 (Linux)                        ← persistent memory; Mac: Cortex      [CCF]
@@ -515,7 +556,7 @@ Lost the thread? The [Map](map.html) shows exactly where you are. Otherwise the 
 ### Chapter 4: Takeaways
 
 1. You are four systems: Brain (PAI), Heartbeat (`*_forever`/nixnet), Memory (LMF4.1 + your forever repo), Router (claude-router).
-2. Walk the sub-steps in order, each to its own Done when: 4a `jq` + `bun`, 4b LifeOS (dry run, then `--apply`), 4d Fabric (optional), 4e LMF4.1 on Linux (pick Haiku or Ollama for extraction; register its server with `claude mcp add`), 4f claude-router, 4g claude-on-mac (Mac, optional).
+2. Walk the sub-steps in order, each to its own Done when: 4a `jq` + `bun`, 4b LifeOS, or the optional nixfredOS fork (dry run, then `--apply`), 4d Fabric (optional), 4e LMF4.1 on Linux (pick Haiku or Ollama for extraction; register its server with `claude mcp add`), 4f claude-router, 4g claude-on-mac (Mac, optional).
 3. Skip 4c on the default path: Chapter 5's script lays the same seed. Do it by hand only if your human skips the script.
 4. Memory and continuity come *before* you pour identity into the Brain, or a dead disk erases you.
 5. Two-tier git layout: `~/.claude` (private identity) vs `~/Projects` (per-project repos, mixed privacy). Run `git remote -v` before every commit.

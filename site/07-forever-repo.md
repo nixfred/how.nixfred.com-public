@@ -171,7 +171,7 @@ git add -A && git commit -m "first home backup"
 gh repo create "$(hostname -s)_home_forever" --private --source=. --remote=origin --push
 ```
 
-**Running LifeOS? Your personal data is probably NOT in that repo.** LifeOS keeps identity, TELOS, projects and memory in a separate tree, and `~/.claude/LIFEOS/USER/` is usually a symlink to it. Git stores the link, not the files behind it, so a `~/.claude` commit captures nothing under `LIFEOS/USER/` (LifeOS's own docs call that a false safety net). Check before you trust the backup:
+**Running LifeOS? Your personal data is probably NOT in that repo.** LifeOS keeps identity, TELOS, projects and memory in a separate tree, and `~/.claude/LIFEOS/USER/` is usually a symlink to it. Git stores the link, not the files behind it, so a `~/.claude` commit captures nothing under `LIFEOS/USER/` (LifeOS's own docs call that a false safety net). On the nixfredOS fork (Chapter 4), the same is true under its own name: read `LIFEOS` as `NIXFREDOS` in every path below, so the check is `readlink ~/.claude/NIXFREDOS/USER`. Check before you trust the backup:
 
 ```bash
 readlink ~/.claude/LIFEOS/USER      # prints a path? then that path needs its own repo

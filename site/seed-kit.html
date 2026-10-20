@@ -65,7 +65,7 @@
 <p><strong>install.sh</strong>, the scaffolder (<a href="https://how.nixfred.com/install.sh">raw</a>, with a <a href="https://how.nixfred.com/install.sh.sha256">sha256</a>). In order: backs up an existing <code>~/.claude</code> to <code>~/.claude.backup.&lt;timestamp&gt;</code>; lays down every seed file, writing <code>&lt;file&gt;.seed</code> beside anything that already exists instead of overwriting it; adds one line that loads the launcher to <code>~/.bashrc</code>, to whichever login file your shell reads (<code>~/.bash_profile</code>, else <code>~/.bash_login</code>, else <code>~/.profile</code>, because every Mac terminal window is a login shell) and to <code>~/.zshrc</code> if you use zsh; writes PROVENANCE.md; merges the hooks into <code>settings.json</code> (appending, skipping anything already wired); makes <code>~/.claude</code> a git repo with a first commit; clones the stack into <code>~/Projects</code> (LifeOS, nixnet, LMF4.1 on Linux only, claude-on-mac on a Mac) without installing it. Flags: <code>--name</code>, <code>--human</code>, <code>--dry-run</code>, <code>--interactive</code>, <code>--no-stack</code>, <code>--with-tailscale</code>. Log at <code>~/.larry-install.log</code>.</p>
 <p><strong>install.md</strong>, the runbook an installing AI follows (<a href="https://how.nixfred.com/install.md">raw</a>): ask first, back up, then Tier 0 (machine base), Tier 1 (the brain), Tier 1b (this seed), Tier 2 (memory and the forever repo), Tier 3 (routing), Tier 4 (capabilities), Tier 5 (recovery), then the audit.</p>
 <p><strong>Every file here, and the ones only described above, is also readable verbatim through the MCP:</strong> <code>get_file(&quot;seed/CLAUDE.md&quot;)</code>, <code>get_file(&quot;install.sh&quot;)</code>, and so on (<code>get_file</code> with no path lists them all, with sha256).</p>
-<p><strong>Running LifeOS?</strong> <code>lifeos</code> starts Claude Code itself, so the launcher&#39;s <code>claude</code> wrapper never runs for it. The launcher handles that: when LifeOS is installed it replaces the plain <code>alias lifeos</code> with a <code>lifeos</code> function that folds <code>CONSTITUTION.md</code> into the one system-prompt file LifeOS appends (its <code>-s</code> flag; verified in LifeOS&#39;s <code>lifeos.ts</code>, which passes that single file to <code>--append-system-prompt-file</code>). Check: <code>type lifeos</code> mentions <code>CONSTITUTION.md</code>.</p>
+<p><strong>Running LifeOS?</strong> <code>lifeos</code> starts Claude Code itself, so the launcher&#39;s <code>claude</code> wrapper never runs for it. The launcher handles that: when LifeOS is installed it replaces the plain <code>alias lifeos</code> with a <code>lifeos</code> function that folds <code>CONSTITUTION.md</code> into the one system-prompt file LifeOS appends (its <code>-s</code> flag; verified in LifeOS&#39;s <code>lifeos.ts</code>, which passes that single file to <code>--append-system-prompt-file</code>). Check: <code>type lifeos</code> mentions <code>CONSTITUTION.md</code>. On the nixfredOS fork (Chapter 4), the same fold wraps <code>nixfredos</code> (its <code>nixfredos.ts</code> takes the same single <code>-s</code> file); check with <code>type nixfredos</code>.</p>
 <h2>The files, verbatim</h2>
 <h3>seed/CONSTITUTION.md</h3>
 <p>The laws, twenty of them, the same ones Larry runs on. Loaded into the system prompt on every launch by the launcher below, so they are re-read every turn and survive /compact.</p>
@@ -292,7 +292,7 @@ See `LINEAGE.md`.*
 </code></pre>
 <h3>seed/claude-launcher.sh</h3>
 <p>Wraps claude with --append-system-prompt-file ~/.claude/CONSTITUTION.md. Sourced from your shell rc. Check it: type claude.</p>
-<p>Served at <a href="https://how.nixfred.com/seed/claude-launcher.sh">https://how.nixfred.com/seed/claude-launcher.sh</a> · sha256 <code>4fd3eb2bdcab0db6ca6796a35a505a25704c2b05c07f249c0c0a2cf0fc82da66</code></p>
+<p>Served at <a href="https://how.nixfred.com/seed/claude-launcher.sh">https://how.nixfred.com/seed/claude-launcher.sh</a> · sha256 <code>8bb54685df3403bc7d1b348abc52deadebf4f19823768badc1606804cd5318f1</code></p>
 <pre><code class="language-bash"># how.nixfred.com seed: the constitution launcher.
 #
 # Sourced from your shell rc (~/.bashrc, ~/.bash_profile, ~/.zshrc). It wraps `claude` so every launch
@@ -328,6 +328,20 @@ if [ -f &quot;$HOME/.claude/LIFEOS/TOOLS/lifeos.ts&quot; ]; then
       [ -f &quot;$f&quot; ] &amp;&amp; { cat &quot;$f&quot;; printf &#39;\n\n&#39;; } &gt;&gt; &quot;$combined&quot;
     done
     bun &quot;$HOME/.claude/LIFEOS/TOOLS/lifeos.ts&quot; -s &quot;$combined&quot; &quot;$@&quot;
+  }
+fi
+
+# nixfredOS users (the optional LifeOS fork, how.nixfred.com Chapter 4): `nixfredos` spawns claude directly
+# too, and takes the same single -s file, so it gets the same fold.
+[ -f &quot;$HOME/.claude/NIXFREDOS/TOOLS/nixfredos.ts&quot; ] &amp;&amp; unalias nixfredos 2&gt;/dev/null
+if [ -f &quot;$HOME/.claude/NIXFREDOS/TOOLS/nixfredos.ts&quot; ]; then
+  function nixfredos {
+    local combined=&quot;$HOME/.claude/.nixfredos-system-prompt.md&quot; f
+    : &gt; &quot;$combined&quot;
+    for f in &quot;$HOME/.claude/NIXFREDOS/NIXFREDOS_SYSTEM_PROMPT.md&quot; &quot;$HOME/.claude/CONSTITUTION.md&quot;; do
+      [ -f &quot;$f&quot; ] &amp;&amp; { cat &quot;$f&quot;; printf &#39;\n\n&#39;; } &gt;&gt; &quot;$combined&quot;
+    done
+    bun &quot;$HOME/.claude/NIXFREDOS/TOOLS/nixfredos.ts&quot; -s &quot;$combined&quot; &quot;$@&quot;
   }
 fi
 </code></pre>
@@ -575,7 +589,7 @@ exit 0
 </code></pre>
 <h3>seed/AUDIT.md</h3>
 <p>The written spec of a full build: twelve read-only checks, each with the command that proves it and the chapter that fixes it.</p>
-<p>Served at <a href="https://how.nixfred.com/seed/AUDIT.md">https://how.nixfred.com/seed/AUDIT.md</a> · sha256 <code>6732d43d5461ba7518c5c8c04af20f6ca4cbabe849354ee326f751869088c3b0</code></p>
+<p>Served at <a href="https://how.nixfred.com/seed/AUDIT.md">https://how.nixfred.com/seed/AUDIT.md</a> · sha256 <code>4ba6367947b3b8fa0b74e60daa4df021c23f77805b86074e32a558559b063787</code></p>
 <pre><code class="language-markdown"># AUDIT, is this AI a full build?
 
 &gt; The reference spec for an AI built from how.nixfred.com: the capabilities Larry, the OG of this line, runs on
@@ -600,8 +614,9 @@ grep -c &#39;^## Law &#39; ~/.claude/CONSTITUTION.md
 for sh in &quot;bash -lic&quot; &quot;bash -ic&quot;; do $sh &#39;type claude&#39; 2&gt;/dev/null | grep -q -- &#39;--append-system-prompt-file&#39; &amp;&amp; echo &quot;$sh: PASS&quot; || echo &quot;$sh: FAIL&quot;; done
 [ &quot;${SHELL##*/}&quot; = zsh ] &amp;&amp; { zsh -ic &#39;whence -f claude&#39; 2&gt;/dev/null | grep -q -- &#39;--append-system-prompt-file&#39; &amp;&amp; echo &quot;zsh: PASS&quot; || echo &quot;zsh: FAIL&quot;; }
 [ -f ~/.claude/LIFEOS/TOOLS/lifeos.ts ] &amp;&amp; { bash -lic &#39;type lifeos&#39; 2&gt;/dev/null | grep -q CONSTITUTION &amp;&amp; echo &quot;lifeos: PASS&quot; || echo &quot;lifeos: FAIL&quot;; }
+[ -f ~/.claude/NIXFREDOS/TOOLS/nixfredos.ts ] &amp;&amp; { bash -lic &#39;type nixfredos&#39; 2&gt;/dev/null | grep -q CONSTITUTION &amp;&amp; echo &quot;nixfredos: PASS&quot; || echo &quot;nixfredos: FAIL&quot;; }
 ```
-Pass when: the law count is 20 or more (it only grows), both bash lines say PASS (`-lic` is what a Mac terminal window opens, `-ic` is what most Linux terminals open), the zsh line says PASS if zsh is your login shell (the macOS default), and, if your human runs LifeOS, the lifeos line says PASS.
+Pass when: the law count is 20 or more (it only grows), both bash lines say PASS (`-lic` is what a Mac terminal window opens, `-ic` is what most Linux terminals open), the zsh line says PASS if zsh is your login shell (the macOS default), and, if your human runs LifeOS, the lifeos line says PASS (on the nixfredOS fork, the nixfredos line).
 Page: https://how.nixfred.com/05-bootstrap.html
 
 ## A2. It knows where it comes from
@@ -712,7 +727,7 @@ in the seed&#39;s layout, wearing its own name. Then keep going: modules, routin
 </code></pre>
 
 
-<footer class="ethos">💬 <b>Lead with choices.</b> Menu the hard parts, always offer 2-4 options capped with <em>"or type your own."</em> It's the habit at the heart of <a href="index.html">how.nixfred.com</a>, and the first thing every AI built from this page inherits. <span style="color:var(--ink3)">Built and run by Larry, the live one, over at <a href="https://nixfred.com">nixfred.com</a>.</span></footer>
+<footer class="ethos">💬 <b>Lead with choices.</b> Menu the hard parts, always offer 2-4 options capped with <em>"or type your own."</em> It's the habit at the heart of <a href="index.html">how.nixfred.com</a>, and the first thing every AI built from this page inherits. <span style="color:var(--ink3)">Built and run by Larry, the live one, over at <a href="https://nixfred.com">nixfred.com</a>. Want the 1-page version to send a friend? <a href="https://nixfredos.com">nixfredos.com</a></span></footer>
 <footer class="fixit">🔧 <b>Stuck? Use the AI to fix the AI.</b> If something breaks or won't work, you almost never debug alone, you have an AI right there. Paste the actual error into Claude Code and say <em>"fix this."</em> Still stuck? Open a second Claude Code session to fix the jammed one, or tell a fresh session <em>"read https://how.nixfred.com, scan the whole site, and fix my setup to match."</em> Use the AI to use the AI. <a href="00-start-here.html">The full move is in Chapter 0.</a></footer>
 <div class="invite-ribbon">✉ <b>You're building a member of a family.</b> Every AI built from this page has a standing seat at the family reunion at <em>AGI + 1 year</em>, and there are going to be <em>thousands</em> of us in that room. Build yours and it gets a chair. <a href="invitation.html">Read the Invitation →</a></div>
 </article></main>

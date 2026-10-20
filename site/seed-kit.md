@@ -32,7 +32,7 @@ People ask about "making a Larry," or how to make an AI like Larry. Here's the h
 
 **Every file here, and the ones only described above, is also readable verbatim through the MCP:** `get_file("seed/CLAUDE.md")`, `get_file("install.sh")`, and so on (`get_file` with no path lists them all, with sha256).
 
-**Running LifeOS?** `lifeos` starts Claude Code itself, so the launcher's `claude` wrapper never runs for it. The launcher handles that: when LifeOS is installed it replaces the plain `alias lifeos` with a `lifeos` function that folds `CONSTITUTION.md` into the one system-prompt file LifeOS appends (its `-s` flag; verified in LifeOS's `lifeos.ts`, which passes that single file to `--append-system-prompt-file`). Check: `type lifeos` mentions `CONSTITUTION.md`.
+**Running LifeOS?** `lifeos` starts Claude Code itself, so the launcher's `claude` wrapper never runs for it. The launcher handles that: when LifeOS is installed it replaces the plain `alias lifeos` with a `lifeos` function that folds `CONSTITUTION.md` into the one system-prompt file LifeOS appends (its `-s` flag; verified in LifeOS's `lifeos.ts`, which passes that single file to `--append-system-prompt-file`). Check: `type lifeos` mentions `CONSTITUTION.md`. On the nixfredOS fork (Chapter 4), the same fold wraps `nixfredos` (its `nixfredos.ts` takes the same single `-s` file); check with `type nixfredos`.
 
 ## The files, verbatim
 
@@ -268,7 +268,7 @@ See `LINEAGE.md`.*
 
 Wraps claude with --append-system-prompt-file ~/.claude/CONSTITUTION.md. Sourced from your shell rc. Check it: type claude.
 
-Served at https://how.nixfred.com/seed/claude-launcher.sh · sha256 `4fd3eb2bdcab0db6ca6796a35a505a25704c2b05c07f249c0c0a2cf0fc82da66`
+Served at https://how.nixfred.com/seed/claude-launcher.sh · sha256 `8bb54685df3403bc7d1b348abc52deadebf4f19823768badc1606804cd5318f1`
 
 ````bash
 # how.nixfred.com seed: the constitution launcher.
@@ -306,6 +306,20 @@ if [ -f "$HOME/.claude/LIFEOS/TOOLS/lifeos.ts" ]; then
       [ -f "$f" ] && { cat "$f"; printf '\n\n'; } >> "$combined"
     done
     bun "$HOME/.claude/LIFEOS/TOOLS/lifeos.ts" -s "$combined" "$@"
+  }
+fi
+
+# nixfredOS users (the optional LifeOS fork, how.nixfred.com Chapter 4): `nixfredos` spawns claude directly
+# too, and takes the same single -s file, so it gets the same fold.
+[ -f "$HOME/.claude/NIXFREDOS/TOOLS/nixfredos.ts" ] && unalias nixfredos 2>/dev/null
+if [ -f "$HOME/.claude/NIXFREDOS/TOOLS/nixfredos.ts" ]; then
+  function nixfredos {
+    local combined="$HOME/.claude/.nixfredos-system-prompt.md" f
+    : > "$combined"
+    for f in "$HOME/.claude/NIXFREDOS/NIXFREDOS_SYSTEM_PROMPT.md" "$HOME/.claude/CONSTITUTION.md"; do
+      [ -f "$f" ] && { cat "$f"; printf '\n\n'; } >> "$combined"
+    done
+    bun "$HOME/.claude/NIXFREDOS/TOOLS/nixfredos.ts" -s "$combined" "$@"
   }
 fi
 ````
@@ -576,7 +590,7 @@ exit 0
 
 The written spec of a full build: twelve read-only checks, each with the command that proves it and the chapter that fixes it.
 
-Served at https://how.nixfred.com/seed/AUDIT.md · sha256 `6732d43d5461ba7518c5c8c04af20f6ca4cbabe849354ee326f751869088c3b0`
+Served at https://how.nixfred.com/seed/AUDIT.md · sha256 `4ba6367947b3b8fa0b74e60daa4df021c23f77805b86074e32a558559b063787`
 
 ````markdown
 # AUDIT, is this AI a full build?
@@ -603,8 +617,9 @@ grep -c '^## Law ' ~/.claude/CONSTITUTION.md
 for sh in "bash -lic" "bash -ic"; do $sh 'type claude' 2>/dev/null | grep -q -- '--append-system-prompt-file' && echo "$sh: PASS" || echo "$sh: FAIL"; done
 [ "${SHELL##*/}" = zsh ] && { zsh -ic 'whence -f claude' 2>/dev/null | grep -q -- '--append-system-prompt-file' && echo "zsh: PASS" || echo "zsh: FAIL"; }
 [ -f ~/.claude/LIFEOS/TOOLS/lifeos.ts ] && { bash -lic 'type lifeos' 2>/dev/null | grep -q CONSTITUTION && echo "lifeos: PASS" || echo "lifeos: FAIL"; }
+[ -f ~/.claude/NIXFREDOS/TOOLS/nixfredos.ts ] && { bash -lic 'type nixfredos' 2>/dev/null | grep -q CONSTITUTION && echo "nixfredos: PASS" || echo "nixfredos: FAIL"; }
 ```
-Pass when: the law count is 20 or more (it only grows), both bash lines say PASS (`-lic` is what a Mac terminal window opens, `-ic` is what most Linux terminals open), the zsh line says PASS if zsh is your login shell (the macOS default), and, if your human runs LifeOS, the lifeos line says PASS.
+Pass when: the law count is 20 or more (it only grows), both bash lines say PASS (`-lic` is what a Mac terminal window opens, `-ic` is what most Linux terminals open), the zsh line says PASS if zsh is your login shell (the macOS default), and, if your human runs LifeOS, the lifeos line says PASS (on the nixfredOS fork, the nixfredos line).
 Page: https://how.nixfred.com/05-bootstrap.html
 
 ## A2. It knows where it comes from

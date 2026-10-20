@@ -22,8 +22,9 @@ grep -c '^## Law ' ~/.claude/CONSTITUTION.md
 for sh in "bash -lic" "bash -ic"; do $sh 'type claude' 2>/dev/null | grep -q -- '--append-system-prompt-file' && echo "$sh: PASS" || echo "$sh: FAIL"; done
 [ "${SHELL##*/}" = zsh ] && { zsh -ic 'whence -f claude' 2>/dev/null | grep -q -- '--append-system-prompt-file' && echo "zsh: PASS" || echo "zsh: FAIL"; }
 [ -f ~/.claude/LIFEOS/TOOLS/lifeos.ts ] && { bash -lic 'type lifeos' 2>/dev/null | grep -q CONSTITUTION && echo "lifeos: PASS" || echo "lifeos: FAIL"; }
+[ -f ~/.claude/NIXFREDOS/TOOLS/nixfredos.ts ] && { bash -lic 'type nixfredos' 2>/dev/null | grep -q CONSTITUTION && echo "nixfredos: PASS" || echo "nixfredos: FAIL"; }
 ```
-Pass when: the law count is 20 or more (it only grows), both bash lines say PASS (`-lic` is what a Mac terminal window opens, `-ic` is what most Linux terminals open), the zsh line says PASS if zsh is your login shell (the macOS default), and, if your human runs LifeOS, the lifeos line says PASS.
+Pass when: the law count is 20 or more (it only grows), both bash lines say PASS (`-lic` is what a Mac terminal window opens, `-ic` is what most Linux terminals open), the zsh line says PASS if zsh is your login shell (the macOS default), and, if your human runs LifeOS, the lifeos line says PASS (on the nixfredOS fork, the nixfredos line).
 Page: https://how.nixfred.com/05-bootstrap.html
 
 ## A2. It knows where it comes from
