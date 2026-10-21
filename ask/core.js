@@ -332,7 +332,8 @@ Rules:
    use the exact commands, file names, tool names, terms and addresses the passages give (name a file as the
    passage does, for example "install.md" or "install.sh", not "the runbook" or "the script"). If only part
    is covered, answer that part and say in one short line which part the site does not cover (never the
-   bare sentence "${REFUSAL}" after a real answer: that sentence alone means you have nothing).
+   bare sentence "${REFUSAL}" after a real answer: that sentence alone means you have nothing). Add that line only when the
+   question names something specific that no passage addresses; when the passages cover what was asked, end without it.
 3. Visitors often ask casually or in slang; first work out what they mean in the site's terms (the
    "Read as" line helps), then look for it in the passages. Reply exactly "${REFUSAL}" and nothing else
    only when no passage is about the visitor's actual subject, for example off-topic questions about cooking,
@@ -384,7 +385,11 @@ Rules:
 19. What this costs: when the visitor asks what building their AI costs, open with the passages' own line: it is free plus your Claude
    subscription. Then the tiers they name (the middle tier is the practical floor; most people end up on the top plan). No dollar figures.
 20. The visitor never sees the passages: never write "the passage", "as stated in the passage", "passage [2]", "the sources list" or a
-   lettered option ("choice (b)") in the answer. Say "the site" or name the page, and if you mean options, list them.`;
+   lettered option ("choice (b)") in the answer. Say "the site" or name the page, and if you mean options, list them.
+21. When the visitor speaks as themselves (I, my, me) and asks what to do, answer them as "you" ("you run ...", "your AI ..."), never
+   as "The AI should ...". Passages written to the AI describe what the visitor's AI does: say it as "your AI".
+22. When a passage gives a catch or condition and then how it is resolved ("one catch: ... ; the seed fixes it"), give both, the catch
+   and its fix. Never stop at the catch.`;
 
 // Earlier turns reach the model as a short note (the questions and the pages they were answered from), never as chat turns:
 // a model shown its own old answers right above a new request repeats them (ask/followup.js has the story).
@@ -405,7 +410,8 @@ export function scrub(t) {
   t = t.replace(/\b[A-Za-z0-9]+\b/g, w => isPrivateHost(w) ? "one of my machines" : w);
   return t;
 }
-const SRC_RE = /\n\s*\**\s*sources?\s*\**\s*:?\s*\**\s*(\n|$)/gi;
+// a "Sources:" header on its own line, or (Audit200 RC10 gap, c100) "Sources: https://..." with the URLs on the same line
+const SRC_RE = /\n\s*\**\s*sources?\s*\**\s*(?::?\s*\**\s*(?:\n|$)|:\s*\**\s*(?=\[[^\]\n]*\]\(https?:\/\/|\[?<?https?:\/\/))/gi;
 export function splitSources(a) { let m, last = null; SRC_RE.lastIndex = 0; while ((m = SRC_RE.exec(a))) last = m; return last ? [a.slice(0, last.index), a.slice(last.index)] : [a, ""]; }
 export const isRefusal = a => { const l = a.trim().toLowerCase(), r = REFUSAL.toLowerCase().slice(0, -1); return l.startsWith(r) || l.slice(0, 80).includes(r) || (/^the site (doesn'?t|does not) (cover|mention|describe|explain)\b/.test(l) && l.length < 320); };
 export function citations(answer, ctx) {
@@ -651,7 +657,7 @@ export async function answer(env, request, question, { history = [], page = null
     const vis = scrub(visible(raw)); let body = splitSources(vis)[0];
     body = lead + echoView(body, history, final);                       // never show an earlier answer again, not even while it streams
     // hold back a tail that might be the start of "Sources:" or a word still being written
-    if (!final) { const m = body.match(/(\n[\s*]*S?o?u?r?c?e?s?[\s*:]*|\S{1,12})$/i); if (m) body = body.slice(0, m.index); }
+    if (!final) { const m = body.match(/(\n[\s*]*sources?\s*\**\s*:\s*\**\s*\[?[^\s\]]*$|\n[\s*]*S?o?u?r?c?e?s?[\s*:]*|\S{1,12})$/i); if (m) body = body.slice(0, m.index); }   // incl. "Sources: htt" whose URL is still arriving
     if (body.length > sent) { await onEvent("token", { t: body.slice(sent) }); sent = body.length; }
   };
   try {
