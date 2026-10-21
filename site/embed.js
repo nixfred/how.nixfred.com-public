@@ -50,7 +50,7 @@ function AskLarryPanel(o){
     return html;
   }
   function chips(sources){
-    var ok=(sources||[]).map(function(s){var h=o.href(s.url);return h?'<a class="al-cite" href="'+esc(h)+'"'+(o.newTab&&o.newTab(h)?' target="_blank" rel="noopener"':'')+'>'+esc(o.citeLabel(s))+'</a>':'';}).filter(Boolean);
+    var ok=(sources||[]).map(function(s){var h=o.href(s.url);return h?'<a class="al-cite" href="'+esc(h)+'"'+(o.newTab&&o.newTab(h)?' target="_blank" rel="noopener"':'')+'>'+esc(AskLarryPanel.dedupe(o.citeLabel(s)))+'</a>':'';}).filter(Boolean);
     return ok.length?'<div class="al-cites"><span>'+esc(o.citeLead||'From the site:')+'</span>'+ok.join('')+'</div>':'';
   }
   function bubble(role,html){var d=document.createElement('div');d.className='al-msg al-'+role;d.innerHTML=html;log.appendChild(d);log.scrollTop=log.scrollHeight;return d;}
@@ -102,6 +102,22 @@ function AskLarryPanel(o){
   if((wasMin||o.startMin)&&!mobile()&&!o.forceOpen){state.classList.add('al-min');pill.setAttribute('aria-expanded','false');}
   return {open:open,close:close,ask:ask,esc:esc,md:md,bubble:bubble,mobile:mobile};
 }
+// Source chips: the host appears once. A title that is only the host or the URL ("how.nixfred.com" for the home page) shows
+// the host (plus the path when there is one); any other title gets " · host" only when the host is not this page's and the
+// title does not already say it. dedupe() also collapses a repeated segment ("how.nixfred.com · how.nixfred.com").
+AskLarryPanel.dedupe=function(label){
+  var n=function(x){return String(x).toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/\/+$/,'').trim();}, seen={};
+  return String(label).split(' · ').filter(function(seg){var k=n(seg); if(!k||seen[k])return false; seen[k]=1; return true;}).join(' · ');
+};
+AskLarryPanel.citeText=function(s,here){
+  var t=String(s.title||'').trim(), h='', path='';
+  try{var x=new URL(s.url);h=x.hostname;path=x.pathname.replace(/\/+$/,'');}catch(e){}
+  var n=function(v){return String(v).toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/\/+$/,'');};
+  if(!h)return AskLarryPanel.dedupe(t.slice(0,60)||String(s.url));
+  var bare=!t||n(t)===h||n(t)===h+path.toLowerCase();
+  var label=bare?(h===here&&path?path:h+path):(h!==here&&n(t).indexOf(h)<0?t.slice(0,60)+' · '+h:t.slice(0,60));
+  return AskLarryPanel.dedupe(label);
+};
 
 // ── Fleet glue for the shared Ask Larry panel (ask/panel.js), built into /embed.js by build.ts ──
 // <script src="https://how.nixfred.com/embed.js" data-site="larry" defer></script>   (or /embed.js?site=larry)
@@ -143,7 +159,7 @@ if (!window.__fleetAskLoaded) (function () {
     panel.querySelector('.al-head span').textContent = P.sub;
     var al = AskLarryPanel({ panel: panel, pill: pill, state: root.querySelector('.al-root'), key: 'fleet-ask-v1:' + SITE, minKey: 'fleet-ask-min:' + SITE,
       href: fleetHref, newTab: function (h) { return new URL(h).origin !== location.origin; }, bare: /(^|[\s(])(https:\/\/[^\s<)]+)/g,
-      citeLabel: function (s) { var t = String(s.title || s.url).slice(0, 60), h = ''; try { h = new URL(s.url).hostname; } catch (e) {} return h && h !== location.hostname ? t + ' · ' + h : t; },
+      citeLabel: function (s) { return AskLarryPanel.citeText(s, location.hostname); },
       citeLead: 'From the sites:', hello: P.hello + ' Try one:', starters: P.starters,
       startMin: me.getAttribute('data-open') !== 'true', keyScope: root, active: function () { return root.activeElement; }, send: send,
       fail: function (q, el, e) {

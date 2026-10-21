@@ -311,7 +311,8 @@ Rules:
    that the site does not give that location. Never fill in a likely path.
 16. Earlier turns of this chat are summarised in the user message. The visitor has read those answers: never repeat, quote or
    restate them. Answer only the new question. For "what's next" or "then what", give the next step the passages describe, never
-   a step already covered.`;
+   a step already covered.
+17. Model ids: write a model id exactly as a passage spells it, in backticks (\`claude-haiku-4-5\`), never reworded as "Claude Haiku (4-5)".`;
 
 // Earlier turns reach the model as a short note (the questions and the pages they were answered from), never as chat turns:
 // a model shown its own old answers right above a new request repeats them (ask/followup.js has the story).
@@ -413,6 +414,23 @@ export function groundPaths(answer, ctx, cited = []) {
   const body = out.join("").replace(new RegExp(`(${note.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*){2,}`, "g"), note + " ");
   return { body, flagged };
 }
+// A model id is written exactly as a passage spells it (eval c05: the answer said "Claude Haiku (4-5)" for the page's `claude-haiku-4-5`).
+// Only a versioned mention of a family whose id a passage gives is rewritten ("Claude Haiku (4-5)", "Haiku 4.5", "claude-haiku-4.5"
+// become `claude-haiku-4-5`); "Haiku" alone, a version no passage has, and shell blocks stay as they are.
+export const MODEL_ID_RE = /\bclaude-(?:opus|sonnet|haiku|fable)-\d+(?:-\d+)+\b/g;
+export function groundModelIds(answer, ctx) {
+  const ids = new Set(); for (const p of ctx) for (const m of String(p.text).matchAll(MODEL_ID_RE)) ids.add(m[0]);
+  if (!ids.size) return { body: String(answer), fixed: 0 };
+  let fixed = 0;
+  const fix = t => t.replace(/`?\b(?:claude[-\s]+)?(opus|sonnet|haiku|fable)(?:[-\s]+\(?|\s*\()(\d+)[-.\s]+(\d+)\)?`?(?![\w-])/gi, (m, fam, a, b) => {
+    const id = `claude-${fam.toLowerCase()}-${a}-${b}`;
+    if (!ids.has(id) || (m === "`" + id + "`")) return m;
+    if (!/^`?claude/i.test(m) && !/\d\s*[-.\s]\s*\d/.test(m)) return m;
+    fixed++; return "`" + id + "`";
+  });
+  const parts = String(answer).split(/(```[^\n]*\n[\s\S]*?```)/g);
+  return { body: parts.map(part => { const f = part.match(/^```([^\n]*)\n/); return f ? part : fix(part); }).join(""), fixed };
+}
 export function fallbackAnswer(ctx) {
   if (!ctx.length) return REFUSAL;
   return "My language model is busy right now, so here are the most relevant parts of the site, straight from the source:\n\n" +
@@ -501,6 +519,7 @@ export async function answer(env, request, question, { history = [], page = null
       const g = groundCommands(body, ctx, cited); body = g.body; ungrounded = g.flagged;
       for (const p of g.support) if (!cited.includes(p)) cited.push(p);
       const gp = groundPaths(body, ctx, cited); body = gp.body;
+      body = groundModelIds(body, ctx).body;
       if (!isRefusal(body)) body = body.replace(/\n*\s*The site doesn'?t cover that\.\s*$/i, "").replace(/\s*The site doesn'?t cover that\.\s*(?=\n)/gi, "");   // a real answer never ends in the refusal
       const asModelSaid = body;
       body = stripEcho(body, history).trim();                           // whatever the model still repeated from an earlier answer

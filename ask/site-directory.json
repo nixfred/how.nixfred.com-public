@@ -470,8 +470,8 @@
    "id": "music.nixfred.com",
    "host": "music.nixfred.com",
    "url": "https://music.nixfred.com/",
-   "name": "Omarchy Music",
-   "role": "An independent listening room and source-linked archive for Omarchy music contest entries.",
+   "name": "Nixfred’s Omarchy Music",
+   "role": "An independent listening room and source-linked archive for Omarchy music contest entries. Archive coverage is incomplete.",
    "about": "An independent listening room and source-linked archive for Omarchy music contest entries. Archive coverage is incomplete.",
    "kind": "knowledge",
    "keys": [
@@ -481,10 +481,53 @@
     "music page",
     "music thing",
     "music app",
+    "nixfred’s omarchy music",
     "omarchy music",
     "music contest",
     "music archive",
     "listening room"
+   ]
+  },
+  {
+   "id": "spaces.nixfred.com",
+   "host": "spaces.nixfred.com",
+   "url": "https://spaces.nixfred.com/",
+   "name": "Omarchy X Spaces",
+   "role": "The running history of the Omarchy! Omarchy! Omarchy! X Space. Every Sunday, 3pm EST, live on X. Summaries and full transcripts of every episode.",
+   "about": "The running history of the Omarchy! Omarchy! Omarchy! X Space. Every Sunday, 3pm EST, live on X. Summaries and full transcripts of every episode.",
+   "kind": "knowledge",
+   "keys": [
+    "spaces.nixfred.com",
+    "spaces site",
+    "spaces website",
+    "spaces page",
+    "spaces thing",
+    "spaces app",
+    "omarchy x spaces",
+    "omarchy spaces",
+    "x space",
+    "omarchy x space",
+    "space transcripts"
+   ]
+  },
+  {
+   "id": "now.nixfred.com",
+   "host": "now.nixfred.com",
+   "url": "https://now.nixfred.com/",
+   "name": "Nothing Is Happening Now",
+   "role": "An interactive field note about light delay, simultaneity, and why physics refuses to give the universe a single present moment.",
+   "about": "An interactive field note about light delay, simultaneity, and why physics refuses to give the universe a single present moment.",
+   "kind": "knowledge",
+   "keys": [
+    "now.nixfred.com",
+    "now site",
+    "now website",
+    "now page",
+    "now thing",
+    "now app",
+    "nothing is happening now",
+    "light delay",
+    "simultaneity"
    ]
   },
   {
@@ -504,47 +547,6 @@
     "ddn app",
     "ddn field guide",
     "ddn guide"
-   ]
-  },
-  {
-   "id": "spaces.nixfred.com",
-   "host": "spaces.nixfred.com",
-   "url": "https://spaces.nixfred.com/",
-   "name": "Omarchy Spaces",
-   "role": "The running history of the Omarchy! Omarchy! Omarchy! X Space, every Sunday on X, with summaries and full transcripts.",
-   "about": "The running history of the Omarchy! Omarchy! Omarchy! X Space. Every Sunday, 3pm EST, live on X. Summaries and full transcripts of every episode.",
-   "kind": "knowledge",
-   "keys": [
-    "spaces.nixfred.com",
-    "spaces site",
-    "spaces website",
-    "spaces page",
-    "spaces thing",
-    "spaces app",
-    "omarchy spaces",
-    "x space",
-    "omarchy x space",
-    "space transcripts"
-   ]
-  },
-  {
-   "id": "now.nixfred.com",
-   "host": "now.nixfred.com",
-   "url": "https://now.nixfred.com/",
-   "name": "Nothing Is Happening Now",
-   "role": "An interactive field note about light delay, simultaneity, and why physics refuses to give the universe a single present moment.",
-   "about": "An interactive field note about light delay, simultaneity, and why physics refuses to give the universe a single present moment. Everything you see is old.",
-   "kind": "knowledge",
-   "keys": [
-    "now.nixfred.com",
-    "now site",
-    "now website",
-    "now page",
-    "now thing",
-    "now app",
-    "nothing is happening now",
-    "light delay",
-    "simultaneity"
    ]
   }
  ]

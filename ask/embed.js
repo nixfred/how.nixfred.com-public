@@ -38,7 +38,7 @@ if (!window.__fleetAskLoaded) (function () {
     panel.querySelector('.al-head span').textContent = P.sub;
     var al = AskLarryPanel({ panel: panel, pill: pill, state: root.querySelector('.al-root'), key: 'fleet-ask-v1:' + SITE, minKey: 'fleet-ask-min:' + SITE,
       href: fleetHref, newTab: function (h) { return new URL(h).origin !== location.origin; }, bare: /(^|[\s(])(https:\/\/[^\s<)]+)/g,
-      citeLabel: function (s) { var t = String(s.title || s.url).slice(0, 60), h = ''; try { h = new URL(s.url).hostname; } catch (e) {} return h && h !== location.hostname ? t + ' · ' + h : t; },
+      citeLabel: function (s) { return AskLarryPanel.citeText(s, location.hostname); },
       citeLead: 'From the sites:', hello: P.hello + ' Try one:', starters: P.starters,
       startMin: me.getAttribute('data-open') !== 'true', keyScope: root, active: function () { return root.activeElement; }, send: send,
       fail: function (q, el, e) {

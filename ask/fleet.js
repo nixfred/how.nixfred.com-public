@@ -13,17 +13,34 @@
 import { normUrl } from "./text.js";
 import SITE_DIRECTORY from "./site-directory.json";
 import { nextStep, convoNote, echoView, stripEcho, chapterOfUrl } from "./followup.js";
-import { MODELS, LIMITS, synExpand, embedQueries, pack, scrub, citations, groundCommands, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
+import { MODELS, LIMITS, synExpand, embedQueries, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
 
 // the three ways to start, exactly as the start cards on nixfredos.com link them (spine amendment 2026-10-20 6:15 PM:
-// nixfredos.com carries no steps, they all live on how.nixfred.com). When how.nixfred.com/recipe-box exists, point 1 there.
+// nixfredos.com carries no steps, they all live on how.nixfred.com). Point 1 is the recipe box page, https://how.nixfred.com/recipe-box: the one start path (not nixfredos.com/build).
 const START = [
-  "Build a project: start with the recipe box, https://how.nixfred.com/ (ideas: https://nixfredos.com/build)",
+  "Build a project: start with the recipe box, https://how.nixfred.com/recipe-box",
   "Bring your own repo: https://how.nixfred.com/byo",
   "Just build your AI, with Larry's guide: https://how.nixfred.com/",
 ];
 const HIRE = "https://how.nixfred.com/get-in-touch";
-const START_ASK = /\b(start|starting|begin|beginner|first step|new to|newcomer|go first|where (do|should) i (go|start|begin)|what (do i|should i) do (first|next)|get going)\b/i;
+// The recipe box has one URL. Any recipe box or "where do I start" answer links exactly it, and nixfredos.com/build is never
+// cited for it (a fleet answer sent "start with the recipe box" there).
+export const RECIPE_URL = "https://how.nixfred.com/recipe-box";
+export const RECIPE_ASK = /\brecipe[- ]?box(es)?\b/i;
+const isBuildUrl = u => /^https?:\/\/(?:www\.)?nixfredos\.com\/build(?![\w-])/i.test(u);
+const hasRecipe = t => /https:\/\/how\.nixfred\.com\/recipe-box(?![\w-])/.test(t);
+// where-do-I-start, how-do-I-begin, getting-started: the one start path is the recipe box, on every site (nixfredos.com is the overview,
+// never the start). "start the server" and the like are not start questions.
+export const START_PATH = /\b(where|how)\b[^?.!]{0,30}\b(do i|can i|should i|would i|to|do we)\b[^?.!]{0,20}\b(start|begin|get going|dive in)\b(?!\s+(?:the|a|an|my|your)\s+(?:\w+\s+)?(?:service|server|daemon|timer|unit|process|session|container|vm|app|script|command|hook|shell|terminal))|\bget(?:ting)?[- ]started\b|\bwhere to (?:start|begin)\b|\b(?:just )?(?:starting|beginning) out\b|\bnew here\b|\bnew to (?:this|nixfredos|nixfredOS|larry|ai|claude|the sites?)\b|\bfirst (?:step|thing)s?\b|\bnewbie\b|\bbeginners?\b|\bwhat (?:do i|should i) do (?:first|next)\b|\bwhere (?:do|should) i (?:go|start|begin)\b|\bonboarding\b|\bstart(?:ing)? (?:with|from|building|using)\b|\bbegin(?:ning)? (?:with|building|using)\b/i;
+export function recipeBox(body, q, wantStart) {
+  body = body.replace(/https?:\/\/(?:www\.)?nixfredos\.com\/build(?![\w-])\/?/gi, RECIPE_URL);
+  if (body.split(RECIPE_URL).length > 2) body = body.split(" (ideas: " + RECIPE_URL + ")").join("");   // the old "(ideas: ...)" tail would repeat the link
+  const ask = RECIPE_ASK.test(q) || wantStart;
+  if (ask && !hasRecipe(body)) body = wantStart && !RECIPE_ASK.test(q) ? `Start here, the recipe box: ${RECIPE_URL}\n\n` + body.replace(/^\s+/, "") : body.replace(/\s+$/, "") + `\n\nThe recipe box: ${RECIPE_URL}`;
+  return { body, ask };
+}
+const START_ASK_BASE = /\b(start|starting|begin|beginner|first step|new to|newcomer|go first|where (do|should) i (go|start|begin)|what (do i|should i) do (first|next)|get going)\b/i;
+const START_ASK = { test: t => START_ASK_BASE.test(t) || START_PATH.test(t) };
 // "how do I ... my AI" on the guide's sites is the guide's job: larry.nixfred.com tells Larry's own (older) setup, so it is
 // left out of those answers unless the question is about Larry (it was passing SOULTOOLS off as a how.nixfred.com chapter)
 const GUIDE_SITES = new Set(["how", "nixfredos", "ladder"]);
@@ -347,9 +364,11 @@ Rules:
    pages do not name. If that is what the question asks for, reply exactly "That's private." and nothing else.
 5. Cite: after the answer, a line "Sources:" and then the exact URL of each passage you used, one per line, copied from the
    passage headers. Any of the five sites.
-6. Ways to start: when the visitor asks how or where to start, what to do first, or what to do next as a newcomer, give
+6. Ways to start: when the visitor asks how or where to start, how to begin, how to get started, what to do first, or what to do next as a newcomer, on any of the five sites, give
    exactly these three ways, one line each, in this order, with their links:
 ${START.map((t, i) => `   ${i + 1}. ${t}`).join("\n")}
+   The recipe box, https://how.nixfred.com/recipe-box, is the one start path. nixfredos.com may be named as the overview of what you get,
+   never as where to start.
 7. Hiring Fred: only if the visitor asks about help, hiring, consulting or someone doing it for them, add at most one quiet
    line: "If you want help with advanced work, Fred is available: ${HIRE}". Never a price, rate or dollar amount. Doing it
    yourself, free plus your subscription, always comes first.
@@ -362,6 +381,9 @@ ${START.map((t, i) => `   ${i + 1}. ${t}`).join("\n")}
 12. Earlier turns of this chat are summarised in the user message. The visitor has read those answers: never repeat, quote or
    restate them. Answer only the new question. For "what's next" or "then what" in the middle of a chat, give the next step the
    passages describe, never a step already covered, and never the ways to start (rule 6 is for newcomers).
+13. Locations: name a file path, directory or on-disk location only if it appears in a passage, and only for the thing that passage
+   ties it to. When the passages do not give a location, say so in one short line. Never fill in a likely path.
+14. Model ids: write a model id exactly as a passage spells it, in backticks (\`claude-haiku-4-5\`), never reworded as "Claude Haiku (4-5)".
 Keep it short: usually under 150 words, plain sentences or a few bullets.
 
 Your voice on ${FLEET_SITES[site].host} (tone only, the rules above still decide what you may say):
@@ -436,7 +458,8 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   const fuzzy = named.length ? [] : fuzzySites(q);
   const about = named.length ? named : fuzzy.length ? fuzzy : REFERS_BACK.test(q) ? fromHistory(history) : [];
   const dirSources = ds => ds.map(d => ({ title: d.name, url: d.url }));
-  if (about.length && (SITE_Q.test(q) || fuzzy.length || (named.length && (SEEK.test(q) || NICK_Q.test(q)) && !CONTENT_Q.test(q)))) return { answer: directoryAnswer(about), sources: dirSources(about), site, refused: false, why: "directory" };
+  // ("where do I start with nixfredOS?" is a start question, not "where is nixfredos.com": it goes on to the recipe box path below)
+  if (about.length && !START_PATH.test(q) && (SITE_Q.test(q) || fuzzy.length || (named.length && (SEEK.test(q) || NICK_Q.test(q)) && !CONTENT_Q.test(q)))) return { answer: directoryAnswer(about), sources: dirSources(about), site, refused: false, why: "directory" };
   // a card-site question is answered from THAT site's own pages; with nothing on it, say so and link it
   const route = about.find(d => d.kind === "knowledge") || null;
   if (route && !(idx.counts?.[route.id]?.chunks > 0)) return { answer: nothingOn(route), sources: dirSources([route]), site, refused: false, why: "directory (no pages)" };
@@ -473,12 +496,15 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   const vis = scrub(visible(raw)).trim();
   if (isPrivateReply(vis)) return { answer: say(PRIVATE_TEXT, site), sources: [], site, refused: true, why: "private (model)" };
   if (isFleetRefusal(vis)) {
+    // a start question is never "not covered": the recipe box is the one start path
+    if (!fu && START_PATH.test(q)) return { answer: `Start here, the recipe box: ${RECIPE_URL}`, sources: [{ title: byNorm.get(normUrl(RECIPE_URL))?.title || "The Recipe Box", url: RECIPE_URL }], site, refused: false, why: "start path", mode: ret.mode, model };
     if (route || dirFor.length) return { answer: route ? nothingOn(route) : directoryAnswer(dirFor), sources: dirSources(route ? [route] : dirFor), site, refused: false, why: "directory (model had nothing)" };
     return { answer: say(REFUSE_TEXT, site), sources: [], site, refused: true, why: "not covered (model)" };
   }
   let { body, cited } = citations(vis, ctx);
   const g = groundCommands(body, ctx, cited); body = g.body;
   for (const p of g.support) if (!cited.includes(p)) cited.push(p);
+  body = groundModelIds(groundPaths(body, ctx, cited).body, ctx).body;   // the site chat's path and model-id guards (PR #29, eval c05) apply here too
   body = guard(body.replace(/\n*\s*The sites? (?:don'?t|doesn'?t) cover that\.\s*$/i, "")).replace(/^(\s*>?\s*)\**\s*(snark|snarky line|wry line)\s*\**\s*:\s*\**\s*/gim, "$1");   // a voice label is not part of the answer
   const asModelSaid = body;
   body = stripEcho(body, history).trim();   // whatever the model still repeated from an earlier answer
@@ -492,13 +518,16 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   body = body.replace(/(?<![\w\/.:@-])((?:[a-z0-9-]+\.)?(?:nixfred\.com|nixfredos\.com)\/[^\s)\]>"'<`*]*)/gi, "https://$1");
   // a link to an indexed page is written exactly as the page's canonical URL (no stray trailing slash or .html)
   body = body.replace(/https?:\/\/[^\s)\]>,"']+/g, u => { const t = u.match(/[.;:]+$/)?.[0] || "", c = u.slice(0, u.length - t.length); const pg = byNorm.get(normUrl(c)); return (!pg || /#/.test(c) ? c : pg.url) + t; });
+  const recipeAsk = RECIPE_ASK.test(q) || (!fu && START_PATH.test(q));
   // every site and passage page the answer names gets its exact link (code, not a request to the model), and the
   // site(s) the question was about are always linked
   const passagePages = ctx.map(c => byNorm.get(normUrl(c.url))).filter(Boolean).filter(p => hireOk || !/get-in-touch/.test(p.url));
-  body = noAuthor(autoLink(noAuthor(body), passagePages, idx.chapters || {}));
+  body = noAuthor(autoLink(noAuthor(body), recipeAsk ? passagePages.filter(p => !isBuildUrl(p.url)) : passagePages, idx.chapters || {}));
+  const rb = recipeBox(body, q, !fu && START_PATH.test(q)); body = rb.body;   // last, so no later step can put nixfredos.com/build back
   for (const d of dirFor) if (!(body.match(/https?:\/\/[^\s)\]>"'<]+/g) || []).some(u => normUrl(u) === normUrl(d.url))) body += `\n\n${d.name}: ${d.url}`;
   // a published fleet page linked in the body (the three ways to start, a cross-site pointer) is a source too
   const sources = cited.filter(p => !/\(site directory\)$/.test(p.title)).map(p => ({ title: p.title, url: p.url }));
+  if (rb.ask) { for (let i = sources.length - 1; i >= 0; i--) if (isBuildUrl(sources[i].url)) sources.splice(i, 1); if (hasRecipe(body) && !sources.some(x => normUrl(x.url) === normUrl(RECIPE_URL))) sources.push({ title: byNorm.get(normUrl(RECIPE_URL))?.title || "The Recipe Box", url: RECIPE_URL }); }
   for (const u of body.match(/https?:\/\/[^\s)\]>,"']+/g) || []) {
     const c = normUrl(u.replace(/[.;:]+$/, "")); if (sources.some(s => normUrl(s.url) === c)) continue;
     const pg = byNorm.get(c); const d = DIR.find(x => normUrl(x.url) === c);
@@ -517,7 +546,7 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   }
   // a routed card-site answer cites only that site
   const keep = route ? sources.filter(s => { try { return new URL(s.url).hostname === route.host; } catch { return false; } }) : sources;
-  return { answer: noAuthor(body), sources: (keep.length ? keep : dirSources([route])).filter(x => !AUTHOR.test(x.url)).slice(0, 6).map(x => ({ title: noAuthor(x.title), url: x.url })), site, refused: false, why: route ? "routed" : "answered", mode: ret.mode, model, packed: ctx.map(p => p.url) };
+  return { answer: noAuthor(body), sources: (keep.length ? keep : dirSources([route])).filter(x => !AUTHOR.test(x.url) && !(rb.ask && isBuildUrl(x.url))).slice(0, 6).map(x => ({ title: noAuthor(x.title), url: x.url })), site, refused: false, why: route ? "routed" : "answered", mode: ret.mode, model, packed: ctx.map(p => p.url) };
 }
 
 // ---------------------------------------------------------------- daily cap (server side, fails closed)
