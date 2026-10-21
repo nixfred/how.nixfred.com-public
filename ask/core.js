@@ -67,7 +67,8 @@ export function findPage(idx, ref) {
 export function bm25(idx, query, { pool = POOL, page = null } = {}) {
   const { avg, lens, postings } = idx.bm25; const k1 = 1.4, b = 0.75; const score = new Map();
   for (const t of new Set(tokenize(query))) {
-    const p = postings[t]; if (!p) continue; const idf = IDF.get(t);
+    // own keys only ("constructor" is a word too); idx.idf: the fleet index carries its own
+    const p = Object.hasOwn(postings, t) ? postings[t] : null; if (!p) continue; const idf = (idx.idf ?? IDF).get(t);
     for (let j = 0; j < p.length; j += 2) {
       const i = p[j], f = p[j + 1];
       if (page !== null && idx.chunks[i].p !== page) continue;
@@ -131,9 +132,9 @@ Reply with JSON only: {"rewrite": "...", "alternates": ["...", "..."], "pages": 
 - If the question has nothing to do with the site, just restate it plainly, use "pages": [], and do not invent site terms.`;
 
 const RW_CACHE = new Map();
-const aiText = r => { const x = typeof r === "string" ? r : (r?.response ?? r?.choices?.[0]?.message?.content ?? ""); return x && typeof x === "object" ? x : String(x); };
-const visible = s => String(s).replace(/<think>[\s\S]*?<\/think>/g, "").replace(/<think>[\s\S]*$/, "").replace(/^\s+/, "");
-const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+export const aiText = r => { const x = typeof r === "string" ? r : (r?.response ?? r?.choices?.[0]?.message?.content ?? ""); return x && typeof x === "object" ? x : String(x); };
+export const visible = s => String(s).replace(/<think>[\s\S]*?<\/think>/g, "").replace(/<think>[\s\S]*$/, "").replace(/^\s+/, "");
+export const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
 
 export async function rewrite(env, idx, question) {
   const key = question.toLowerCase().trim();
@@ -451,7 +452,7 @@ export const originOk = request => { const o = request.headers.get("origin"); re
 export const clientIp = request => request.headers.get("cf-connecting-ip") || "local";   // never x-forwarded-for
 export const json = (data, status = 200, headers = {}) => new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff", ...headers } });
 const MEM = new Map();
-const LIMIT_FALLBACK = { ASK: 8, SEARCH: 40, MCP: 60 };
+const LIMIT_FALLBACK = { ASK: 8, SEARCH: 40, MCP: 60, FLEET: 8 };
 // Workers rate limiting binding (via the how-nixfred-ratelimit service); per-isolate window if it is unreachable.
 export async function rateLimit(env, request, bucket) {
   const key = clientIp(request);

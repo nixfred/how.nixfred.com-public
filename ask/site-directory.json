@@ -1,0 +1,353 @@
+{
+ "note": "ONE site directory for the fleet chat (scripts/fleet-crawl.ts writes it from https://nixfred.com/sites.json; the five widget roles are Fred's words). Used by ask/fleet.js for which-site answers and auto-linking.",
+ "registry": "https://nixfred.com/sites.json",
+ "sites": [
+  {
+   "id": "nixfred",
+   "host": "nixfred.com",
+   "url": "https://nixfred.com/",
+   "name": "nixfred.com",
+   "role": "Fred, portfolio and hiring",
+   "keys": [
+    "portfolio",
+    "resume",
+    "hire fred",
+    "hire him",
+    "hiring",
+    "fred's site",
+    "fred's website",
+    "fred's home page",
+    "fred's homepage",
+    "about fred",
+    "contact fred",
+    "nixfred.com"
+   ],
+   "kind": "widget"
+  },
+  {
+   "id": "nixfredos",
+   "host": "nixfredos.com",
+   "url": "https://nixfredos.com/",
+   "name": "nixfredOS",
+   "role": "the pitch",
+   "keys": [
+    "pitch",
+    "nixfredos",
+    "nixfred os",
+    "what you get"
+   ],
+   "kind": "widget"
+  },
+  {
+   "id": "how",
+   "host": "how.nixfred.com",
+   "url": "https://how.nixfred.com/",
+   "name": "how.nixfred.com",
+   "role": "the guide",
+   "keys": [
+    "the guide",
+    "larry's guide",
+    "how-to guide",
+    "how to guide",
+    "build your own ai",
+    "how.nixfred.com"
+   ],
+   "kind": "widget"
+  },
+  {
+   "id": "ladder",
+   "host": "ladder.nixfred.com",
+   "url": "https://ladder.nixfred.com/",
+   "name": "The Ladder",
+   "role": "the student checklist",
+   "keys": [
+    "the ladder",
+    "ladder",
+    "student checklist",
+    "ladder.nixfred.com"
+   ],
+   "kind": "widget"
+  },
+  {
+   "id": "larry",
+   "host": "larry.nixfred.com",
+   "url": "https://larry.nixfred.com/",
+   "name": "larry.nixfred.com",
+   "role": "Larry's story",
+   "keys": [
+    "larry's story",
+    "larry's site",
+    "larry's website",
+    "larry's own site",
+    "larry.nixfred.com"
+   ],
+   "kind": "widget"
+  },
+  {
+   "id": "god.nixfred.com",
+   "host": "god.nixfred.com",
+   "url": "https://god.nixfred.com/",
+   "name": "The Universe As I See It",
+   "role": "What I believe about everything. From the first instant to the last, and why I think it was never many things to begin with.",
+   "kind": "knowledge",
+   "keys": [
+    "god.nixfred.com",
+    "god site",
+    "god website",
+    "the universe as i see it"
+   ]
+  },
+  {
+   "id": "mac.nixfred.com",
+   "host": "mac.nixfred.com",
+   "url": "https://mac.nixfred.com/",
+   "name": "macOS 27",
+   "role": "A pixel faithful Liquid Glass macOS simulation running entirely in your browser.",
+   "kind": "knowledge",
+   "keys": [
+    "mac.nixfred.com",
+    "mac site",
+    "mac website",
+    "macos 27"
+   ]
+  },
+  {
+   "id": "youtube.nixfred.com",
+   "host": "youtube.nixfred.com",
+   "url": "https://youtube.nixfred.com/",
+   "name": "YouTube Library",
+   "role": "A growing library of YouTube videos turned into deep, readable pages.",
+   "kind": "knowledge",
+   "keys": [
+    "youtube.nixfred.com",
+    "youtube site",
+    "youtube website",
+    "youtube library"
+   ]
+  },
+  {
+   "id": "townhop.nixfred.com",
+   "host": "townhop.nixfred.com",
+   "url": "https://townhop.nixfred.com/",
+   "name": "TOWNHOP",
+   "role": "Drop two pins and travel the whole way there through the best YouTube footage of every town in between.",
+   "kind": "knowledge",
+   "keys": [
+    "townhop.nixfred.com",
+    "townhop site",
+    "townhop website",
+    "townhop"
+   ]
+  },
+  {
+   "id": "galaxy.nixfred.com",
+   "host": "galaxy.nixfred.com",
+   "url": "https://galaxy.nixfred.com/",
+   "name": "NIXFRED GALAXY",
+   "role": "Every project, one connected system. An interactive star map of everything on this page and how it all wires together.",
+   "kind": "knowledge",
+   "keys": [
+    "galaxy.nixfred.com",
+    "galaxy site",
+    "galaxy website",
+    "nixfred galaxy"
+   ]
+  },
+  {
+   "id": "tools.nixfred.com",
+   "host": "tools.nixfred.com",
+   "url": "https://tools.nixfred.com/",
+   "name": "AI Systems Workbench",
+   "role": "Fourteen practical instruments for reliable AI systems.",
+   "kind": "knowledge",
+   "keys": [
+    "tools.nixfred.com",
+    "tools site",
+    "tools website",
+    "ai systems workbench"
+   ]
+  },
+  {
+   "id": "go.nixfred.com",
+   "host": "go.nixfred.com",
+   "url": "https://go.nixfred.com/",
+   "name": "What Should I Do Today?",
+   "role": "An Atlanta event aggregation engine. Real, current, structured event data pulled from live sources, provenance tracked on every entry, never maintained by hand.",
+   "kind": "knowledge",
+   "keys": [
+    "go.nixfred.com",
+    "go site",
+    "go website",
+    "what should i do today?"
+   ]
+  },
+  {
+   "id": "omarchy.nixfred.com",
+   "host": "omarchy.nixfred.com",
+   "url": "https://omarchy.nixfred.com/",
+   "name": "Omarchy Plugins",
+   "role": "Plugins and a theme for the Omarchy desktop. Bar widgets, a Mac bridge, workspace control, and a suite of living system instruments.",
+   "kind": "knowledge",
+   "keys": [
+    "omarchy.nixfred.com",
+    "omarchy site",
+    "omarchy website",
+    "omarchy plugins"
+   ]
+  },
+  {
+   "id": "filter.nixfred.com",
+   "host": "filter.nixfred.com",
+   "url": "https://filter.nixfred.com/",
+   "name": "The Great Filter",
+   "role": "Build a galaxy, seed it with civilizations, and watch almost all of them disappear.",
+   "kind": "knowledge",
+   "keys": [
+    "filter.nixfred.com",
+    "filter site",
+    "filter website",
+    "the great filter"
+   ]
+  },
+  {
+   "id": "physics.nixfred.com",
+   "host": "physics.nixfred.com",
+   "url": "https://physics.nixfred.com/",
+   "name": "Where Physics Starts Sweating",
+   "role": "A cinematic guide to the strangest frontiers in real physics, from neutron star interiors and time dilation to black hole horizons.",
+   "kind": "knowledge",
+   "keys": [
+    "physics.nixfred.com",
+    "physics site",
+    "physics website",
+    "where physics starts sweating"
+   ]
+  },
+  {
+   "id": "art.nixfred.com",
+   "host": "art.nixfred.com",
+   "url": "https://art.nixfred.com/",
+   "name": "News Weather",
+   "role": "Abstract generative art driven by a portrait of world signals.",
+   "kind": "knowledge",
+   "keys": [
+    "art.nixfred.com",
+    "art site",
+    "art website",
+    "news weather"
+   ]
+  },
+  {
+   "id": "polymarket.nixfred.com",
+   "host": "polymarket.nixfred.com",
+   "url": "https://polymarket.nixfred.com/",
+   "name": "Polymarket War Room",
+   "role": "Open a fake money account, browse real live Polymarket markets, and paper trade against them.",
+   "kind": "knowledge",
+   "keys": [
+    "polymarket.nixfred.com",
+    "polymarket site",
+    "polymarket website",
+    "polymarket war room"
+   ]
+  },
+  {
+   "id": "sun.nixfred.com",
+   "host": "sun.nixfred.com",
+   "url": "https://sun.nixfred.com/",
+   "name": "Solar Save Foundation",
+   "role": "The Sun has roughly 4.8 billion years left and cannot save itself.",
+   "kind": "knowledge",
+   "keys": [
+    "sun.nixfred.com",
+    "sun site",
+    "sun website",
+    "solar save foundation"
+   ]
+  },
+  {
+   "id": "qumulo.nixfred.com",
+   "host": "qumulo.nixfred.com",
+   "url": "https://qumulo.nixfred.com/",
+   "name": "Qumulo Field Guide",
+   "role": "An independent field guide to Qumulo. The architecture, the economics, and how to defend the design in front of people who will push back.",
+   "kind": "knowledge",
+   "keys": [
+    "qumulo.nixfred.com",
+    "qumulo site",
+    "qumulo website",
+    "qumulo field guide"
+   ]
+  },
+  {
+   "id": "ninjaone.nixfred.com",
+   "host": "ninjaone.nixfred.com",
+   "url": "https://ninjaone.nixfred.com/",
+   "name": "N1 Field Guide",
+   "role": "A source validated, interactive field guide to the complete NinjaOne portfolio, written for enterprise solution engineering.",
+   "kind": "knowledge",
+   "keys": [
+    "ninjaone.nixfred.com",
+    "ninjaone site",
+    "ninjaone website",
+    "n1 field guide"
+   ]
+  },
+  {
+   "id": "tailscale.nixfred.com",
+   "host": "tailscale.nixfred.com",
+   "url": "https://tailscale.nixfred.com/",
+   "name": "Tailscale Field Guide",
+   "role": "An unofficial, mechanism first field guide to Tailscale.",
+   "kind": "knowledge",
+   "keys": [
+    "tailscale.nixfred.com",
+    "tailscale site",
+    "tailscale website",
+    "tailscale field guide"
+   ]
+  },
+  {
+   "id": "calc.nixfred.com",
+   "host": "calc.nixfred.com",
+   "url": "https://calc.nixfred.com/",
+   "name": "Field Calculators",
+   "role": "Field calculators for IT infrastructure conversations.",
+   "kind": "knowledge",
+   "keys": [
+    "calc.nixfred.com",
+    "calc site",
+    "calc website",
+    "field calculators"
+   ]
+  },
+  {
+   "id": "bandwidth.nixfred.com",
+   "host": "bandwidth.nixfred.com",
+   "url": "https://bandwidth.nixfred.com/",
+   "name": "The Funnel and the Flood",
+   "role": "A field guide to the bandwidth of human communication, from the wink to fiber to AI.",
+   "kind": "knowledge",
+   "keys": [
+    "bandwidth.nixfred.com",
+    "bandwidth site",
+    "bandwidth website",
+    "the funnel and the flood"
+   ]
+  },
+  {
+   "id": "aiwatch.nixfred.com",
+   "host": "aiwatch.nixfred.com",
+   "url": "https://aiwatch.nixfred.com/",
+   "name": "AI Signal",
+   "role": "Daily expert synthesis, signal scoring, and strategic drift detection.",
+   "kind": "knowledge",
+   "keys": [
+    "aiwatch.nixfred.com",
+    "aiwatch site",
+    "aiwatch website",
+    "ai signal"
+   ]
+  }
+ ]
+}

@@ -14,6 +14,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 
 import { createHash } from "node:crypto";
 import { tokenize, anchorSlug, SITE } from "../ask/text.js";
 import { parseBlocks, checksFrom } from "../ask/commands.js";
+import { decode, fragmentToMd, clean, sections, chunkMd } from "../ask/chunk.js";
 
 const ROOT = `${import.meta.dir}/..`;
 const OUT = `${ROOT}/site`;
@@ -21,10 +22,6 @@ const read = (p: string) => readFileSync(p, "utf8");
 
 // ── 1. the page list, in sitemap order (the sitemap is generated from the manifest) ──
 const locs = [...read(`${OUT}/sitemap.xml`).matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1]);
-
-const ENT: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'", apos: "'", nbsp: " ", rarr: "→", larr: "←", middot: "·", hellip: "…", rsquo: "'", lsquo: "'", rdquo: '"', ldquo: '"', times: "×" };
-const decode = (s: string) => s.replace(/&(#x[0-9a-f]+|#\d+|[a-z0-9]+);/gi, (m, e) =>
-  e[0] === "#" ? String.fromCodePoint(e[1] === "x" || e[1] === "X" ? parseInt(e.slice(2), 16) : +e.slice(1)) : (ENT[e.toLowerCase()] ?? m));
 
 // HTML tool pages (home, map, spawn, ...) have no .md twin: turn the article into light markdown.
 function htmlToMd(html: string): string {
@@ -34,50 +31,10 @@ function htmlToMd(html: string): string {
     .replace(/<div class="invite-ribbon">[\s\S]*?<\/div>/g, "")
     .replace(/<div class="mentor">[\s\S]*?<\/div>/g, "")
     .replace(/<div class="pager">[\s\S]*?<\/div>/g, "");
-  a = a.replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, (_, c) => "\n```\n" + decode(c.replace(/<[^>]+>/g, "")).trim() + "\n```\n");
-  a = a.replace(/<h([1-4])[^>]*>([\s\S]*?)<\/h\1>/gi, (_, n, t) => `\n\n${"#".repeat(+n)} ${t.replace(/<[^>]+>/g, "").trim()}\n\n`);
-  a = a.replace(/<li[^>]*>/gi, "\n- ").replace(/<\/(p|div|ol|ul|section|details|summary|blockquote|table|tr)>/gi, "\n\n").replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<code>([\s\S]*?)<\/code>/gi, "`$1`").replace(/<(b|strong)>([\s\S]*?)<\/\1>/gi, "**$2**");
-  a = decode(a.replace(/<[^>]+>/g, ""));
-  return a.split("\n").map(l => l.replace(/[ \t]+/g, " ").trim()).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  return fragmentToMd(a);
 }
 
-// ── 2. chunking (port of larry/chunk.py, but keeping line breaks so commands stay readable) ──
-const TARGET = 450, MAX = 600, MIN = 120, MERGE = 260, OVERLAP = 60;
-const words = (s: string) => s.split(/\s+/).filter(Boolean).length;
-function clean(md: string): string {
-  return md.replace(/^<!--[\s\S]*?-->\s*/, "").replace(/^---\n[\s\S]*?\n---\n/, "").trim();
-}
-function sections(md: string): [string, string, string][] {
-  const out: [string, string, string][] = []; let stack: Record<number, string> = {}; let buf: string[] = []; let cur = ""; let inCode = false;
-  const flush = () => { const body = buf.join("\n").trim(); if (body) out.push([Object.keys(stack).map(Number).sort().map(k => stack[k]).join(" > "), cur, body]); };
-  for (const line of md.split("\n")) {
-    if (line.trim().startsWith("```")) inCode = !inCode;
-    const m = inCode ? null : line.match(/^(#{1,4})\s+(.+?)\s*#*\s*$/);
-    if (m) { flush(); buf = []; const lvl = m[1].length; cur = m[2].trim(); stack = Object.fromEntries(Object.entries(stack).filter(([k]) => +k < lvl)); stack[lvl] = cur; }
-    else buf.push(line);
-  }
-  flush();
-  return out;
-}
-function windows(body: string): string[] {
-  if (words(body) <= MAX) return [body];
-  const lines = body.split("\n"); const out: string[] = []; let cur: string[] = []; let n = 0;
-  for (const l of lines) {
-    cur.push(l); n += words(l);
-    if (n >= TARGET) {
-      out.push(cur.join("\n"));
-      const keep: string[] = []; let k = 0;                       // ~OVERLAP words of trailing context
-      for (let i = cur.length - 1; i >= 0 && k < OVERLAP; i--) { keep.unshift(cur[i]); k += words(cur[i]); }
-      cur = keep; n = k;
-    }
-  }
-  if (cur.length && n > OVERLAP) {
-    if (n < MIN && out.length) out[out.length - 1] += "\n" + cur.slice(cur.length ? 1 : 0).join("\n");
-    else out.push(cur.join("\n"));
-  }
-  return out;
-}
+// ── 2. chunking: ask/chunk.js (shared with scripts/fleet-index.ts) ──
 
 type Page = { url: string; slug: string; title: string; covers: string; md: string };
 const pages: Page[] = [];
@@ -104,20 +61,7 @@ const NO_CHUNKS = new Set(["map"]);
 const forChunks = (md: string) => md.replace(/^(`{4,})[^\n]*\n[\s\S]*?\n\1\s*$/gm, "(verbatim file shown on the page; read it with get_file or at its URL)");   // the Map repeats one resume prompt per step and swamps retrieval; still listed + get_page-able
 pages.forEach((pg, pi) => {
   if (NO_CHUNKS.has(pg.slug)) return;
-  const secs = sections(forChunks(pg.md));
-  const merged: [string, string, string][] = []; let acc: [string, string, string] | null = null;
-  for (const [path, head, body] of secs) {
-    if (!acc) acc = [path, head, body];
-    else if (words(acc[2]) < MERGE && words(acc[2]) + words(body) <= MAX) acc[2] += `\n\n## ${head}\n` + body;
-    else { merged.push(acc); acc = [path, head, body]; }
-  }
-  if (acc) {
-    const last = merged[merged.length - 1];
-    if (last && words(acc[2]) < MIN && words(last[2]) + words(acc[2]) <= MAX + MIN) last[2] += `\n\n## ${acc[1]}\n` + acc[2];
-    else merged.push(acc);
-  }
-  for (const [path, head, body] of merged)
-    for (const w of windows(body)) chunks.push({ p: pi, h: head, hp: path, a: head ? "#" + anchorSlug(head) : "", t: w.trim() });
+  for (const c of chunkMd(forChunks(pg.md))) chunks.push({ p: pi, ...c });
 });
 
 // ── 3. BM25 postings: term -> [chunkIndex, tf, chunkIndex, tf, ...] ──

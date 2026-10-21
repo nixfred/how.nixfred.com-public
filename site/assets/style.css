@@ -382,6 +382,7 @@ a.st-title:hover{color:var(--accent)}
 .byo-out-head .spine-copy{margin-left:auto;flex:none;font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:8px;border:1px solid var(--accent);background:var(--bg3);color:var(--accent);cursor:pointer}
 .col code.byo-prompt{display:block;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13.5px;line-height:1.6;padding:12px 14px;background:#0b0f14;border:1px solid #2a5c4f;border-radius:9px;color:var(--ink)}
 
+/* ask-larry-panel:start (one source: how.nixfred.com's chat and /embed.js, cut out by ask/panel-build.js) */
 /* ── Ask Larry: hero bar, sidebar ask row, chapter button, docked pill + panel ── */
 .cta-nav.ask{border-color:var(--accent);color:var(--accent);background:rgba(57,208,168,.07)}
 .al-hero{margin:22px 0 26px;padding:18px 18px 14px;border:1px solid var(--accent);border-radius:14px;
@@ -468,6 +469,7 @@ body:not(.al-min) .al-pill{display:none}
   .main{padding-bottom:170px}
   .al-hero-row{flex-direction:column}.al-hero-row button{padding:12px}
 }
+/* ask-larry-panel:end */
 
 /* one paste: the homepage start path and /recipe-box (install, sign in, paste one prompt) */
 .onepaste{margin:0 0 14px;padding-left:22px;color:var(--ink2);line-height:1.6}

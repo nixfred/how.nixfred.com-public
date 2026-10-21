@@ -7,6 +7,7 @@ const ROOT = `${import.meta.dir}/..`; const OUT = process.argv[2];
 
 // what goes out: served files, the server code, the scripts that build the index and the manifest
 const ALLOW = ["site", "functions", "ask", "scripts/ask-index.ts", "scripts/mcp-manifest.ts", "scripts/ingest.ts", "scripts/public-export.ts",
+  "scripts/fleet-index.ts", "scripts/fleet-crawl.ts",
   "mcp-tools.json", "package.json", "bun.lock"];
 // held back on purpose until fixed at the source (each is listed in the public README, never dropped silently).
 // A held-back file that scans clean is mirrored again automatically.
@@ -15,9 +16,9 @@ const HOLD: Record<string, string> = {
 };
 
 export const HOST_HASHES = new Set(["3:mj5xqm", "3:tpi3i1", "4:18fxzs4", "3:bd2pnt", "4:5c7zia", "6:17m2iyu"]);   // same list as ask/core.js
-const fnv1a = (s: string) => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h; };
-const PUBLIC_EMAILS = new Set(["larry@nixfred.tech", "frednix@gmail.com", "git@github.com"]);   // the contact addresses the site already publishes
-const RULES: [string, RegExp][] = [
+export const fnv1a = (s: string) => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h; };
+export const PUBLIC_EMAILS = new Set(["larry@nixfred.tech", "frednix@gmail.com", "git@github.com"]);   // the contact addresses the site already publishes
+export const RULES: [string, RegExp][] = [
   ["private-ip", /\b(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})\b/g],
   ["tailnet-ip", /\b100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d{1,3}\.(?!0\b)\d{1,3}\b/g],   // x.y.z.0 network examples are fine
   ["tailnet-host", /\b[a-z0-9-]+\.ts\.net\b|\btail[0-9a-f]{5,}\b/gi],

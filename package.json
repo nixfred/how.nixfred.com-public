@@ -4,10 +4,12 @@
   "private": true,
   "description": "how.nixfred.com, Larry's field guide: take a vanilla Claude Code install and build it into your own AI.",
   "scripts": {
-    "build": "bun build.ts && bun scripts/ask-index.ts && bun scripts/mcp-manifest.ts",
+    "build": "bun build.ts && bun scripts/ask-index.ts && bun scripts/fleet-index.ts && bun scripts/mcp-manifest.ts",
     "audit": "bun audit.ts",
     "serve": "python3 -m http.server 8099 -d site",
-    "test:ask": "bun test/ask-smoke.ts",
+    "test:ask": "bun test/ask-smoke.ts && bun test/fleet-contract.ts",
+    "crawl:fleet": "bun scripts/fleet-crawl.ts",
+    "test:mobile": "node test/embed-mobile.mjs",
     "eval": "bun eval/eval-live.ts"
   },
   "dependencies": {
