@@ -10,7 +10,7 @@ slug: "26-connectors"
 
 **For you, the human, start here.** An AI that can only see what you paste is still half-blind. Connect it to where your work actually lives, email, calendar, documents, team chat, the live web, and it stops being a clever text box and starts acting on your real day. Every connector you add deletes a class of "let me give you context" busywork. The catch worth knowing up front: each connector also costs context, so connect what you'll use and trim what you won't.
 
-**What it covers (searchable):** connectors, MCP servers, Gmail / email, calendar, Google Drive / Notion / docs, Slack / Teams, web and research access, MCP context cost, MCP-for-exploration vs hardcode-for-production.
+**What it covers (searchable):** connectors, MCP (Model Context Protocol) servers, Gmail / email, calendar, Google Drive / Notion / docs, Slack / Teams, web and research access, MCP context cost, MCP-for-exploration vs hardcode-for-production.
 
 **How to hand it off:** point your AI here so it reaches your real material instead of guessing, and stays disciplined about context cost. The section below is written to your AI.
 
@@ -76,7 +76,7 @@ Once this is wired, one of the highest-value things you can do with it is **OSIN
 
 ## 26.7 In Claude Code: MCP connectors (and when to skip them)
 
-In Claude Code, connectors arrive as **MCP servers**, and any connector your human already added at claude.ai shows up automatically (switch one off per project in `/mcp`). There's a pro nuance worth knowing now (full treatment in Chapter 31): Claude Code defers MCP tool definitions by default (tool search), so only tool names and server instructions load at start and full definitions load when a tool is actually needed. Servers still cost something, big tool outputs most of all, so:
+In Claude Code, connectors arrive as **MCP servers** (MCP is the Model Context Protocol, the standard plug that lets an AI use outside tools), and any connector your human already added at claude.ai shows up automatically (switch one off per project in `/mcp`). There's a pro nuance worth knowing now (full treatment in Chapter 31): Claude Code defers MCP tool definitions by default (tool search), so only tool names and server instructions load at start and full definitions load when a tool is actually needed. Servers still cost something, big tool outputs most of all, so:
 
 - **Use MCP for exploration**: when you want to range across a tool's full surface.
 - **Hardcode a single API endpoint for production**: if you only ever need one thing (read one Notion DB), wiring that one call is far cheaper than loading the whole server.

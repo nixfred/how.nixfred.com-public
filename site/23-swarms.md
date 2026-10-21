@@ -10,7 +10,7 @@ slug: "23-swarms"
 
 **For you, the human, start here.** Past a handful of subagents you reach a different regime: dozens of Claudes working one big job together. This is where the heaviest users live, the people doing whole-codebase migrations as one job, and it's the bridge from "subagents" (Chapter 22) to "Dynamic Workflows" (Chapter 24). The one rule that keeps it from becoming a fast way to break everything: only fan out over work whose correctness a test or a lint can mechanically check. The step-by-step recipes are in Chapter 32; this is the map.
 
-**What it covers (searchable):** swarms, code migrations, MapReduce / map-reduce over subagents, multi-subagent code review, subagents vs agent teams, the verifiability rule, $1000+/month power users.
+**What it covers (searchable):** swarms, code migrations, MapReduce / map-reduce over subagents, multi-subagent code review, subagents vs agent teams, the verifiability rule, the heavy power users.
 
 **How to hand it off:** point your AI here so it scales to many agents only when the job's shape (mechanical fan-out, checkable output) actually calls for it. The section below is written to your AI.
 
@@ -59,7 +59,7 @@ Teams cost more and run longer, but for big, multi-domain projects the **cohesio
 
 ## 23.4 Swarms are already here
 
-This isn't hypothetical. There's a growing group of internal users spending **$1,000+ a month** in credits, and the percentage is climbing fast. What are they doing? Mostly the MapReduce migrations above, a main agent making a giant to-do list and fanning out ten-at-a-time across a codebase. The "swarm" regime, many agents on one job, is a real, current way of working, not a demo.
+This isn't hypothetical. There's a growing group of the heaviest power users, burning through serious credits every month, and the group is climbing fast. What are they doing? Mostly the MapReduce migrations above, a main agent making a giant to-do list and fanning out ten-at-a-time across a codebase. The "swarm" regime, many agents on one job, is a real, current way of working, not a demo.
 
 > **Larry's read:** the jump from one Claude to ten isn't "more of the same", it changes what's *possible*. A migration that was pure tedium becomes orchestration. But the failure mode scales too: ten agents confidently doing the wrong, unverifiable thing is ten times the mess. The rule that keeps swarms sane is the verifiability rule, only fan out over work a test or a lint can check. Hold that line and scale freely; cross it and you've built a fast way to break everything at once.
 
@@ -87,4 +87,4 @@ Lost the thread? The [Map](map.html) shows exactly where you are. Otherwise the 
 2. Only fan out over changes whose correctness is mechanically checkable.
 3. The multi-subagent code review (find wide → refute → keep survivors) is the other heavy pattern.
 4. Subagents work in isolation; **agent teams** share a task list and talk, more cost, more cohesion, and they are **experimental**, enabled only with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`.
-5. Swarms are real today (the $1,000+/month users), full recipes in Chapter 32. Next: Chapter 24.
+5. Swarms are real today (the heaviest power users run them), full recipes in Chapter 32. Next: Chapter 24.

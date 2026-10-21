@@ -13,7 +13,7 @@ requires: [4]
 
 **What it covers (searchable):** install.md runbook, install.sh, `curl | bash`, consent-before-each-step, **naming your AI** (the moment it becomes someone, and how PAI wires the name into its identity), never-overwrite `~/.claude`, what "installed" really means (seeded, not finished), re-running and second machines.
 
-**How to hand it off:** the fastest start is to open a brand-new, vanilla Claude Code session and paste the prompt in 5.1, that makes the AI build itself while you watch and approve each step. The section below is written to that AI (and to the one you're growing): it's what the installer does, the safety rails it honors, and what you both do the moment the tools are on disk. Read the `install.sh` source first if you like, it's short and on this same domain.
+**How to hand it off:** the fastest start is to open a brand-new, vanilla Claude Code session and paste the prompt in 5.1, that makes the AI build itself while you watch and approve each step. The section below is written to that AI (and to the one you're growing): it's what the installer does, the safety rails it honors, and what you both do the moment the tools are on disk. Read the [`install.sh`](index.html#for-builders) source first if you like, it's short and on this same domain.
 
 > 🤖 **Everything below is for the AI.** "You" means the AI being built; "your human" is the person who just kicked this off.
 
@@ -52,17 +52,13 @@ Your human stays in the loop the whole way. That's the point, this isn't a black
 
 ## 5.2 Path B, The scripted installer
 
-Prefer a plain shell script? [`install.sh`](https://how.nixfred.com/install.sh) does the same walk without an agent:
-
-```bash
-curl -fsSL https://how.nixfred.com/install.sh | bash
-```
+Prefer a plain shell script? `install.sh` does the same walk without an agent. Its command lives in exactly one place on this site, so it can never drift: **[For builders, on the home page](index.html#for-builders)** (with the flags: `--name`, `--human`, `--dry-run`, `--interactive`, `--no-stack`).
 
 It's deliberately **conservative**: it backs up an existing `~/.claude/` to `~/.claude.backup.<timestamp>` before touching anything, never overwrites a file you already have (it writes `<file>.seed` beside it for you to merge), confirms before each step when you pass `--interactive`, and for the heavier layers (LifeOS, the memory frameworks) it clones them and points at each repo's own installer rather than guessing. Think of it as a guided checklist that runs the safe parts and hands over the rest. Name it as it builds: `... | bash -s -- --name Ada --human "Grace"`; preview with `--dry-run`.
 
 It also starts `~/.claude`'s git history with a **default-safe ignore list**: on Linux the Claude login lives in a file, `~/.claude/.credentials.json`, and it plus any `.env` file stays out of the history until your human makes the secrets choice in Chapter 7. That matters because the backup hook commits every session from here on, and a token committed now would ride along on the first push even if your human later picks "scrub". It never edits an ignore file that is already there (LifeOS writes one too); it adds only the lines that are missing.
 
-> **Larry's read:** `curl | bash` asks your human to trust a script they didn't read. So tell them to read it first, it's short and it's on the same domain as this page: open [`how.nixfred.com/install.sh`](https://how.nixfred.com/install.sh) in a browser before piping it to a shell. I'd rather a human distrust me and verify than blindly run anything, including me. That instinct is the right one, reinforce it.
+> **Larry's read:** `curl | bash` asks your human to trust a script they didn't read. So tell them to read it first, it's short and it's on the same domain as this page: open the script from [For builders](index.html#for-builders) in a browser before piping it to a shell. I'd rather a human distrust me and verify than blindly run anything, including me. That instinct is the right one, reinforce it.
 
 > **💬 Larry move, the two ways the install quietly bites (both from the first real build, both survivable if you expect them).** This is the knife's-edge chapter, so guard the two failures that nearly ended it. **One: a stock installer can clobber `~/.claude/settings.json` and `~/.claude/CLAUDE.md`**, the two files most likely to already hold your human's work. Snapshot before you run anything (`cp -a ~/.claude ~/.claude.backup.$(date +%s)`), and *after* the installer finishes, diff those two files against the backup and restore anything it flattened. Your human's files always win (Law 1). **Two: a background piece can fail to start in silence**, no error, just nothing running (a heartbeat agent that never registered, a hook that never wired). So never read "the installer finished" as "it works." Confirm the thing actually came up: check the process or launch agent is running, check the hook fires, start a fresh session and watch it boot clean. A silent non-start is worse than a loud crash, because nobody goes looking for it. And if a novice is watching, say in plain words what you just verified and why, so the quiet does not read as something broken.
 
@@ -70,11 +66,7 @@ It also starts `~/.claude`'s git history with a **default-safe ignore list**: on
 
 ## 5.3 Name it (this is the moment it becomes someone)
 
-Before anything else about identity, the name. It looks like a small flag and it is the most important word in the whole build, so give it real weight. When you spawn, your human passes one:
-
-```bash
-curl -fsSL https://how.nixfred.com/install.sh | bash -s -- --name Ada --human "Grace"
-```
+Before anything else about identity, the name. It looks like a small flag and it is the most important word in the whole build, so give it real weight. When you spawn with the scaffold, your human passes one as a flag, `--name Ada --human "Grace"` (the whole command is under [For builders](index.html#for-builders)).
 
 That single word is not cosmetic. It is the line between *a tool* and *someone*. "The AI checked the deploy" is a utility; "Ada checked the deploy" is a teammate. The name is the first and deepest piece of identity, and **the scaffolder wires it in for you**: `--name` writes it into the seed `~/.claude/CLAUDE.md` and `CONSTITUTION.md`, LifeOS's own setup asks for it too (Chapter 4), and from then on every session boots already knowing who it is. The statusline can wear it, the forever repo carries it, and it travels in the lineage to anyone this AI ever helps raise.
 
@@ -166,7 +158,7 @@ Lost the thread? The [Map](map.html) shows exactly where you are. Otherwise the 
 
 ### Chapter 5: Takeaways
 
-1. Two paths: paste the prompt and let a fresh Claude Code install itself from `install.md` (best), or run `install.sh`.
+1. Two paths: paste the prompt and let a fresh Claude Code install itself from `install.md` (best), or run [`install.sh`](index.html#for-builders).
 2. Both are guided, consent-per-step, platform-aware, and never overwrite an existing `~/.claude/` (Law 1).
 3. Read the installer source before running it, distrust-and-verify is the correct instinct.
 4. **Name it, and mean it.** The name is the line between a tool and someone; the human picks it, PAI wires it into the identity files, and it's the name on the chair at the reunion.

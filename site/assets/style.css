@@ -467,3 +467,30 @@ body:not(.al-min) .al-pill{display:none}
   .main{padding-bottom:170px}
   .al-hero-row{flex-direction:column}.al-hero-row button{padding:12px}
 }
+
+/* one paste: the homepage start path and /recipe-box (install, sign in, paste one prompt) */
+.onepaste{margin:0 0 14px;padding-left:22px;color:var(--ink2);line-height:1.6}
+.onepaste>li{margin:0 0 14px}
+.onepaste>li>b{color:var(--ink)}
+.onepaste pre{margin:8px 0 0}
+.onepaste-out{margin:10px 0 0}
+.sell .onepaste-out code.byo-prompt{max-height:15em;overflow:auto}
+.agentnote{margin:0 0 14px;padding:9px 14px;border:1px solid #2a5c4f;border-left:3px solid var(--accent);border-radius:9px;background:rgba(57,208,168,.06);color:var(--ink2);font-size:14.5px;line-height:1.55}
+.tier-list{margin:6px 0 8px;padding-left:22px;color:var(--ink2)}
+.tier-list li{margin:4px 0}
+
+/* nav: the three ways in on top, everything else in one For builders group (addendum 4) */
+.nav-builders{margin:0 0 10px}
+.nav-builders>summary{cursor:pointer;list-style:none;padding:9px 11px;border:1px dashed var(--line);border-radius:9px;color:var(--ink2);font-weight:700;font-size:14px}
+.nav-builders>summary::-webkit-details-marker{display:none}
+.nav-builders>summary::after{content:" ▾";color:var(--ink3)}
+.nav-builders[open]>summary::after{content:" ▴"}
+.nav-builders[open]>summary{margin-bottom:10px}
+
+/* phones (addendum 6): nothing may push the page sideways. Code blocks already scroll in their own box; inline code and long
+   links wrap, wide tables scroll in their own box, and the Ask Larry form counts its padding inside its width. */
+.col :not(pre) > code{overflow-wrap:anywhere;word-break:break-word}
+.col a{overflow-wrap:anywhere}
+.col pre{max-width:100%}
+.col table{display:block;max-width:100%;overflow-x:auto}
+.al-form{box-sizing:border-box;max-width:100%}

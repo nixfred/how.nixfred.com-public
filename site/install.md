@@ -35,8 +35,8 @@ step zero, no matter how well the rest goes.
   things: (a) overwriting an existing `~/.claude/`, (b) anything needing `sudo`/system changes,
   (c) creating remote repos or handling secrets. And tell them the honest caveat: a fully-autonomous
   cold-start run is the *least* reliable path, the guided in-order build is the real method. (A plain
-  script that enforces the same safety rails: `curl -fsSL https://how.nixfred.com/install.sh | bash`,
-  it backs up first and pauses on the irreversibles.)
+  script that enforces the same safety rails is `install.sh`; its command lives in one place,
+  https://how.nixfred.com/#for-builders . It backs up first and pauses on the irreversibles.)
 
 ## Rules for you, the installing agent (both modes)
 
@@ -91,11 +91,13 @@ Snapshot `~/.claude/` per Rule 0 before any install. Then proceed.
   Full treatment, per distro: https://how.nixfred.com/04-larry-stack (Step 4a)
 
 ### Tier 1, The Brain (LifeOS, formerly PAI), the big one
-- **LifeOS** (Daniel Miessler, formerly Personal AI Infrastructure), skills, hooks, agents, identity scaffolding.
+- **LifeOS** (formerly Personal AI Infrastructure), skills, hooks, agents, identity scaffolding.
   This is the most important tier; clone it into `~/Projects` and read it before installing.
   ```bash
   mkdir -p ~/Projects && cd ~/Projects
-  git clone https://github.com/danielmiessler/LifeOS
+  LIFEOS_REPO=$(curl -fsSL https://ourlifeos.ai/ | grep -o 'https://github.com/[^"/]*/LifeOS"' | head -1 | tr -d '"')   # the source repo the project's own site links to
+  echo "$LIFEOS_REPO"                  # check it before cloning
+  git clone "$LIFEOS_REPO" LifeOS
   ```
   **If `~/.claude/` already has the user's content, do NOT let the installer overwrite it, back up
   first (Rule 0) and merge.** Then the bootstrap (preview, then real), which places the skill only:
@@ -126,10 +128,9 @@ The brain gives the *shape*; the seed gives the *self*: `CONSTITUTION.md` (the l
 a starter `CLAUDE.md`, the launcher that loads the constitution into the **system prompt** every launch,
 and three hooks (backup heartbeat, remember trigger, memory backstop). Read each file with your human
 first (every one is plain text under https://how.nixfred.com/seed/), then pick one way, with their yes:
-- **Scripted (recommended):** the scaffolder lays all of it down, backup first, never overwriting:
-  ```bash
-  curl -fsSL https://how.nixfred.com/install.sh | bash -s -- --no-stack --name <AIName> --human "<HumanName>"
-  ```
+- **Scripted (recommended):** the scaffolder lays all of it down, backup first, never overwriting. Its command
+  lives in one place, https://how.nixfred.com/#for-builders ; here add `--no-stack --name <AIName> --human "<HumanName>"`
+  to it (read the script with your human first, and run it only on their yes).
 - **By hand (only if the human is skipping the script; never both):** Chapter 4, Step 4c (fetch the seed
   files and add the launcher line) plus Chapter 21 ("Wire the seed hooks by hand"):
   https://how.nixfred.com/04-larry-stack

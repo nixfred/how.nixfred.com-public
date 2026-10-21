@@ -72,7 +72,7 @@ say "Spawning ${g}${LARRY_NAME}${o} for ${g}${HUMAN_NAME}${o}."
 
 # ── Tier 0: prerequisites ───────────────────────────────────────────────
 hdr "Tier 0 · Prerequisites"
-have claude && ok "Claude Code present" || warn "Claude Code not found, install it: https://docs.claude.com/claude-code"
+have claude && ok "Claude Code present" || warn "Claude Code not found, install it with: curl -fsSL https://claude.ai/install.sh | bash  (https://code.claude.com/docs/en/setup)"
 have git || die "git is required."
 if [ "$TAILSCALE" = 1 ] && ! have tailscale; then
   run "install Tailscale (multi-host mesh)" bash -c 'curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale up'
@@ -194,7 +194,9 @@ clone(){ local url="$1" dir="$STK/$2"
   if [ "$DRY" = 1 ]; then printf "${d}would clone %s${o}\n" "$2"; return; fi
   if git clone -q --depth 1 "$url" "$dir" 2>/dev/null; then ok "cloned $2"; else warn "could NOT clone $2 (skipped), $url"; fi; }
 # public layers only, a stranger's machine has no access to private repos
-clone https://github.com/danielmiessler/LifeOS.git LifeOS   # formerly PAI
+# LifeOS (formerly PAI): take the source repo from the project's own site, so this script names no person
+LIFEOS_REPO=$(curl -fsSL --max-time 15 https://ourlifeos.ai/ 2>/dev/null | grep -o 'https://github.com/[^"/]*/LifeOS"' | head -1 | tr -d '"')
+if [ -n "$LIFEOS_REPO" ]; then clone "$LIFEOS_REPO.git" LifeOS; else warn "could NOT find the LifeOS repo on https://ourlifeos.ai (skipped); Chapter 4 has the install"; fi
 [ "$OS" = "Linux" ] && clone https://github.com/nixfred/lmf4.1.git lmf4.1   # LMF4.1 is Linux only (systemd timers); a Mac uses LifeOS Cortex
 [ "$OS" = "Darwin" ] && clone https://github.com/nixfred/claude-on-mac.git claude-on-mac
 clone https://github.com/nixfred/nixnet.git nixnet

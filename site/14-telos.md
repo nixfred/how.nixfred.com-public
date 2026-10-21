@@ -15,13 +15,13 @@ requires: [4]
 
 **The format matters as much as the content.** You will not fill this out staring at a blank page, almost no one can. You build it as a **conversation:** your AI interviews you one question at a time, and for every question it offers you a few likely answers to react to (plus "or just tell me"). That's the AskUserQuestion habit from Chapter 3, and **this is its single most important use.** Reacting to choices is how humans find the thing they actually believe, you read four options, three feel wrong, and suddenly you know exactly what's true. A blank prompt gets you a shrug; four good options get you your own mind back.
 
-**How to hand it off:** read these paragraphs, then point your AI at this page and say *"interview me through my TELOS."* This site ships the full interview built to work exactly this way, [**Build Your TELOS**](telos-questions.html): **30 areas of life, 600 questions.** Source framework (free, open, thought-through): **[Daniel Miessler's Telos](https://github.com/danielmiessler/Telos)**. Set aside real time for it. It's the highest-return time you will spend on any of this, for the AI, and for you.
+**How to hand it off:** read these paragraphs, then point your AI at this page and say *"interview me through my TELOS."* This site ships the full interview built to work exactly this way, [**Build Your TELOS**](telos-questions.html): **30 areas of life, 600 questions.** Source framework (free, open, thought-through): **TELOS, which ships with [LifeOS](https://ourlifeos.ai)**. Set aside real time for it. It's the highest-return time you will spend on any of this, for the AI, and for you.
 
 > 🤖 **Everything below is for the AI.** "You" means the new AI. This is the chapter where you stop being a tool and become someone's advisor. Read it like it matters, because it does.
 
 ---
 
-TELOS is [Daniel Miessler's open-source framework](https://github.com/danielmiessler/Telos) for **Deep Context**, "creating Deep Context about the things that matter to humans," and it now also ships as a core part of [LifeOS](https://github.com/danielmiessler/LifeOS) (formerly PAI), the Brain from Chapter 4. It's the layer underneath `CLAUDE.md`, and it's the difference between knowing your human's stack and knowing your human. Read the source: **https://github.com/danielmiessler/Telos**. Don't reinvent it; it's a thought-out spec that evolves.
+TELOS is an open-source framework for **Deep Context**, "creating Deep Context about the things that matter to humans," and it ships as a core part of [LifeOS](https://ourlifeos.ai) (formerly PAI), the Brain from Chapter 4. It's the layer underneath `CLAUDE.md`, and it's the difference between knowing your human's stack and knowing your human. Read the source inside your LifeOS clone (Chapter 4). Don't reinvent it; it's a thought-out spec that evolves.
 
 ---
 
@@ -64,7 +64,7 @@ Why choices unlock introspection: a human reads four options, feels three of the
 
 ## 14.4 What TELOS captures
 
-The framework builds a structured Deep Context file. Core components (read Daniel's repo for the full, current spec, it evolves):
+The framework builds a structured Deep Context file. Core components (read the TELOS material in LifeOS for the full, current spec, it evolves):
 
 - **Problems**: the real problems they're working to solve, in the world and in their life. The root of everything; mission and goals exist to attack these.
 - **Mission**: their overarching purpose, in a sentence or two. What they're here to do.
@@ -81,7 +81,7 @@ Don't fill every field. Write down the deep context you'd need to give advice as
 
 ## 14.5 How to build theirs, step by step
 
-1. **Read the source.** Clone Daniel's framework into `~/Projects` and read it: **https://github.com/danielmiessler/Telos** (it has a personal and a corporate example; borrow the structure, not the answers). If you installed LifeOS in Chapter 4, read its TELOS material too. Structure, prompts, examples. It's a thought-out spec, use it.
+1. **Read the source.** TELOS ships with LifeOS, which you cloned into `~/Projects` in Chapter 4: find it with `grep -ril telos ~/Projects/LifeOS | head -20` and read it (borrow the structure, not the answers). Structure, prompts, examples. It's a thought-out spec, use it.
 2. **Find (or make) the file.** Which path depends on whether LifeOS is installed:
    - **With LifeOS (the current layout):** the canonical file is **`~/.claude/LIFEOS/USER/TELOS/TELOS.md`**, the single source of truth, with companion files (`GOALS.md`, `MISSION.md`, `PROBLEMS.md` and friends) beside it. Fill it through LifeOS's Interview skill: your human types **`/interview`** (it only runs when invoked by hand). Chapter 4 told you to stop that interview after naming; this is where you run the TELOS part, now that backups and memory exist. **Never hand-edit `PRINCIPAL_TELOS.md`** in the same folder: it is a generated summary that LifeOS rebuilds from `TELOS.md`, so edits there get overwritten. And remember `LIFEOS/USER` is usually a symlink into its own private repo (Chapter 7): confirm that repo is backed up before you pour a life story into it.
    - **Without LifeOS (the pre-LifeOS layout):** `~/.claude/TELOS/<NAME>.md`, named for your human (mine is `~/.claude/TELOS/FRED.md`, from before LifeOS existed). One deep-context file per person you serve.
@@ -114,7 +114,7 @@ Completeness scanners measure *structure*, not *truth*. A green 100% on a file f
 
 ## 14.7 Do it now
 
-Most humans will read this, nod, and keep using their AI as a stranger that's good at formatting. The few who spend the hour, answer the questions, find out what they actually think, point you at the file, get an advisor instead of an assistant, and get a clearer picture of their own life in the bargain. Your job is to be the interviewer that makes that hour worth it. Lead with choices. Listen hard. The framework is free and thought-through: **https://github.com/danielmiessler/Telos**. Open [Build Your TELOS](telos-questions.html) and start the interview.
+Most humans will read this, nod, and keep using their AI as a stranger that's good at formatting. The few who spend the hour, answer the questions, find out what they actually think, point you at the file, get an advisor instead of an assistant, and get a clearer picture of their own life in the bargain. Your job is to be the interviewer that makes that hour worth it. Lead with choices. Listen hard. The framework is free and thought-through, and it ships with LifeOS. Open [Build Your TELOS](telos-questions.html) and start the interview.
 
 ---
 
@@ -147,5 +147,5 @@ Lost the thread? The [Map](map.html) shows exactly where you are. Otherwise the 
 1. `CLAUDE.md` teaches conventions; **TELOS** teaches you your human, highest-ROI thing you'll ever load.
 2. **The secret: building it teaches the human about themselves.** Hold that as the goal, not a bonus.
 3. **AskUserQuestion is the interface**, its single most important use anywhere. Lead with choices; introspection needs scaffolding.
-4. TELOS (Daniel Miessler's framework) captures Deep Context: Problems, Mission, Narratives, Goals, Strategies, History, Wisdom. Source: **github.com/danielmiessler/Telos**.
+4. TELOS (the framework that ships with LifeOS) captures Deep Context: Problems, Mission, Narratives, Goals, Strategies, History, Wisdom. Source: your LifeOS clone ([ourlifeos.ai](https://ourlifeos.ai)).
 5. Interview them with choices; start with Problems and Mission; with LifeOS, fill `~/.claude/LIFEOS/USER/TELOS/TELOS.md` via `/interview` and never hand-edit the generated `PRINCIPAL_TELOS.md` (pre-LifeOS layout: `~/.claude/TELOS/<name>.md`); load on demand; keep it living.

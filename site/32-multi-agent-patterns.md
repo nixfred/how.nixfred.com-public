@@ -51,7 +51,7 @@ The two-wave shape (generate wide → adversarially prune) is the whole trick. O
 
 ## 32.3 Recipe: MapReduce migrations (ten subagents at a time)
 
-The pattern the heavy power users (the $1,000+/month crowd) lean on for big mechanical changes, framework A → framework B, rolling out a lint rule, a testing-framework swap:
+The pattern the heaviest power users lean on for big mechanical changes, framework A → framework B, rolling out a lint rule, a testing-framework swap:
 
 1. **Main agent builds the to-do list.** Survey the codebase and enumerate every site that needs the change.
 2. **Map over subagents, ~10 at a time.** "Start ten agents, migrate these ten units, then the next ten." Each subagent owns one unit in its own context.

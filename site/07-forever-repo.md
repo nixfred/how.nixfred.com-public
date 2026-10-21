@@ -11,7 +11,7 @@ requires: [4]
 
 **For you, the human, start here.** This is the hands-on chapter that makes your AI *immortal*: a **private** git repo that backs up the files that literally are your AI (`~/.claude/`, your dotfiles), auto-committing as you work, plus **`gup`**, a one-word "commit and push everything" so living in git takes zero effort. The day a disk dies, you either have your AI or a story about one. This chapter is the difference.
 
-**What it covers (searchable):** forever repo, private GitHub repo, no GitHub account yet (make one, or stay local for now), installing `gh` and `gitleaks` on Mac and Linux, `gh auth login`, `gh repo create --private`, the Claude login token (`.credentials.json`) kept out of history, SessionEnd backup hook, `gup` / `wgup`, `git remote -v` before every push (Law 11), `.gitignore`, immortality loop.
+**What it covers (searchable):** `gup`, the one-word command that saves everything (add, commit, push), forever repo, private GitHub repo, no GitHub account yet (make one, or stay local for now), installing `gh` and `gitleaks` on Mac and Linux, `gh auth login`, `gh repo create --private`, the Claude login token (`.credentials.json`) kept out of history, SessionEnd backup hook, `gup` / `wgup`, `git remote -v` before every push (Law 11), `.gitignore`, immortality loop.
 
 **How to hand it off:** point your AI here and let it stand up the backup. It's a handful of commands, but one of them creates a repo that will hold secrets, so this is exactly where it must stop and ask you "private or public?" instead of guessing. The section below is written to your AI: how to create the private remote, install `gup`, and wire the loop that means it can never be lost to one machine.
 
@@ -207,7 +207,7 @@ git -C ~/.claude rev-parse -q --verify HEAD >/dev/null && if git -C ~/.claude lo
 
 ## 7.3 Install `gup`, commit + push in one word
 
-The SessionEnd hook backs you up automatically, but you'll often want to checkpoint *now*, after a good session, before a risky change. `gup` does add + commit + push in a single word, auto-writing a searchable message from the changed files.
+The SessionEnd hook backs you up automatically, but you'll often want to checkpoint *now*, after a good session, before a risky change. **`gup` is the one-word command that saves everything.** It does add + commit + push in a single word, auto-writing a searchable message from the changed files.
 
 ```bash
 mkdir -p ~/bin

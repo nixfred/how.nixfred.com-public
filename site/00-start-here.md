@@ -16,7 +16,7 @@ slug: "00-start-here"
 
 ## Step 1, Install Claude Code
 
-Claude Code is the engine. The official installer is the same one line on both platforms. It needs `curl`, and a missing `curl` makes that one line a silent no-op (bash runs an empty script and reports success), so check for it first. This line exits nonzero when `curl` is missing, so an agent cannot mistake the gap for an install:
+Claude Code is the engine. Anthropic's own installer is the same one line on both platforms, and it is the only way this site installs it: one method, so every page and every step agrees ([their setup page](https://code.claude.com/docs/en/setup)). It needs `curl`, and a missing `curl` makes that one line a silent no-op (bash runs an empty script and reports success), so check for it first. This line exits nonzero when `curl` is missing, so an agent cannot mistake the gap for an install:
 
 ```bash
 command -v curl || { echo "curl is missing: install it with your package manager first (Step 4 lists the line for each distro), then come back"; false; }
@@ -26,21 +26,6 @@ Then the installer:
 
 ```bash
 curl -fsSL https://claude.ai/install.sh | bash
-```
-
-Prefer a package manager? Pick your platform and run its block.
-
-**Mac:**
-
-```bash
-brew install --cask claude-code     # update later with: brew upgrade claude-code
-```
-
-**Linux:**
-
-```bash
-# the npm package needs Node 22 or later: get it via your package manager (apt/dnf/pacman) or nvm first, then:
-npm install -g @anthropic-ai/claude-code
 ```
 
 **"`~/.local/bin` is not in your PATH"?** The official installer puts `claude` in `~/.local/bin`, and on a fresh Ubuntu (and some other setups) it ends with that note, which means a new terminal can't find `claude` yet. Add the folder to the PATH for your shell, once:
