@@ -80,7 +80,8 @@ function AskLarryPanel(o){
     q=String(q||'').trim(); if(!q||busy)return;
     if(q.length>500){q=q.slice(0,500);}
     if(minimized()||(mobile()&&!panel.classList.contains('al-expanded')))open(undefined,true);
-    var prior=hist.slice(-6).map(function(m){return {role:m.role,content:m.content};});
+    // the server needs each answer's cited pages (not just its text) to know where the chat is in the guide, so "then what" moves forward
+    var prior=hist.slice(-6).map(function(m){var x={role:m.role,content:m.content};if(m.role==='assistant'&&m.sources&&m.sources.length){x.sources=m.sources.slice(0,4).map(function(s){return s.url;});}return x;});
     hist.push({role:'user',content:q}); save(); render();
     var el=bubble('bot','<p class="al-typing"><span></span><span></span><span></span></p>'); busy=true; form.classList.add('busy');
     o.send(q,prior,function(raw){el.innerHTML=md(raw);log.scrollTop=log.scrollHeight;}).then(function(r){

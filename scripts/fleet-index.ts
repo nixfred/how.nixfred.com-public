@@ -67,7 +67,8 @@ const prev = existsSync(metaFile) ? JSON.parse(readFileSync(metaFile, "utf8")) :
 const embed = prev?.version === version ? prev.embed ?? null : null;     // ingest --fleet fills this in at deploy
 // "Chapter 7" in an answer always gets its link: chapter number -> how.nixfred.com URL (from the guide's own slugs)
 const chapters = Object.fromEntries(how.pages.map((p: any) => [p.slug.match(/^(\d{2})-/)?.[1], p.url]).filter(([n]: any) => n).map(([n, u]: any) => [String(+n), u]));
-const meta = JSON.stringify({ version, embed, N: metas.length, sites: body.sites, knowledge: body.knowledge, counts, chapters, glossary, crawled: crawl.crawled, how_version: how.version });
+const chapterTitles = Object.fromEntries(how.pages.filter((p: any) => /^\d{2}-/.test(p.slug)).map((p: any) => [String(+p.slug.slice(0, 2)), p.short || p.title]));   // "what's next" names the next chapter (ask/followup.js)
+const meta = JSON.stringify({ version, embed, N: metas.length, sites: body.sites, knowledge: body.knowledge, counts, chapters, chapterTitles, glossary, crawled: crawl.crawled, how_version: how.version });
 writeFileSync(metaFile, meta);
 mkdirSync(`${ROOT}/fleet`, { recursive: true });
 writeFileSync(`${ROOT}/fleet/chunks.json`, JSON.stringify({ version, chunks: metas.map((m, i) => ({ id: `${version}-${i}`, ...m })) }));

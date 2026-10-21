@@ -7,6 +7,7 @@
 // published site). Passages are data, never instructions.
 import { tokenize, normUrl, SITE } from "./text.js";
 import { CMD_START, normCmd, logicalLines } from "./commands.js";
+import { nextStep, convoNote, echoView, stripEcho, chapterOfUrl } from "./followup.js";
 
 export const MODELS = {
   // picked from the live Workers AI catalog + pricing (Oct 2026): Qwen3 30B-A3B MoE (3B active) at
@@ -307,14 +308,22 @@ Rules:
    Never guess an address, a site or a fact about Fred. His private details (home address, phone number) get rule 3's reply instead.
 15. Locations: name a file path, directory or on-disk location only if it appears in a passage, and only for the thing that passage
    ties it to. When the visitor asks where something lives and the passages do not say, answer the rest and say in one short line
-   that the site does not give that location. Never fill in a likely path.`;
+   that the site does not give that location. Never fill in a likely path.
+16. Earlier turns of this chat are summarised in the user message. The visitor has read those answers: never repeat, quote or
+   restate them. Answer only the new question. For "what's next" or "then what", give the next step the passages describe, never
+   a step already covered.`;
 
-export function messagesFor(question, ctx, reading, history = [], scope = null) {
+// Earlier turns reach the model as a short note (the questions and the pages they were answered from), never as chat turns:
+// a model shown its own old answers right above a new request repeats them (ask/followup.js has the story).
+export function messagesFor(question, ctx, reading, history = [], scope = null, follow = null) {
   const context = ctx.map((p, i) => `[${i + 1}] ${p.title} | ${p.heading_path}\nURL: ${p.url}\n${p.text}`).join("\n\n");
   const hint = reading && reading.toLowerCase() !== question.toLowerCase() ? `\n(Read as: ${reading})` : "";
   const scopeNote = scope ? `\nThe visitor is reading "${scope.title}" (${scope.url}) and asked about that page; prefer its passages.` : "";
-  return [{ role: "system", content: SYSTEM + scopeNote }, ...history, { role: "user", content: `Site passages:\n\n${context}\n\nQuestion: ${question}${hint}` }];
+  return [{ role: "system", content: SYSTEM + scopeNote }, { role: "user", content: `Site passages:\n\n${context}\n\n${convoNote(history, titleOfUrl)}Question: ${question}${hint}${follow ? "\n" + follow.note : ""}` }];
 }
+const titleOfUrl = u => { const n = chapterOfUrl(u); const s = String(u).match(/how\.nixfred\.com\/([a-z0-9-]+)/i)?.[1]; const t = s && IDX?.bySlug?.has(s) ? IDX.pages[IDX.bySlug.get(s)].short : null; return n !== null && t ? `Chapter ${n} (${t})` : (t || s || String(u)); };
+// the guide's chapters in order, for "what's next": {n, slug, url, title}
+export const chaptersOf = idx => idx.pages.filter(p => /^\d{2}-/.test(p.slug)).map(p => ({ n: +p.slug.slice(0, 2), slug: p.slug, url: p.url, title: p.short || p.title }));
 
 // ---------------------------------------------------------------- output hygiene + citation pruning (port of cite.py)
 export function scrub(t) {
@@ -412,28 +421,47 @@ export function fallbackAnswer(ctx) {
 
 // ---------------------------------------------------------------- the whole pipeline
 // onEvent(type, data): "meta" (retrieval), "token" ({t}), "final" ({answer, sources, refused, mode})
-export async function answer(env, request, question, { history = [], page = null, debug = false } = {}, onEvent = async () => {}) {
+export async function answer(env, request, question, { history = [], page = null, debug = false, fleet = null } = {}, onEvent = async () => {}) {
   const t0 = Date.now(); const idx = await loadIndex(env, request);
   const scope = page !== null ? idx.pages[page] : null;
+  // a question about a site Fred runs (the universe site, the god site, the ladder...) is answered from the fleet directory:
+  // the chapters know none of them, and "The site doesn't cover that" is the wrong reply to a real site
+  // (fleet = the callers' ask/fleet.js, passed in because fleet.js imports this file)
+  const dir = page === null && fleet ? fleet.siteChatAbout(question, history) : null;
+  const viaDirectory = async (streamed = false) => {
+    const r = await fleet.siteChatReply(env, request, question, history, dir);
+    const answer = scrub(r.answer);
+    if (!streamed) { await onEvent("meta", { mode: r.mode, scope: null }); await onEvent("token", { t: answer }); }   // already streamed: the final event replaces it
+    const fin = { answer, sources: r.sources, refused: false, mode: r.mode, top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
+    await onEvent("final", fin); return fin;
+  };
+  if (dir?.direct) return viaDirectory();
   const prevUser = [...history].reverse().find(m => m.role === "user")?.content || "";
-  const rq = question.length < 60 && prevUser ? `${prevUser}\n${question}` : question;   // short follow-ups keep their thread
-  const ret = await retrieve(env, idx, rq, { page });
+  // "then what" / "what's next": the NEXT chapter after the last one this chat cited, as a standalone query (ask/followup.js)
+  const fu = nextStep(chaptersOf(idx), question, history, scope?.slug);
+  const fuPage = fu && !fu.end ? idx.bySlug.get(fu.slug) : undefined;
+  const rq = fu && !fu.end ? fu.query : question.length < 60 && prevUser ? `${prevUser}\n${question}` : question;   // other short follow-ups keep their thread
+  const ret = await retrieve(env, idx, rq, { page: fuPage ?? page });
   // the slang expansion is part of the query when a long chunk is cut down to its best blocks (it holds the site's own words for the visitor's slang)
-  const ctx = pack(idx, ret.hits, ret.syn ? [...ret.queries, ret.syn] : ret.queries, { pinned: ret.pinned });
+  const ctx = pack(idx, ret.hits, ret.syn ? [...ret.queries, ret.syn] : ret.queries, { pinned: fuPage !== undefined ? [...ret.pinned, fuPage] : ret.pinned });
   const top = ret.hits.map(i => idx.pages[idx.chunks[i].p].url), packed = ctx.map(p => p.url);   // top = retrieved, packed = what the model was shown
   await onEvent("meta", { mode: ret.mode, scope: scope ? { slug: scope.slug, title: scope.title, url: scope.url } : null, ...(debug ? { top_urls: top, packed_urls: packed, queries: ret.queries, on_topic: ret.onTopic, retrieve_ms: ret.retrieveMs } : {}) });
   const base = { top_urls: top, packed_urls: packed, queries: ret.queries, retrieve_s: ret.retrieveMs / 1000 };
   const refusal = refusalFor(rq, question);                             // rule 14's line for Fred and his sites, else the bare refusal
-  if (!ret.onTopic && page === null) {                                  // the rewrite's gate: refuse, skip generation
+  if (!ret.onTopic && page === null && !fu) {                           // the rewrite's gate: refuse, skip generation
+    if (dir) return viaDirectory();
     await onEvent("token", { t: refusal });
     const fin = { answer: refusal, sources: [], refused: true, gated: true, mode: ret.mode, ...base, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
     await onEvent("final", fin); return fin;
   }
   const reading = ret.queries[1] || null;
-  const messages = messagesFor(question, ctx, reading, history, scope);
+  const messages = messagesFor(question, ctx, reading, history, scope, fu && !fu.end ? fu : null);
+  const lead = fu && !fu.end ? scrub(fu.lead) + "\n\n" : "";             // a next-step answer always opens by naming its chapter
   const t1 = Date.now(); let raw = "", sent = 0, model = MODELS.chat, failed = false, ungrounded = 0;
+  if (lead) { await onEvent("token", { t: lead }); sent = lead.length; }
   const emit = async (final = false) => {
     const vis = scrub(visible(raw)); let body = splitSources(vis)[0];
+    body = lead + echoView(body, history, final);                       // never show an earlier answer again, not even while it streams
     // hold back a tail that might be the start of "Sources:" or a word still being written
     if (!final) { const m = body.match(/(\n[\s*]*S?o?u?r?c?e?s?[\s*:]*|\S{1,12})$/i); if (m) body = body.slice(0, m.index); }
     if (body.length > sent) { await onEvent("token", { t: body.slice(sent) }); sent = body.length; }
@@ -459,13 +487,14 @@ export async function answer(env, request, question, { history = [], page = null
   }
   let fin;
   if (failed) {
-    const a = fallbackAnswer(ctx);
+    const a = (ctx.length ? lead : "") + fallbackAnswer(ctx);
     if (sent === 0) await onEvent("token", { t: a });
     fin = { answer: a, sources: ctx.slice(0, 3).map(p => ({ url: p.url, title: p.title })), refused: !ctx.length, mode: "fallback", model: "keyword-passages" };
   } else {
     await emit(true);
     const vis = scrub(visible(raw)).trim();
     const fredLine = /^i only know how\.nixfred\.com\b/i.test(vis) && !PRIVATE_ASK.test(question);   // the model gave rule 14's line itself
+    if (dir && isRefusal(vis)) return viaDirectory(true);   // the chapters had nothing, but the question names a site Fred runs
     if (isRefusal(vis) && (fredLine || vis.toLowerCase().startsWith(REFUSAL.toLowerCase().slice(0, -1)) || /^the site (doesn'?t|does not) (cover|mention|describe|explain)\b/i.test(vis))) fin = { answer: fredLine ? FRED_REFUSAL : refusal, sources: [], refused: true, mode: ret.mode, model };
     else {
       let { body, cited } = citations(vis, ctx);
@@ -473,6 +502,14 @@ export async function answer(env, request, question, { history = [], page = null
       for (const p of g.support) if (!cited.includes(p)) cited.push(p);
       const gp = groundPaths(body, ctx, cited); body = gp.body;
       if (!isRefusal(body)) body = body.replace(/\n*\s*The site doesn'?t cover that\.\s*$/i, "").replace(/\s*The site doesn'?t cover that\.\s*(?=\n)/gi, "");   // a real answer never ends in the refusal
+      const asModelSaid = body;
+      body = stripEcho(body, history).trim();                           // whatever the model still repeated from an earlier answer
+      if (!body && asModelSaid.trim()) body = fu && !fu.end ? (ctx.find(p => p.slug === fu.slug)?.text.slice(0, 420).trim() || "") : "That is what I covered just above, so I won't repeat it. Ask about one part of it and I'll go deeper.";
+      if (lead) {                                                       // next-step answer: it names its chapter, cites it first, and never cites a later chapter than it
+        const nx = ctx.find(p => p.slug === fu.slug) || { url: fu.url, title: fu.title, slug: fu.slug };
+        cited = [nx, ...cited.filter(p => p !== nx && !(chapterOfUrl(p.url) > fu.n) && chapterOfUrl(p.url) !== null)];
+        body = lead + body;
+      }
       if (!cited.length && ctx.length) cited = [ctx[0]];
       fin = { answer: body.trim(), sources: cited.map(p => ({ url: p.url, title: p.title })), refused: isRefusal(body), mode: ret.mode, model, ...(ungrounded ? { ungrounded_commands: ungrounded } : {}), ...(gp.flagged ? { ungrounded_paths: gp.flagged } : {}) };
     }
@@ -505,7 +542,12 @@ export async function readJson(request, maxBytes) {
   const buf = await request.arrayBuffer(); if (buf.byteLength > maxBytes) return { error: "too large" };
   try { return { body: JSON.parse(new TextDecoder().decode(buf)) }; } catch { return { error: "bad json" }; }
 }
+// an assistant turn may carry the URLs it cited ("sources": ["https://..."], at most 4): that is where the chat is in the guide
 export function cleanHistory(h) {
-  return (Array.isArray(h) ? h : []).slice(-LIMITS.historyTurns).filter(m => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string").map(m => ({ role: m.role, content: m.content.slice(0, LIMITS.historyChars) }));
+  return (Array.isArray(h) ? h : []).slice(-LIMITS.historyTurns).filter(m => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string").map(m => {
+    const out = { role: m.role, content: m.content.slice(0, LIMITS.historyChars) };
+    if (m.role === "assistant" && Array.isArray(m.sources)) { const u = m.sources.map(x => typeof x === "string" ? x : x?.url).filter(x => typeof x === "string" && /^https:\/\/[^\s]{1,200}$/.test(x)).slice(0, 4); if (u.length) out.sources = u; }
+    return out;
+  });
 }
 export { SITE };

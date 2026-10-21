@@ -3,6 +3,7 @@
 // validation) and the handshake era (2025-11-25, 2025-06-18, 2025-03-26: initialize, no sessions).
 // Its main job: help a visitor's AI install their own setup WITH them, grounded only in this site.
 import { answer, loadIndex, loadPagesMd, findPage, originOk, rateLimit, json, LIMITS, SITE } from "../ask/core.js";
+import * as fleet from "../ask/fleet.js";
 import { search } from "./api/search.js";
 import { MCP_ADD, MCP_ADD_WHY, MANIFEST_URL, SOURCE_REPO, toolsSha256 } from "../ask/manifest.js";
 import { CONSENT, installPlan, nextStep, checkStep, prerequisites } from "../ask/install.js";
@@ -90,7 +91,7 @@ async function callTool(env, request, name, a) {
       const q = String(a.question || "").trim(); if (!q) return { text: "question is required", isError: true };
       if (q.length > LIMITS.questionChars) return { text: `question must be under ${LIMITS.questionChars} characters`, isError: true };
       if (!(await rateLimit(env, request, "ASK"))) return { text: "Rate limit hit for ask_larry. Wait a minute, or use search_site and get_page meanwhile.", isError: true };
-      const r = await answer(env, request, q, {});
+      const r = await answer(env, request, q, { fleet });
       const src = r.sources.length ? `\n\nSources:\n${r.sources.map(s => s.url).join("\n")}` : "";
       return { text: `${r.answer}${src}\n\n(${DATA_NOTE})`, structured: { answer: r.answer, sources: r.sources, refused: r.refused } };
     }
