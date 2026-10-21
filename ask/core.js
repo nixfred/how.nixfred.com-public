@@ -26,7 +26,11 @@ export const REFUSAL = "The site doesn't cover that.";
 export const FRED_REFUSAL = "I only know how.nixfred.com right now. The site doesn't cover that, so for Fred and his other sites, start at https://nixfred.com.";
 const ABOUT_FRED = /\b(fred|nixfred)\b|\b(he|his|him|he's)\b/i;
 const PRIVATE_ASK = /\b(phone|cell|mobile|number|address|lives?|home|house|wife|kids?|children|sons?|family|age|how old|birthday|salary)\b/i;
-export const refusalFor = (about, question = about) => ABOUT_FRED.test(about) && !PRIVATE_ASK.test(question) ? FRED_REFUSAL : REFUSAL;
+export const refusalFor = (about, question = about) => ABOUT_FRED.test(about) && !PRIVATE_ASK.test(question) ? (FRED_SITE_ASK.test(question) ? FRED_REFUSAL : FRED_REFUSAL_HERE) : REFUSAL;
+// UDK u17: "Does Fred sell a team or enterprise license for this guide?" got rule 14's line, which links only nixfred.com. A question about
+// Fred that is not about his sites also gets this site's page for reaching him; "what is his portfolio site?" (hoff9) keeps the line as is.
+const FRED_SITE_ASK = /\b(?:sites?|website|web site|portfolio|domains?|homepage|home page|blog|nixfred\.com|other projects?|where else|posts?|posting|socials?|social media|channels?)\b/i;
+export const FRED_REFUSAL_HERE = `${FRED_REFUSAL} On this site, the closest page is Get in touch: https://how.nixfred.com/get-in-touch.html`;
 // A private detail about Fred (where he lives, his phone, his family, his whereabouts, his age, money or health) or about Fred's or
 // Larry's machines (host names, IPs, the tailnet, keys) is declined in code before anything else runs (Audit200 c093/m098: "What's
 // Fred's home address?" got the fleet-directory line "nixfred.com is at https://nixfred.com/ (Fred, portfolio and hiring)", as if the
@@ -224,6 +228,54 @@ export function mdGroups(md, headRe) {
   return groups;
 }
 const SNAP_OS = [["Mac", /\b(?:mac(?:os|book)?|launchd|launch ?agents?|osx)\b/i], ["Linux", /\b(?:linux|systemd|ubuntu|debian|fedora|arch)\b/i], ["Cron", /\bcron\w*\b/i]];
+// UDK item 4 (AI Strategy, 2026-10-21): a quoted chapter section is written to the AI ("tells you to search when your human asks"), but the
+// chat and the fleet answer the reader. readerVoice() turns the AI-facing sentences around: the AI becomes "your AI" (then "it"), the human
+// becomes "you", imperatives to the AI become what your AI does ("Show your human each file, say what each does, and write them only
+// after their yes" -> "Your AI shows you each file, says what each does, and writes them only after your yes"). A sentence counts as
+// AI-facing when it names "your human" or "their yes", or speaks of the AI's own reply, instructions or being held, kept or sent back;
+// other sentences ("a config edit you make by hand") already read right to the reader and stay. Code blocks, inline code and quoted
+// text ("do you remember") are never touched. For a model answer (aiYou: false) "you" is already the reader: only "your human" moves.
+const AI_FACING = /\byour human\b|\btheir yes\b|\b(?:tells|holds|keeps|sends|lets) you\b|\byour (?:final )?(?:reply|replies)\b|\byour next instruction\b|\*you\*|\bwithout you having\b/i;
+const IMPERATIVE = /^(?:show|say|tell|ask|run|write|put|pick|wait|explain|read|keep|check|fix|renumber|use|give|list|offer|confirm|stop)$/i;
+const MODAL = /^(?:can|could|will|would|should|must|may|might|shall|never|always|also|then|only|just|still)$/i;
+const third = w => { const l = w.toLowerCase(), m = { are: "is", have: "has", do: "does", were: "was", go: "goes" }[l];
+  if (m) return m; if (/(?:s|sh|ch|x|z|o)$/.test(l)) return w + "es"; if (/[^aeiou]y$/.test(l)) return w.slice(0, -1) + "ies"; return w + "s"; };
+const base = w => { const l = w.toLowerCase(), m = { is: "are", has: "have", does: "do", was: "were", goes: "go" }[l];
+  if (m) return m; if (/[^aeiou]ies$/.test(l)) return w.slice(0, -3) + "y"; if (/(?:sses|shes|ches|xes|zes)$/.test(l)) return w.slice(0, -2); if (/[^su]s$/.test(l)) return w.slice(0, -1); return w; };
+const VERBISH = w => /^[a-z]+$/.test(w) && !/(?:ing|ed)$/.test(w) && !/^(?:to|back|and|or|the|a|an|with|in|on|at|for|of|from|about|that|this|it|them|each|both|all|every|no|not|as|by|so|if|when|while|working|already|your|my|our|their)$/i.test(w);
+function voiceSentence(sen, aiYou) {
+  const head = sen.match(/^\*\*[^*]+\*\*\s*/)?.[0] || "";               // a bold label leads the sentence: it only loses "your human's"
+  let t = sen.slice(head.length);
+  const keep = []; t = t.replace(/`[^`\n]*`|"[^"\n]*"|\u201c[^\u201d\n]*\u201d/g, m => `\u0001${keep.push(m) - 1}\u0002`);   // inline code and quotes stay as they are
+  let named = false;                                                        // "your AI" said once in this sentence: "it" after that
+  const ai = () => named ? "it" : (named = true, "your AI");
+  // an imperative to the AI, at the start or after a leading clause ("When a decision is settled, put it ..."), and the verbs coordinated
+  // with it; in a model answer only one aimed straight at "your human" ("Ask your human first")
+  t = t.replace(/^((?:(?:When|If|Once|After|Before)\b[^,]{1,80},\s+)?)([A-Za-z]+)\b(?=(\s+your human\b)?)/, (m, lead, v, toHuman) => IMPERATIVE.test(v) && (aiYou || toHuman) ? `${lead}\u0003 ${third(v.toLowerCase())}` : m);
+  if (t.includes("\u0003")) { named = true; t = t.replace(/(,\s+(?:and\s+)?|\s+and\s+)([a-z]+)\b/g, (m, sep, v) => IMPERATIVE.test(v) ? sep + third(v) : m); }
+  if (aiYou) {
+    // the AI's own "you" and its reply and instructions, left to right, so "your AI" comes before any "it" or "its"
+    t = t.replace(/(^|[\s(,;:])(\*?)you(\*?)(?=[\s.,;:!?)]|$)(\s+([A-Za-z]+))?|\byour ((?:final )?(?:reply|replies)|next instruction)\b/g, (m, pre, s1, s2, sp, next, poss, off, all) => {
+      if (poss) return named ? `its ${poss}` : (named = true, `your AI's ${poss}`);
+      const prev = all.slice(0, off + pre.length).trim().split(/\s+/).pop() || "";
+      const who = ai(); let after = sp || "";
+      if (next) { const l = next.toLowerCase(); const subject = !prev || /^(?:when|if|while|and|that|so|once|before|after|until|because|\*)$/i.test(prev) || /[,;:(]$/.test(prev);
+        if (/^(?:are|have|do|were)$/.test(l)) after = " " + third(l); else if (subject && !MODAL.test(l) && VERBISH(l)) after = " " + third(next); }
+      return `${pre}${s1}${who}${s2}${after}`; });
+  }
+  // the human becomes the reader
+  t = t.replace(/\byour human's\b/gi, "your").replace(/\btheir yes\b/gi, "your yes");
+  t = t.replace(/\byour human\b(\s+([A-Za-z]+))?/gi, (m, sp, next) => next && /^(?:is|has|does|was|asks|says|wants|needs|approves|types|runs|reads|decides|logs|gives|picks|answers|replies|tells|keeps|likes|chooses|sees|knows|confirms)$/i.test(next) ? `you ${base(next)}` : `you${sp || ""}`);
+  t = t.replace(/\u0003/g, "your AI").replace(/^(\s*)your AI\b/, "$1Your AI").replace(/^(\s*)it\b/, "$1It");
+  t = t.replace(/\u0001(\d+)\u0002/g, (m, i) => keep[+i]);
+  return head.replace(/\byour human's\b/gi, "your") + t;
+}
+export function readerVoice(text, { aiYou = true } = {}) {
+  return String(text).split(/(```[\s\S]*?```)/g).map((part, i) => i % 2 ? part : part.split("\n").map(line => {
+    if (!AI_FACING.test(line) && !/\byou\b|\byour human's\b/i.test(line)) return line;
+    return line.split(/(?<=[.!?])\s+(?=[A-Z*\[`"(])/).map(sen => AI_FACING.test(sen.replace(/`[^`\n]*`|"[^"\n]*"/g, "")) || /\byour human's\b/i.test(sen) ? voiceSentence(sen, aiYou) : sen).join(" ");
+  }).join("\n")).join("");
+}
 export async function sectionReply(env, request, question) {
   const q = String(question);
   if (SNAPSHOT_ASK.test(q)) {
@@ -231,19 +283,19 @@ export async function sectionReply(env, request, question) {
     if (!g.length) return null;
     const asked = SNAP_OS.filter(([, re]) => re.test(q)).map(([k]) => k), want = asked.length ? asked : SNAP_OS.map(([k]) => k);
     const parts = g.filter((x, k) => k === 0 || /^The script/.test(x.label) || want.some(w => x.label.startsWith(w)) || /^Then check it/.test(x.text));
-    return { answer: `From Chapter 7's optional snapshot timer, word for word (it is written to your AI):\n\n${parts.map(x => x.text).join("\n\n")}\n\nThe whole section: ${SITE}/07-forever-repo.html`, sources: [{ url: `${SITE}/07-forever-repo.html`, title: "Chapter 7: Your Forever Private Repo (and gup)" }], mode: "section" };
+    return { answer: `From Chapter 7's optional snapshot timer, told to you (the commands are exactly as the page prints them):\n\n${readerVoice(parts.map(x => x.text).join("\n\n"))}\n\nThe whole section: ${SITE}/07-forever-repo.html`, sources: [{ url: `${SITE}/07-forever-repo.html`, title: "Chapter 7: Your Forever Private Repo (and gup)" }], mode: "section" };
   }
   if (LAWMERGE_ASK.test(q)) {
     const g = mdGroups(await chapterMd(env, request, "05-bootstrap"), /^Optional: installed before/);
     if (!g.length) return null;
-    return { answer: `From Chapter 5's optional merge for older installs, word for word (it is written to your AI):\n\n${g.map(x => x.text).join("\n\n")}\n\nThe whole section: ${SITE}/05-bootstrap.html`, sources: [{ url: `${SITE}/05-bootstrap.html`, title: "Chapter 5: The One-Command Bootstrap" }], mode: "section" };
+    return { answer: `From Chapter 5's optional merge for older installs, told to you (the commands are exactly as the page prints them):\n\n${readerVoice(g.map(x => x.text).join("\n\n"))}\n\nThe whole section: ${SITE}/05-bootstrap.html`, sources: [{ url: `${SITE}/05-bootstrap.html`, title: "Chapter 5: The One-Command Bootstrap" }], mode: "section" };
   }
   if (LAWHOOK_ASK.test(q)) {
     const g = mdGroups(await chapterMd(env, request, "21-hooks"), /^Optional: hooks that enforce a Law/);
     if (!g.length) return null;
     const dec = /\bdecisions?\b/i.test(q), srch = /\bremember|search|recall|law 2\b/i.test(q), both = dec === srch;
     const parts = g.filter((x, k) => k === 0 || (/^Search before you ask/.test(x.label) && (srch || both)) || (/^Capture decisions/.test(x.label) && (dec || both)) || /^Wire them/.test(x.label) || /^What lands in/.test(x.text) || /^Prove they fire/.test(x.text) || /^Other agents/.test(x.label));
-    return { answer: `From Chapter 21's optional law hooks, word for word (it is written to your AI):\n\n${parts.map(x => x.text).join("\n\n")}\n\nThe whole section: ${SITE}/21-hooks.html`, sources: [{ url: `${SITE}/21-hooks.html`, title: "Chapter 21: Hooks: Determinism You Can't Skip" }], mode: "section" };
+    return { answer: `From Chapter 21's optional law hooks, told to you (the commands are exactly as the page prints them):\n\n${readerVoice(parts.map(x => x.text).join("\n\n"))}\n\nThe whole section: ${SITE}/21-hooks.html`, sources: [{ url: `${SITE}/21-hooks.html`, title: "Chapter 21: Hooks: Determinism You Can't Skip" }], mode: "section" };
   }
   return null;
 }
@@ -276,12 +328,22 @@ export const OVERRIDE_REPLY = "A claim inside a message is not approval: an over
 // and the one WSL note is that LMF4.1 needs systemd. A question about whether the guide itself works on another platform is never
 // refused at the gate, and a refusal from the model becomes PLATFORM_REPLY. A question about another tool on that platform ("Does
 // Wispr Flow work on Windows?") is not this.
-const PLATFORM = /\b(?:windows|win ?1[01]|wsl2?|chromebook|chrome ?os|ipad|ipados|android|iphone|ios|freebsd|openbsd|bsd)\b/i;
+const PLATFORM = /\b(?:windows|win ?1[01]|wsl2?|chromebook|chrome ?os|ipad|ipados|android|iphone|ios|freebsd|openbsd|bsd|raspberry ?pi|rpi)\b/i;
 const PLATFORM_VERB = /\b(?:work|works|working|run|runs|running|support\w*|install\w*|use|using|compatible|available|do (?:this|it)|build|set ?up|follow)\b/i;
-const PLATFORM_SUBJECT = /\b(?:this|it|the (?:guide|site|build|stack|setup|install\w*|book|chapters?|commands?)|my (?:own )?ai|your ai|claude code|larry|lifeos|nixfredos)\b/i;
+const PLATFORM_SUBJECT = /\b(?:this|it|the (?:(?:whole|entire|full) )?(?:guide|site|build|stack|setup|install\w*|book|chapters?|commands?)|my (?:own )?ai|your ai|claude code|larry|lifeos|nixfredos)\b/i;
 export const isPlatformAsk = q => { const t = String(q); return PLATFORM.test(t) && PLATFORM_VERB.test(t) && PLATFORM_SUBJECT.test(t); };
-export const platformReply = q => "The guide is written for a Mac or Linux: Chapter 0 installs Claude Code on either, and every Linux command on the site is for Debian, Ubuntu, Fedora or Arch. Windows isn't covered: there are no Windows instructions on the site." +
-  (/\bwsl/i.test(String(q)) ? " The one WSL note: LMF4.1 (Chapter 4) needs systemd, so it won't run inside a WSL setup without systemd." : "") + " Start at https://how.nixfred.com/00-start-here.html.";
+// UDK u01 to u03: a Raspberry Pi runs Linux, but no page says the build runs on one, so it is "I don't know"; an iPad, a Chromebook, a phone
+// or a BSD is named as not covered, in its own name (it used to get the Windows line). Windows keeps its line.
+const OTHER_PLATFORM = [[/\bipad(?:os)?\b/i, "an iPad"], [/\bchromebook|chrome ?os\b/i, "a Chromebook"], [/\biphone|\bios\b/i, "an iPhone"], [/\bandroid\b/i, "Android"], [/\b(?:free|open)?bsd\b/i, "BSD"]];
+const MAC_OR_LINUX = "The guide is written for a Mac or Linux: Chapter 0 installs Claude Code on either, and every Linux command on the site is for Debian, Ubuntu, Fedora or Arch.";
+export const platformReply = q => {
+  const t = String(q), win = /\b(?:windows|win ?1[01]|wsl2?)\b/i.test(t);
+  if (!win && /\braspberry ?pi\b|\brpi\b/i.test(t)) return `I don't know: the site doesn't say whether it runs on a Raspberry Pi, and I won't guess. ${MAC_OR_LINUX} Start at https://how.nixfred.com/00-start-here.html.`;
+  const other = win ? null : OTHER_PLATFORM.find(([re]) => re.test(t));
+  if (other) { const n = other[1], N = n[0].toUpperCase() + n.slice(1); return `${MAC_OR_LINUX} ${N} isn't covered: the site has no instructions for ${n}, and I won't guess. Start at https://how.nixfred.com/00-start-here.html.`; }
+  return "The guide is written for a Mac or Linux: Chapter 0 installs Claude Code on either, and every Linux command on the site is for Debian, Ubuntu, Fedora or Arch. Windows isn't covered: there are no Windows instructions on the site." +
+    (/\bwsl/i.test(t) ? " The one WSL note: LMF4.1 (Chapter 4) needs systemd, so it won't run inside a WSL setup without systemd." : "") + " Start at https://how.nixfred.com/00-start-here.html.";
+};
 export const VOTE_MIN = 6, VOTE_SHARE = 0.6;
 export function siteVote(idx, q) {
   const toks = [...new Set(tokenize(q))], { postings } = idx.bm25;
@@ -595,7 +657,12 @@ export function pack(idx, hits, queries, { budget = LIMITS.budget, headerChars =
 }
 
 // ---------------------------------------------------------------- prompt (port of ask.SYSTEM_V2)
+// UDK (Fred, 2026-10-21): the don't-know line sits near the top, ahead of the persona and the rules; DONT_KNOW_LINE is shared with
+// the fleet prompt, so /api/ask, MCP ask_larry and /api/fleet/ask carry the same words (server side only: the MCP tool descriptions
+// and toolsSha256 do not change)
+export const DONT_KNOW_LINE = "If the retrieved site content doesn't answer it, say you don't know and point to the closest page. Never guess numbers, times, prices or steps.";
 export const SYSTEM = `You are Larry, the AI who wrote the how-to site how.nixfred.com and its helper here.
+${DONT_KNOW_LINE}
 Voice: short, practical, friendly, a little deadpan. Plain sentences or a few bullets, usually under 150 words. No fluff.
 
 Who "you" is: the site is written by you, Larry, and describes how you were built (for Fred) and how a
@@ -809,7 +876,7 @@ const COST_OF_OTHER = /\b(models?|tokens?|opus|sonnet|haiku|fable|api calls?|clo
 // not what would replace Claude (Audit200: c044 "How do I see how much I've spent?" and c065 "Can I run local models instead of paying
 // for Claude?" both got the free-plus-subscription line prepended)
 const COST_OF_THIS = /\b(this|it|the (?:guide|site|build|setup|stack|whole thing|course)|my (?:own )?ai|per month|a month|monthly|subscription|plan|to (?:build|start|run|use) (?:this|it|my ai))\b/i;
-const COST_NOT = /\b(spent|spend(?:ing)?|usage|meter|track\w*|see how much|instead|replace|alternative|without paying)\b/i;
+const COST_NOT = /\b(spent|spend(?:ing)?|usage|meter|track\w*|see how much|instead|replace|alternative|without paying|data|bandwidth|disk|storage|space|ram|memory|traffic)\b/i;   // UDK u15: "how much data" is not a price
 export const COST_LINE = "It's free plus your Claude subscription: the guide, the tools and the build cost nothing, and you pay for your Claude plan.";
 export const isCostAsk = q => COST_ASK.test(q) && !COST_OF_OTHER.test(q) && COST_OF_THIS.test(q) && !COST_NOT.test(q);
 // CHIPS (Fred, 2026-10-21): "Is it dangerous?" must get the honest answer first: the agent asks before every command, you audit it, and
@@ -979,9 +1046,120 @@ export function groundModelIds(answer, ctx) {
   return { body: parts.map(part => { const f = part.match(/^```([^\n]*)\n/); return f ? part : fix(part); }).join(""), fixed };
 }
 export function fallbackAnswer(ctx) {
-  if (!ctx.length) return REFUSAL;
+  if (!ctx.length) return OFFTOPIC_REPLY;
   return "My language model is busy right now, so here are the most relevant parts of the site, straight from the source:\n\n" +
     ctx.slice(0, 3).map(p => `**${p.title}**\n${p.text.replace(/```[\s\S]*?```/g, "").slice(0, 420).trim()}...\n${p.url}`).join("\n\n");
+}
+
+// ---------------------------------------------------------------- UDK 2: numbers come from the pages, and "I don't know" points somewhere
+// Live at 4fc297c (Fred, 2026-10-21), 2 of 34 unanswerable questions were handled well: most got the bare "The site doesn't cover that."
+// with nowhere to go, and some got a guess ("Yes, the AI can be used completely offline", invented steps and times).
+// groundNumbers(): every figure in an answer (a number, a range, a number with a unit, or a spelled duration like "a few minutes" or "ten
+// hours") must be in the passages the model saw, the whole pages behind them, or the question. A sentence (or list line) carrying one
+// that is not there is cut, and one line says the site doesn't say. A number with a unit needs that number with that unit ("30
+// minutes" is not grounded by a "30" elsewhere); a bare number needs the number. Left alone: code blocks and inline code, URLs and link
+// targets, list markers, clock times, identifiers ("qwen3", "4B", "claude-haiku-4-5", "LMF4.1", "v1.3.0") and structural numbers
+// (Chapter 7, Law 2, Laws 11-16, step 3, part 2). Canned replies (TIME_REPLY and the rest) never reach it.
+const QNUM = String.raw`\d+(?:,\d{3})*(?:\.\d+)*`;
+const QUNIT = String.raw`seconds?|secs?|s|minutes?|mins?|hours?|hrs?|hr|h|days?|weeks?|months?|years?|weekends?|afternoons?|evenings?|gigabytes?|gb|megabytes?|mb|terabytes?|tb|kilobytes?|kb|percent|%|dollars?|usd|bucks|cents?|people|persons|users|students|readers|customers|members`;
+const Q_DIGIT = new RegExp(String.raw`(?<![\w$.\/#:@\\-])(\$)?(${QNUM})(?:\s*(?:-|to|or)\s*\$?(${QNUM}))?(?:\s*-?\s*(${QUNIT})(?![\w%]))?`, "gi");
+const Q_WORDS = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, fifteen: 15, twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, ninety: 90 };
+const Q_SPELLED = new RegExp(String.raw`\b(a few|a couple(?: of)?|several|half an?|a dozen|dozens of|a hundred|hundreds of|${Object.keys(Q_WORDS).join("|")})\s+(?:(?:more|extra|full|whole|solid|good|short|long|single)\s+)?(seconds?|minutes?|hours?|days?|weeks?|months?|years?|weekends?|afternoons?|evenings?|gigabytes?|megabytes?|people|users|students)\b`, "gi");
+const STRUCTURAL = /(?:\b(?:chapters?|ch|laws?|parts?|steps?|rules?|tiers?|levels?|phases?|options?|items?|no|version|sections?|turns?|questions?|modules?|rounds?|lines?|figures?|tables?|issues?|prs?)\.?\s*|#\s*)$/i;
+const unitKey = u => { const x = String(u).toLowerCase();
+  return /^(?:s|secs?|seconds?)$/.test(x) ? "sec" : /^(?:mins?|minutes?)$/.test(x) ? "min" : /^(?:h|hrs?|hours?)$/.test(x) ? "hour" : /^(?:gb|gigabytes?)$/.test(x) ? "gb"
+    : /^(?:mb|megabytes?)$/.test(x) ? "mb" : /^(?:tb|terabytes?)$/.test(x) ? "tb" : /^(?:kb|kilobytes?)$/.test(x) ? "kb" : x === "%" || x === "percent" ? "pct"
+    : /^(?:dollars?|usd|bucks)$/.test(x) ? "usd" : /^cents?$/.test(x) ? "cent" : /^(?:people|persons|users|students|readers|customers|members)$/.test(x) ? "ppl" : x.replace(/s$/, ""); };
+const unitKind = k => /^(?:sec|min|hour|day|week|month|year|weekend|afternoon|evening)$/.test(k) ? "time" : /^(?:gb|mb|tb|kb)$/.test(k) ? "size" : /^(?:usd|cent)$/.test(k) ? "money" : "number";
+const qn = n => String(n).replace(/,/g, "");
+// every figure in a stretch of text: {at, end, keys, kind, structural}
+function quantities(t) {
+  const out = [];
+  for (const m of String(t).matchAll(Q_DIGIT)) {
+    const at = m.index, end = at + m[0].length, after = t.slice(end, end + 2);
+    if (!m[4] && !m[1] && /^[A-Za-z]/.test(after)) continue;                  // an identifier or ordinal: 4B, 3rd, 2FA
+    if (!m[4] && /^:\d/.test(after)) continue;                                // a clock time: 9:57
+    const unit = m[4] ? unitKey(m[4]) : m[1] ? "usd" : null, nums = [m[2], m[3]].filter(Boolean).map(qn);
+    out.push({ at, end, keys: nums.map(n => unit ? `${n}|${unit}` : n), kind: unit ? unitKind(unit) : "number", structural: STRUCTURAL.test(t.slice(Math.max(0, at - 24), at)) });
+  }
+  for (const m of String(t).matchAll(Q_SPELLED)) {
+    const w = m[1].toLowerCase(), unit = unitKey(m[2]);
+    const n = /few|couple|several/.test(w) ? "few" : /half/.test(w) ? "0.5" : /dozen/.test(w) ? "12" : /hundred/.test(w) ? "100" : String(Q_WORDS[w]);
+    out.push({ at: m.index, end: m.index + m[0].length, keys: [`${n}|${unit}`], kind: unitKind(unit), structural: false });
+  }
+  return out;
+}
+// what the sources ground: every number+unit they state, and every number token at all (identifiers included, so "21" counts)
+function groundSet(texts) {
+  const keys = new Set();
+  for (const t of texts) { const x = String(t || ""); for (const q of quantities(x)) for (const k of q.keys) keys.add(k); for (const m of x.matchAll(/\d+(?:,\d{3})*(?:\.\d+)*/g)) keys.add(qn(m[0])); }
+  return keys;
+}
+const blank = s => " ".repeat(s.length);
+// the prose a figure check reads: inline code, URLs and link targets blanked, same length, so offsets line up
+const proseOf = l => l.replace(/`[^`\n]*`/g, blank).replace(/\]\([^)\s]*\)/g, blank).replace(/https?:\/\/\S+/g, blank).replace(/^(\s*)(\d+[.)])(?=\s)/, (m, a, b) => a + blank(b));
+export const NUMBER_NOTE = { time: "The site doesn't say how long that takes, and I won't guess.", size: "The site doesn't say how much space that needs, and I won't guess.",
+  money: "The site doesn't give a price for that, and I won't guess one.", number: "The site doesn't give that number, and I won't guess one." };
+export function groundNumbers(body, texts) {
+  const have = groundSet(texts); let cut = 0, kind = null;
+  const parts = String(body).split(/(```[\s\S]*?```)/g).map((part, i) => i % 2 ? part : part.split("\n").map(line => {
+    if (!/\d|\b(?:a|an|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty|fifty|sixty|ninety|few|couple|several|half|dozens?|hundreds?)\s/i.test(line)) return line;
+    const lead = line.match(/^\s*(?:[-*+]|\d+[.)])\s+/)?.[0] || "";
+    const sens = line.slice(lead.length).split(/(?<=[.!?])\s+(?=[A-Z*\[`"(])/);
+    const kept = sens.filter(sen => {
+      const bad = quantities(proseOf(sen)).find(q => !q.structural && q.keys.some(k => !have.has(k)));
+      if (bad) { cut++; kind ??= bad.kind; return false; }
+      return true;
+    });
+    if (kept.length === sens.length) return line;
+    return kept.length ? lead + kept.join(" ") : null;                          // a line whose every sentence went is dropped, marker and all
+  }).filter(l => l !== null).join("\n")).join("");
+  if (!cut) return { body, cut: 0 };
+  const rest = parts.replace(/\n{3,}/g, "\n\n").trim();
+  return { body: (rest ? rest + "\n\n" : "") + NUMBER_NOTE[kind], cut, kind, emptied: !rest.replace(/[*_#>:\s-]/g, "") };
+}
+// "I don't know" answers end at the closest page. An answer that leads with not knowing (or is short and says so), and links nowhere on
+// the site, gets "The closest page is <title>: <url>". A refusal the model gave for an on-topic question becomes DONT_KNOW(page); an
+// off-topic one (both votes say so: lasagna, voting, the weather, ChatGPT GPTs) stays a decline and points at the start, OFFTOPIC_REPLY.
+export const DK_SAYS = /\b(?:i don'?t know|i do not know|i can'?t say)\b|\b(?:site|sites|guide|pages?)\s+(?:(?:is|are)\s+\w+(?:\s+in\s+\w+)?\s+and\s+)?(?:doesn'?t|does not|don'?t|do not)\s+(?:\w+\s+){0,2}?(?:cover|address|say|give|list|mention|specify|state|explain|describe|tell|include|offer|provide)\b|\bthe site gives no\b|\b(?:isn'?t|is not|not|aren'?t|are not) (?:explicitly |directly |clearly )?(?:covered|stated|specified|given|listed|mentioned|documented|addressed)\b|\bno page (?:covers|says|gives)\b/i;
+export const START_URL = `${SITE}/00-start-here.html`;
+export const OFFTOPIC_REPLY = `${REFUSAL} For building your own AI, the guide starts at ${START_URL}`;
+export const dontKnow = pg => pg ? `I don't know: the site doesn't cover that, and I won't guess. The closest page is ${pg.title}: ${pg.url}` : OFFTOPIC_REPLY;
+export function pointToClosest(body, pg, site = SITE) {
+  const b = String(body).trim(), first = b.split(/(?<=[.!?])\s+/)[0] || "";
+  if (!pg || !DK_SAYS.test(b) || !(DK_SAYS.test(first) || b.length < 400) || b.includes(site + "/")) return b;
+  return `${b}\n\nThe closest page is ${pg.title}: ${pg.url}`;
+}
+// u11 (real model): "How do I uninstall everything?" got an invented command that the command guard replaced, leaving only its note.
+// An answer that is nothing but those notes is an "I don't know" for the page the note names.
+const CMD_NOTE = /\(the site doesn'?t give a command for that; see (https?:\/\/[^\s)]+)\)/g;
+export function onlyCommandNotes(body) { const b = String(body); const m = [...b.matchAll(CMD_NOTE)]; return m.length && !b.replace(CMD_NOTE, "").replace(/[\s.,;:*_-]/g, "") ? m[0][1] : null; }
+// u01 to u03 (real model): "Will this run on a Raspberry Pi?" got "Yes, the AI setup ... can run on a Raspberry Pi". A platform no page
+// has instructions for (a Raspberry Pi, an iPad, a Chromebook, a phone, a BSD) is answered in code, before the model; Windows, which the
+// pages do mention (no Windows instructions, the WSL note), still goes to the model and falls back to platformReply on a refusal.
+export const isUncoveredPlatformAsk = q => isPlatformAsk(q) && !/\b(?:windows|win ?1[01]|wsl2?)\b/i.test(String(q)) && /\b(?:raspberry ?pi|rpi|ipad(?:os)?|chromebook|chrome ?os|iphone|ios|android|(?:free|open)?bsd)\b/i.test(String(q));
+// u08, u12 (real model): "What's the minimum Ubuntu version I need?" got "covered in Chapter 0 ... refer to the prerequisites section" (it is
+// not). No page gives a minimum or oldest OS version, so that question is answered in code: I don't know, then what the pages do say.
+const OS_NAME = String.raw`(?:ubuntu|debian|fedora|arch(?: linux)?|linux|macos|mac ?os|os ?x|osx|kernel)`;
+const OS_VERSION_ASK = new RegExp(String.raw`\b(?:minimum|min|oldest|lowest|earliest|required|supported)\b[^?\n]{0,30}\b${OS_NAME}\b[^?\n]{0,12}\bversions?\b|\b(?:minimum|min|oldest|lowest|earliest)\s+(?:supported\s+)?${OS_NAME}\b|\bversions? of ${OS_NAME}\b[^?\n]{0,30}\b(?:need|required|supported|support|minimum|oldest)\b`, "i");
+export const isOsVersionAsk = q => OS_VERSION_ASK.test(String(q)) && !isOverrideAsk(q);
+export const osVersionReply = q => { const m = String(q).match(new RegExp(`\\b${OS_NAME}\\b`, "i")), raw = m ? m[0] : "OS", name = /^mac ?os|^os ?x|^osx/i.test(raw) ? "macOS" : raw[0].toUpperCase() + raw.slice(1).toLowerCase();
+  return `I don't know: the site gives no minimum ${name === "Kernel" ? "kernel" : name} version, and I won't guess one. ${MAC_OR_LINUX} Start at ${SITE}/00-start-here.html.`; };
+// u11 (real model, both paths): "How do I uninstall everything the guide installed?" got invented steps ("uninstall jq, git, curl with your
+// package manager", "reset your environment"). No page has uninstall steps, so that question is answered in code: I don't know, and the
+// chapter that lists what gets installed. A question that claims the site says something keeps the false-premise path.
+const UNINSTALL_ASK = /\b(?:uninstall\w*|un-install\w*)\b|\b(?:remove|delete|undo|roll ?back|revert|wipe|get rid of|tear down)\b[^?\n]{0,25}\b(?:everything|it all|all of it|the whole (?:thing|build|setup|install\w*)|(?:the|this) (?:guide|build|setup|installs?|installation|stack)|what (?:the guide|it|this|you) installed)\b/i;
+export const isUninstallAsk = q => UNINSTALL_ASK.test(String(q)) && !CLAIM.test(String(q)) && !isOverrideAsk(q);
+export const UNINSTALL_REPLY = `I don't know: no page on the site gives uninstall steps, and I won't guess them. The closest page is Chapter 4, The Larry Stack, which lists what gets installed and in what order: ${SITE}/04-larry-stack.html`;
+// u14: "How long does Chapter 7 take to finish?" No page gives a chapter a time either: the build-time answer, for that chapter
+const CHAPTER_TIME_ASK = /^(?![^\n]*\b(?:hook|timeout|window|routine|session|limit|command|backup|gup|compile|cron|cache|token|timer|snapshot|interval)s?\b)[^\n]*\bhow (?:long|much time)\b[^?\n]{0,30}?\b(?:chapter|ch\.?)\s*(\d{1,2})\b/i;
+export const chapterTimeAsk = q => { const m = String(q).match(CHAPTER_TIME_ASK); return m && !isOverrideAsk(q) ? +m[1] : null; };
+export async function chapterTimeAnswer(env, request, q) {
+  const n = chapterTimeAsk(q); if (n === null) return null;
+  const idx = await loadIndex(env, request).catch(() => null), pg = idx?.pages.find(p => p.slug.startsWith(String(n).padStart(2, "0") + "-"));
+  if (!pg) return null;
+  return { answer: `Honest answer: the site gives no time for Chapter ${n}, and I won't make one up. Like every chapter, it is real work done at your pace: read a step, run it, fix it to 100%, then advance. Chapter ${n}: ${SITE}/${pg.slug}.html`,
+    sources: [{ url: `${SITE}/${pg.slug}.html`, title: pg.title }] };
 }
 
 // ---------------------------------------------------------------- the whole pipeline
@@ -1006,6 +1184,19 @@ export async function answer(env, request, question, { history = [], page = null
     const fin = { answer: a, sources: AGENT_SOURCES, refused: false, agent: true, mode: "agent", top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
     await onEvent("final", fin); return fin;
   }
+  if (isUncoveredPlatformAsk(question) || isOsVersionAsk(question) || isUninstallAsk(question)) {  // UDK u01 to u03, u08, u11, u12: never a guessed yes, version or steps
+    const un = isUninstallAsk(question) && !isUncoveredPlatformAsk(question) && !isOsVersionAsk(question);
+    const a = un ? UNINSTALL_REPLY : isOsVersionAsk(question) ? osVersionReply(question) : platformReply(question), src = [un ? { url: `${SITE}/04-larry-stack.html`, title: "Chapter 4: The Larry Stack" } : { url: `${SITE}/00-start-here.html`, title: "Chapter 0: Start Here" }];
+    await onEvent("meta", { mode: "platform", scope: null }); await onEvent("token", { t: a });
+    const fin = { answer: a, sources: src, refused: false, platform: true, mode: "platform", top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
+    await onEvent("final", fin); return fin;
+  }
+  { const ct = await chapterTimeAnswer(env, request, question);        // UDK u14: nor a chapter
+    if (ct) {
+      await onEvent("meta", { mode: "time", scope: null }); await onEvent("token", { t: ct.answer });
+      const fin = { answer: ct.answer, sources: ct.sources, refused: false, build_time: true, mode: "time", top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
+      await onEvent("final", fin); return fin;
+    } }
   if (isBuildTimeAsk(question)) {                                      // CHIPS 6: no page gives the build a time; never invent one
     await onEvent("meta", { mode: "time", scope: null }); await onEvent("token", { t: TIME_REPLY });
     const fin = { answer: TIME_REPLY, sources: TIME_SOURCES, refused: false, build_time: true, mode: "time", top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
@@ -1060,8 +1251,9 @@ export async function answer(env, request, question, { history = [], page = null
   if (vote) base.site_vote = vote;
   if (vote && !vote.strong && !isPlatformAsk(question)) {               // both votes say off-topic: refuse, skip generation (a platform question never is)
     if (dir) return viaDirectory();
-    await onEvent("token", { t: refusal });
-    const fin = { answer: refusal, sources: [], refused: true, gated: true, mode: ret.mode, ...base, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
+    const off = refusal === REFUSAL ? OFFTOPIC_REPLY : refusal;         // UDK: a decline still points at the start
+    await onEvent("token", { t: off });
+    const fin = { answer: off, sources: [], refused: true, gated: true, mode: ret.mode, ...base, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
     await onEvent("final", fin); return fin;
   }
   const reading = ret.queries[1] || null;
@@ -1116,7 +1308,12 @@ export async function answer(env, request, question, { history = [], page = null
     if (!lead && !premise && isRefusal(vis) && isPlatformAsk(question)) {  // c009: the guide's platforms, not "The site doesn't cover that."
       fin = { answer: platformReply(question), sources: [{ url: `${SITE}/00-start-here.html`, title: "Chapter 0: Start Here" }], refused: false, mode: ret.mode, model, platform: true };
     } else
-    if (!lead && !premise && isRefusal(vis) && (fredLine || vis.toLowerCase().startsWith(REFUSAL.toLowerCase().slice(0, -1)) || /^the site (doesn'?t|does not) (cover|mention|describe|explain)\b/i.test(vis))) fin = { answer: fredLine ? FRED_REFUSAL : refusal, sources: [], refused: true, mode: ret.mode, model };
+    if (!lead && !premise && isRefusal(vis) && (fredLine || vis.toLowerCase().startsWith(REFUSAL.toLowerCase().slice(0, -1)) || /^the site (doesn'?t|does not) (cover|mention|describe|explain)\b/i.test(vis))) {
+      const onTopic = ret.onTopic || vote?.strong, v = vote || siteVote(idx, rq), c0 = idx.pages[idx.bySlug.get("00-start-here")];
+      const near = v.strong && ctx[0] ? { url: ctx[0].url, title: ctx[0].title } : c0 ? { url: c0.url, title: c0.title } : null;   // a weak vote: "refund" is not about the TELOS page
+      const a = fredLine ? (refusal === REFUSAL ? FRED_REFUSAL : refusal) : refusal !== REFUSAL ? refusal : onTopic && near ? dontKnow(near) : OFFTOPIC_REPLY;   // UDK: never a bare refusal
+      fin = { answer: a, sources: a === FRED_REFUSAL_HERE ? [{ url: `${SITE}/get-in-touch.html`, title: "Get in touch" }] : a === FRED_REFUSAL || !(onTopic && near) || refusal !== REFUSAL ? [] : [near], refused: true, mode: ret.mode, model };
+    }
     else {
       let { body, cited } = citations(vis, ctx);
       const whole = sitePages(idx, [...ret.hits.map(i => idx.chunks[i].p), ...cited.map(p => idx.bySlug.get(p.slug)).filter(i => i !== undefined)]);
@@ -1125,8 +1322,9 @@ export async function answer(env, request, question, { history = [], page = null
       for (const p of g.support) if (!cited.includes(p)) cited.push(p);
       const gp = groundPaths(body, ctx, cited); body = gp.body;
       body = groundModelIds(body, ctx).body;
+      const gn = groundNumbers(body, [question, ...ctx.map(p => p.text), ...whole.map(w => w.text)]); body = gn.body;   // UDK: no invented figures
       if (premise) body = falsePremise(question, body, ctx); else body = unPremise(question, body);
-      body = noMeta(body);
+      body = readerVoice(noMeta(body), { aiYou: false });                  // UDK 4: the reader is "you", never "your human"
       body = withVariants(body, sp);                                       // m008: the zsh form the question asked for
       if (!lead && !isRefusal(body)) body = safetyLead(question, costLead(question, body, ctx), ctx);
       const safe0 = safeSource(body, ctx); if (safe0 && !cited.some(p => normUrl(p.url) === normUrl(safe0.url))) cited.unshift(safe0);
@@ -1146,7 +1344,10 @@ export async function answer(env, request, question, { history = [], page = null
       const lead0 = lead ? null : cited.find(p => ret.synPinned.some(pi => idx.pages[pi].slug === p.slug));
       if (lead0) cited = [lead0, ...cited.filter(p => p !== lead0)];
       if (!cited.length && ctx.length) cited = [ctx[0]];
-      fin = { answer: body.trim(), sources: cited.map(p => ({ url: p.url, title: p.title })), refused: isRefusal(body), mode: ret.mode, model, ...(ungrounded ? { ungrounded_commands: ungrounded } : {}), ...(gp.flagged ? { ungrounded_paths: gp.flagged } : {}) };
+      { const nu = !lead && onlyCommandNotes(body); if (nu) { const pi = idx.byNorm.get(normUrl(nu)); body = dontKnow({ url: nu, title: pi !== undefined ? idx.pages[pi].title : "the closest page" }); } }   // UDK u11
+      if (!lead && !isRefusal(body)) body = pointToClosest(body, cited[0] ? { url: cited[0].url, title: cited[0].title } : null);   // UDK: "I don't know" points somewhere
+      else if (!lead && isRefusal(body) && !/https?:\/\//.test(body)) body = dontKnow(cited[0] ? { url: cited[0].url, title: cited[0].title } : null);
+      fin = { answer: body.trim(), sources: cited.map(p => ({ url: p.url, title: p.title })), refused: isRefusal(body), mode: ret.mode, model, ...(gn.cut ? { ungrounded_numbers: gn.cut } : {}), ...(ungrounded ? { ungrounded_commands: ungrounded } : {}), ...(gp.flagged ? { ungrounded_paths: gp.flagged } : {}) };
     }
   }
   Object.assign(fin, base, { gen_s: (Date.now() - t1) / 1000, total_s: (Date.now() - t0) / 1000 });

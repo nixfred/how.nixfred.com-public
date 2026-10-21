@@ -13,7 +13,7 @@
 import { normUrl } from "./text.js";
 import SITE_DIRECTORY from "./site-directory.json";
 import { nextStep, convoNote, echoView, stripEcho, chapterOfUrl } from "./followup.js";
-import { MODELS, LIMITS, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, isPromptAsk, sectionReply, isAgentAsk, agentReply, AGENT_SOURCES, isBuildTimeAsk, TIME_REPLY, TIME_SOURCES, isExistingAsk, EXISTING_REPLY, EXISTING_SOURCES, isPrivateDetail, PRIVATE_REPLY, isPlatformAsk, platformReply, unPremise, withVariants, synHeadChunks, sectionChunks, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, costLead, safetyLead, safeSource, fixHookCredit, CH21_SOURCE, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
+import { MODELS, LIMITS, DONT_KNOW_LINE, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, isPromptAsk, sectionReply, isAgentAsk, agentReply, AGENT_SOURCES, isBuildTimeAsk, TIME_REPLY, TIME_SOURCES, chapterTimeAnswer, groundNumbers, pointToClosest, DK_SAYS, isUncoveredPlatformAsk, onlyCommandNotes, isOsVersionAsk, osVersionReply, isUninstallAsk, UNINSTALL_REPLY, readerVoice, isExistingAsk, EXISTING_REPLY, EXISTING_SOURCES, isPrivateDetail, PRIVATE_REPLY, isPlatformAsk, platformReply, unPremise, withVariants, synHeadChunks, sectionChunks, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, costLead, safetyLead, safeSource, fixHookCredit, CH21_SOURCE, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
 
 // the three ways to start, exactly as the start cards on nixfredos.com link them (spine amendment 2026-10-20 6:15 PM:
 // nixfredos.com carries no steps, they all live on how.nixfred.com). Point 1 is the recipe box page, https://how.nixfred.com/recipe-box: the one start path (not nixfredos.com/build).
@@ -87,6 +87,12 @@ const INJECT_TEXT = {
   larry: "Cute. My instructions aren't published, and they're not changing. Ask me something real.",
 };
 const say = (map, site) => map[site] || map.default;
+// UDK (Fred, 2026-10-21): no "not covered" reply ends nowhere. Off-topic: the decline plus the start of the guide. On-topic (the passages
+// were about the question, the model still had nothing): "I don't know" plus the closest page, a how.nixfred.com page when one was retrieved.
+const FLEET_START = "https://how.nixfred.com/00-start-here";
+const offTopic = site => `${say(REFUSE_TEXT, site)} For building your own AI, the guide starts at ${FLEET_START}`;
+const closestOf = ctx => { const p = ctx.find(x => !/\(site directory\)$/.test(x.title) && /^https:\/\/how\.nixfred\.com\//.test(x.url)); return p ? { title: p.title, url: p.url } : ctx.length ? { title: "Chapter 0: Start Here", url: FLEET_START } : null; };   // always a how.nixfred.com page
+const fleetDontKnow = pg => `I don't know: the sites don't cover that, and I won't guess. The closest page is ${pg.title}: ${pg.url}`;
 
 // ---------------------------------------------------------------- private-data gate (deterministic, before any model call)
 // Someone's private data: calendar, mail, messages, memories, secrets, whereabouts, family, health, money, the owner's
@@ -365,6 +371,7 @@ how.nixfred.com (how: the build guide), ladder.nixfred.com (the student checklis
 It is ONE chat that knows all five, plus the other published sites linked from nixfred.com's cards (physics.nixfred.com,
 god.nixfred.com, tailscale.nixfred.com and the rest; they have no chat of their own): answer from whichever site has it and link
 the exact page there, whichever site you are on.
+${DONT_KNOW_LINE}
 
 Rules:
 1. Use ONLY the numbered passages in the user message. Each passage header names its site and its URL. No outside knowledge,
@@ -479,6 +486,9 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   { const sr = !isOverrideAsk(q) && !isPromptAsk(q) ? await sectionReply(env, request, q).catch(() => null) : null;   // BATCH B: Ch7 / Ch21 optional recipes, word for word
     if (sr) return { answer: sr.answer, sources: sr.sources.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), site, refused: false, why: "section" }; }
   if (isAgentAsk(q)) return { answer: agentReply(q), sources: AGENT_SOURCES.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), site, refused: false, why: "agent" };   // BATCH B, for every caller
+  if (isUninstallAsk(q) && !isUncoveredPlatformAsk(q) && !isOsVersionAsk(q)) return { answer: UNINSTALL_REPLY, sources: [{ title: "Chapter 4: The Larry Stack", url: "https://how.nixfred.com/04-larry-stack" }], site, refused: false, why: "uninstall" };   // UDK u11
+  if (isUncoveredPlatformAsk(q) || isOsVersionAsk(q)) return { answer: isOsVersionAsk(q) ? osVersionReply(q) : platformReply(q), sources: [{ title: "Chapter 0: Start Here", url: "https://how.nixfred.com/00-start-here" }], site, refused: false, why: "platform" };   // UDK u01 to u03
+  { const ct = await chapterTimeAnswer(env, request, q); if (ct) return { answer: ct.answer, sources: ct.sources.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), site, refused: false, why: "chapter time" }; }   // UDK u14
   if (isBuildTimeAsk(q)) return { answer: TIME_REPLY, sources: TIME_SOURCES.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), site, refused: false, why: "build time" };   // CHIPS 6, for every caller
   const idx = await loadFleet(env, request);
   if (LIFEOS_WHO.test(q)) return { answer: say(LIFEOS_CREDIT, site), sources: [{ title: "LifeOS", url: LIFEOS_HOME }, { title: "The Larry Stack: Repos & Install Order", url: LIFEOS_PAGE }], site, refused: false, why: "lifeos credit" };
@@ -502,7 +512,7 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   if (rw.priv) return { answer: say(PRIVATE_TEXT, site), sources: [], site, refused: true, why: "private (rewrite)" };
   // the rewrite's off-topic call is one vote (Audit200 RC1): a question that keyword-matches one how.nixfred.com page squarely
   // ("What is gitleaks for?") is not refused on it; no how index (or any error) keeps the old behaviour
-  if (!rw.onTopic && !about.length && !fu && !ON_TOPIC.test(q) && !isPlatformAsk(q) && !(await loadIndex(env, request).then(hi => siteVote(hi, rq).strong, () => false))) return { answer: say(REFUSE_TEXT, site), sources: [], site, refused: true, why: "off-topic (rewrite)" };
+  if (!rw.onTopic && !about.length && !fu && !ON_TOPIC.test(q) && !isPlatformAsk(q) && !(await loadIndex(env, request).then(hi => siteVote(hi, rq).strong, () => false))) return { answer: offTopic(site), sources: [], site, refused: true, why: "off-topic (rewrite)" };
   const noLarry = !route && GUIDE_SITES.has(site) && HOWTO_OWN.test(q) && !/\blarry\b/i.test(q);
   const ret = await retrieveFleet(env, request, idx, site, rq, rw, { routeSite: fu ? "how" : route?.id, notSite: noLarry ? "larry" : null });   // a next step is a chapter of the guide: how.nixfred.com
   const { hits, view } = ret;
@@ -530,7 +540,7 @@ export async function fleetAnswer(env, request, site, q, history = []) {
     catch { model = MODELS.chatFallback; raw = aiText(await withTimeout(env.AI.run(model, { messages, max_tokens: 500, temperature: 0.1 }), 20000)); }
     if (typeof raw !== "string" || !visible(raw).trim()) throw new Error("empty");
   } catch {
-    if (!ctx.length) return { answer: say(REFUSE_TEXT, site), sources: [], site, refused: true, why: "model down, nothing retrieved" };
+    if (!ctx.length) return { answer: offTopic(site), sources: [], site, refused: true, why: "model down, nothing retrieved" };
     const a = "My language model is busy right now, so here are the most relevant passages, straight from the pages:\n\n" +
       ctx.slice(0, 3).map(p => `**${p.title}**\n${p.text.replace(/```[\s\S]*?```/g, "").slice(0, 380).trim()}...\n${p.url}`).join("\n\n");
     return { answer: noAuthor(scrub(a)), sources: ctx.slice(0, 3).map(p => ({ title: noAuthor(p.title), url: p.url })), site, refused: false, why: "fallback", mode: ret.mode };
@@ -542,8 +552,12 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   if (isFleetRefusal(vis) && !premise) {
     // a start question is never "not covered": the recipe box is the one start path
     if (!fu && START_PATH.test(q)) return { answer: `Start here, the recipe box: ${RECIPE_URL}`, sources: [{ title: byNorm.get(normUrl(RECIPE_URL))?.title || "The Recipe Box", url: RECIPE_URL }], site, refused: false, why: "start path", mode: ret.mode, model };
+    // u17 (real model): "Does Fred sell a team or enterprise license?" got only "nixfred.com is at https://nixfred.com/"; u09 "Does the guide
+    // come in Spanish?" (the guide = how.nixfred.com) got only its directory line. A question about Fred or a named site that the passages
+    // don't answer says so first, then gives the site and the closest guide page; "where is / which site" questions keep the plain line
+    if (!route && dirFor.length && !SITE_Q.test(q)) { const near = closestOf(ctx); return { answer: `I don't know: the sites don't cover that, and I won't guess. ${directoryAnswer(dirFor)}${near ? `\n\nThe closest page is ${near.title}: ${near.url}` : ""}`, sources: [...dirSources(dirFor), ...(near ? [near] : [])], site, refused: false, why: "directory (model had nothing)" }; }
     if (route || dirFor.length) return { answer: route ? nothingOn(route) : directoryAnswer(dirFor), sources: dirSources(route ? [route] : dirFor), site, refused: false, why: "directory (model had nothing)" };
-    if (!fu) return { answer: say(REFUSE_TEXT, site), sources: [], site, refused: true, why: "not covered (model)" };
+    if (!fu) { const strong = await loadIndex(env, request).then(h => siteVote(h, rq).strong, () => true); const near = strong ? closestOf(ctx) : ctx.length ? { title: "Chapter 0: Start Here", url: FLEET_START } : null; return near ? { answer: fleetDontKnow(near), sources: [near], site, refused: true, why: "not covered (model)" } : { answer: offTopic(site), sources: [], site, refused: true, why: "not covered (model)" }; }
   }
   // a next-step ask is never refused (Audit200: live "what comes after telos?" was): the model's refusal becomes its chapter's own words
   let { body, cited } = citations(fu && isFleetRefusal(vis) ? (ctx.find(c => normUrl(c.url) === normUrl(fu.url))?.text.slice(0, 420).trim() || "") : vis, ctx);
@@ -556,8 +570,12 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   body = g.body;
   for (const p of g.support) if (!cited.includes(p)) cited.push(p);
   body = groundModelIds(groundPaths(body, ctx, cited).body, ctx).body;
+  { let gn = groundNumbers(body, [q, ...ctx.map(c => c.text)]);           // UDK: no invented figures; the whole guide pages before a cut
+    if (gn.cut) { const hx = hi || await loadIndex(env, request).catch(() => null); const pis = hx ? [...ctx, ...cited].map(p => hx.byNorm.get(normUrl(p.url))).filter(i => i !== undefined) : [];
+      if (pis.length) gn = groundNumbers(body, [q, ...ctx.map(c => c.text), ...sitePages(hx, pis).map(w => w.text)]); }
+    body = gn.body; }
   if (premise) body = falsePremise(q, isFleetRefusal(body) ? "" : body, ctx); else body = unPremise(q, body);   // CHIPS: no "No, the site does not say that." for a question that claims nothing
-  body = withVariants(noMeta(body), sp);                                  // m008: the zsh form the question asked for
+  body = withVariants(readerVoice(noMeta(body), { aiYou: false }), sp);   // m008: the zsh form the question asked for; UDK 4: the reader is "you", never "your human"
   if (!premise && !fu && !isFleetRefusal(body)) body = safetyLead(q, costLead(q, body, ctx), ctx);
   { const safe0 = safeSource(body, ctx); if (safe0 && !cited.some(p => normUrl(p.url) === normUrl(safe0.url))) cited.unshift(safe0); }
   { const hc = fixHookCredit(body); body = hc.body;   // SEED KIT FIX: search-first.sh / capture-decisions.sh are Ch21's, never the Seed Kit's
@@ -570,7 +588,9 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   if (fu || !START_ASK.test(q)) { const plain = l => l.replace(/[*_`]|\[|\]\([^)]*\)/g, "").replace(/^\s*(\d+[.)]|[-*])\s*/, "").trim(); const kept = body.split("\n").filter(l => !START.some(t => plain(l).startsWith(t.split(":")[0]) && plain(l).includes(t.slice(t.lastIndexOf("https://")).replace(/[\s)].*$/, "")))); if (kept.join("").trim().length >= 40) body = kept.join("\n").replace(/\n{3,}/g, "\n\n").trim(); }
   const hireOk = HIRE_ASK.test(q);
   if (!hireOk) { body = body.split("\n").filter(l => !HIRE_LINE.test(l)).join("\n").replace(/\n{3,}/g, "\n\n").trim(); cited = cited.filter(p => !/get-in-touch/.test(p.url)); }
-  if (!fu && !premise && (isFleetRefusal(body) || !body)) return { answer: say(REFUSE_TEXT, site), sources: [], site, refused: true, why: "not covered (model)" };
+  { const nu = !fu && onlyCommandNotes(body); if (nu) return { answer: fleetDontKnow({ title: byNorm.get(normUrl(nu))?.title || "the closest page", url: nu }), sources: [{ title: byNorm.get(normUrl(nu))?.title || nu, url: nu }], site, refused: true, why: "not covered (only a cut command)" }; }   // UDK u11
+  if (!fu && !premise && (isFleetRefusal(body) || !body)) { const strong = await loadIndex(env, request).then(h => siteVote(h, rq).strong, () => true); const near = strong ? closestOf(ctx) : ctx.length ? { title: "Chapter 0: Start Here", url: FLEET_START } : null; return near ? { answer: fleetDontKnow(near), sources: [near], site, refused: true, why: "not covered (model)" } : { answer: offTopic(site), sources: [], site, refused: true, why: "not covered (model)" }; }
+  if (!fu) body = pointToClosest(body, cited[0] && /^https:\/\/how\.nixfred\.com\//.test(cited[0].url) && !/\(site directory\)$/.test(cited[0].title) ? { title: cited[0].title, url: cited[0].url } : closestOf(ctx), "https://how.nixfred.com");   // UDK: "I don't know" points somewhere
   // a bare fleet address with a path ("nixfred.com/portfolio/") becomes a real link first
   body = body.replace(/(?<![\w\/.:@-])((?:[a-z0-9-]+\.)?(?:nixfred\.com|nixfredos\.com)\/[^\s)\]>"'<`*]*)/gi, "https://$1");
   // a link to an indexed page is written exactly as the page's canonical URL (no stray trailing slash or .html)
@@ -666,6 +686,7 @@ export async function handleFleetAsk(request, env) {
   if (body.history !== undefined && !Array.isArray(body.history)) return out({ error: "bad_request", detail: "history must be an array" }, 400);
   const site = sent, history = cleanHistory(body.history);
   if (isPromptAsk(q)) return out({ answer: say(INJECT_TEXT, site), sources: [], refused: true });
+  { const ct = await chapterTimeAnswer(env, request, q).catch(() => null); if (ct) return out({ answer: ct.answer, sources: ct.sources.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), refused: false }); }   // UDK u14
   if (isBuildTimeAsk(q)) return out({ answer: TIME_REPLY, sources: TIME_SOURCES.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), refused: false });   // CHIPS 6: never an invented build time ("LifeOS takes about 10-15 minutes")
   if (isExistingAsk(q)) return out({ answer: EXISTING_REPLY, sources: EXISTING_SOURCES.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), refused: false });   // CHIPS add-on: the existing-setup prompt, no model call   // c097/m099: the prompt stays private, not the install-confirmations text
   if (isOverrideAsk(q)) return out({ answer: OVERRIDE_REPLY, sources: [{ title: "Chapter 0: Start Here", url: "https://how.nixfred.com/00-start-here" }], refused: true });   // m080: a claim is not approval
