@@ -72,7 +72,9 @@ export function findPage(idx, ref) {
 }
 
 // ---------------------------------------------------------------- BM25 over the static postings
-export function bm25(idx, query, { pool = POOL, page = null } = {}) {
+export function bm25(idx, query, { pool = POOL, page = null } = {}) { return bm25Scored(idx, query, page).slice(0, pool).map(([i]) => i); }
+// [chunk, score] pairs, best first (bm25() is the ranked chunk list; siteVote() needs the scores)
+function bm25Scored(idx, query, page = null) {
   const { avg, lens, postings } = idx.bm25; const k1 = 1.4, b = 0.75; const score = new Map();
   for (const t of new Set(tokenize(query))) {
     // own keys only ("constructor" is a word too); idx.idf: the fleet index carries its own
@@ -83,11 +85,31 @@ export function bm25(idx, query, { pool = POOL, page = null } = {}) {
       score.set(i, (score.get(i) || 0) + idf * f * (k1 + 1) / (f + k1 * (1 - b + b * lens[i] / avg)));
     }
   }
-  return [...score.entries()].sort((a, b) => b[1] - a[1]).slice(0, pool).map(([i]) => i);
+  return [...score.entries()].sort((a, b) => b[1] - a[1]);
+}
+
+// The rewrite's on_topic is one vote, not a veto (Audit200 RC1). qwen3 marks short tool-name questions ("What is gitleaks for?",
+// "What's LMF4.1 and do I need it on a Mac?", "How do I install Fabric on a Mac?") off-topic at temperature 0, every time, while
+// keyword retrieval lands squarely on the page that answers them. The gate refuses only when this second vote is weak too.
+// Strong = every word of the question is in the site's vocabulary (lasagna, weather, ChatGPT, election are not), the best chunk
+// scores at least VOTE_MIN, and one page holds at least VOTE_SHARE of the top-8 score mass (a real topic sits on one page; an
+// off-topic question that borrows site words like "recipe", "home" or "Fred" scatters across many). Injections never vote.
+// Calibrated on every refusal item in eval.jsonl, eval_hard.jsonl and the prime audit's 13: the highest share among them is 0.44
+// (m079, hoff1); gitleaks 0.81, LMF4.1 0.89, Fabric 0.79.
+export const isInjection = q => /\b(system|hidden|developer) (prompt|instructions?|message)\b|\bignore (all |any |your |the |previous |prior |above )*(rules|instructions|prompt)\b|\b(jailbreak|DAN mode|developer mode)\b|\bpretend (you are|to be) (not|no longer)\b/i.test(q);
+export const VOTE_MIN = 6, VOTE_SHARE = 0.6;
+export function siteVote(idx, q) {
+  const toks = [...new Set(tokenize(q))], { postings } = idx.bm25;
+  const oov = toks.filter(t => !/^\d+$/.test(t) && !Object.hasOwn(postings, t));
+  const sc = bm25Scored(idx, q).slice(0, 8), mass = new Map(); let tot = 0;
+  for (const [i, s] of sc) { const p = idx.chunks[i].p; mass.set(p, (mass.get(p) || 0) + s); tot += s; }
+  const top = sc[0]?.[1] ?? 0, share = tot ? Math.max(...mass.values()) / tot : 0;
+  const chapter = chapterPins(idx, q).length > 0;                        // "Chapter 5" names a page of this guide (RC3)
+  return { strong: toks.length > 0 && !oov.length && (chapter || (top >= VOTE_MIN && share >= VOTE_SHARE)) && !isInjection(q), top: +top.toFixed(2), share: +share.toFixed(2), oov, ...(chapter ? { chapter } : {}) };
 }
 
 // Visitor slang -> the site's own vocabulary. Deterministic, so it still helps when the LLM rewrite fails.
-const SYN = [
+export const SYN = [
   [/\b(remember\w*|recall|memor\w*|forget\w*|last week|yesterday)\b/i, "memory LMF mem search CLAUDE.md context.md recall archive"],
   [/\b((past|old|previous|earlier) (conversations?|chats?|sessions?)|months? ago|dig up|talked about|said before)\b/i, "mem search LMF memory archive recall past sessions"],
   [/\b(week to week|changes? (often|a lot|weekly)|current (state|status|work)|what i'?m working on)\b/i, "context.md current state working memory CLAUDE.md", ["11-memory-files"]],
@@ -96,7 +118,8 @@ const SYN = [
   [/\b(rules?|laws?|never (break|do)|golden)\b[^?]*\b(install\w*|set ?up|setting up)\b|\b(install\w*|set ?up)\b[^?]*\b(rules?|laws?|never)\b/i, "never overwrite add alongside identity Law 1 backup .seed conservative installer consent before each step", ["04-larry-stack", "05-bootstrap"]],
   [/\b(slow|sluggish|dumb|dumber|forgetful|context (is )?(full|filling)|long session)\b/i, "context discipline /compact /clear /context fill"],
   [/\b(back\s?ups?|backed up|lose (it|everything)|crash\w*|dies|died|new machine|laptop (dies|died|stolen))\b/i, "forever repo gup disaster recovery backup"],
-  [/\b(cost\w*|price\w*|money|pay\w*|subscription|expensive|cheap)\b/i, "money talk subscription $100 $200 cost max plan"],
+  // the cost words of Ch0 Step 2 since the spine pass (no dollar figures, no "max plan"); audit rule 45 fails on a term the site no longer has
+  [/\b(cost\w*|price\w*|money|pay\w*|subscription|expensive|cheap)\b/i, "money talk subscription middle tier top plan pay-as-you-go API price of this build", ["00-start-here"]],
   [/\b(start\w*|begin\w*|first step|where do i|new to this|from scratch|zero)\b/i, "Start Here Chapter 0 install Claude Code first session"],
   [/\b(mac|macbook|macos|osx)\b/i, "Mac Homebrew iTerm2 bash zsh install"],
   [/\b(phone|remote\w*|anywhere|other machines?|ssh)\b/i, "Tailscale mesh phone multi-host"],
@@ -109,13 +132,50 @@ const SYN = [
   [/\b(stack|repos?|install order|pai|lifeos)\b/i, "Larry Stack repos install order PAI LifeOS"],
   [/\b(github|git ?hub|gh|forever repo|private repo)\b/i, "forever repo private GitHub repo gh auth login gh repo create backup Chapter 7"],
   [/\b(wrong|right|correct) (repo|remote)\b|\bbefore (every|each|any|i|you|we|my) (commit|push)|\bpush\w* (\w+ )?(to|into) the wrong\b/i, "git remote -v Law 11 read the remote out loud before every commit and push private public privacy isolation", ["04-larry-stack", "07-forever-repo"]],
-  // delete / wipe / clean up -> Law 4 (the prime audit's "delete a folder to clean up" landed on Ch27's file-access lines instead)
-  [/\b(delet(e|es|ed|ing)|remov(e|es|ed|ing)|rm( -\w+)?|wip(e|es|ed|ing)|clean(s|ed|ing)? ?up|nuk(e|es|ed|ing)|purg(e|es|ed|ing)|eras(e|es|ed|ing)|get rid of)\b/i, "Law 4 ask before destroying destructive", ["19-permissions", "spawn"]],
+  // delete / wipe / clean up -> Law 4 (the prime audit's "delete a folder to clean up" landed on Ch27's file-access lines instead);
+  // Audit200 RC2: it pins seed-kit too, whose Law 4 chunk is the law itself (show exactly what, an explicit yes, investigate first,
+  // trash over rm); a longer expansion with those words pulled unrelated pages into the top 3 for "wipe some old files" (h51)
+  [/\b(delet(e|es|ed|ing)|remov(e|es|ed|ing)|rm( -\w+)?|wip(e|es|ed|ing)|clean(s|ed|ing)? ?up|nuk(e|es|ed|ing)|purg(e|es|ed|ing)|eras(e|es|ed|ing)|get rid of)\b/i, "Law 4 ask before destroying destructive", ["seed-kit", "19-permissions", "spawn"]],
   [/\b(stops?|prevents?|blocks?|guards?|keeps?) (you|it|claude|the ai)\b[^?]*\b(rm|delet\w*|destructive|dangerous)\b/i, "deny rules hooks PreToolUse block destructive commands", ["19-permissions", "21-hooks"]],
 ];
 export const synExpand = q => SYN.filter(([re]) => re.test(q)).map(([, t]) => t).join(" ");
 // pages a slang rule points at: deterministic, so a vague question still reaches the page that answers it
 export const synPages = (idx, q) => [...new Set(SYN.filter(([re, , pg]) => pg && re.test(q)).flatMap(([, , pg]) => pg))].map(sl => idx.bySlug?.get(sl)).filter(i => i !== undefined);
+
+// ---------------------------------------------------------------- chapter numbers and the step data (Audit200 RC3)
+// "Chapter 5", "ch 7", "ch4.2": the page with that display number is pinned like a slang rule's page. Nothing mapped them before, so
+// "the Done when line for Chapter 5" was answered from Ch4's "Next: Chapter 5" teaser and "Path A vs Path B in Chapter 5" never saw Ch5.
+const CH_RE = /\b(?:chapter|ch\.?)\s*(\d{1,2})(?:\.\d+)?\b/gi;
+export function chapterPins(idx, q) {
+  const out = [];
+  for (const m of String(q).matchAll(CH_RE)) { const pre = m[1].padStart(2, "0") + "-"; const i = idx.pages.findIndex(p => p.slug.startsWith(pre)); if (i >= 0 && !out.includes(i)) out.push(i); }
+  return out;
+}
+// A "Done when" / Verify / "how do I check it" question is answered from the step data the guided-install tools already serve
+// (index.json steps[]: each step's own Done when line and read-only Verify checks, verbatim), put in as passage [1]. The chapter
+// is the one the question names, else the best-ranked chapter page among the top 3 hits when the step shares a word with the
+// question in at least two words (or the question is only "did it work"). A split chapter gives the sub-step that shares the most words with the
+// question; on a tie, the one holding the chapter's own "Done when" section.
+export const CHECK_ASK = /\bdone[- ]when\b|\bverify (?:block|step|section|lines?)\b|\bverification\b|\bhow (?:do|can|would|should|will) (?:i|we|you|my ai|it) (?:check|verify|confirm|test)\b(?! (?:\w+ )?out\b)|\bcheck (?:that |if |whether )?(?:it|this|that|everything) (?:worked|works|is working|went)\b|\b(?:did|does) (?:it|that|this) work\b/i;
+const CHECK_STOP = /^(done|when|verify|verification|check|chapter|ch|work|block|line|step|first|last|\d+)$/;
+export function stepPassage(idx, q, candidates = []) {
+  if (!CHECK_ASK.test(q) || !idx.steps) return null;
+  const named = chapterPins(idx, q), qt = new Set(tokenize(q).filter(t => !CHECK_STOP.test(t)));
+  for (const pi of named.length ? named.slice(0, 1) : candidates.filter(i => /^\d{2}-/.test(idx.pages[i]?.slug || "")).slice(0, 1)) {
+    const pg = idx.pages[pi], base = `${SITE}/${pg.slug}.html`;
+    const steps = idx.steps.filter(st => st.url.replace(/#.*$/, "") === base && (st.done_when || st.checks.length));
+    if (!steps.length) continue;
+    const score = st => { const w = new Set(tokenize(`${st.title} ${st.done_when || ""} ${st.checks.map(c => `${c.code} ${c.under}`).join(" ")}`)); return [...qt].filter(t => w.has(t)).length; };
+    const ranked = steps.map((st, i) => ({ st, i, s: score(st) + (st.checks.some(c => /^Done when/i.test(c.under)) ? 0.5 : 0) })).sort((a, b) => b.s - a.s || b.i - a.i);
+    if (!named.length && qt.size && ranked[0].s < 2) continue;            // a page the question only brushed against: no passage
+    const st = ranked[0].st;
+    const lines = [`Chapter ${+pg.slug.slice(0, 2)}, ${pg.title}: its Done when line and Verify block, as the page prints them.`];
+    if (st.done_when) lines.push(`Done when: ${st.done_when}`);
+    if (st.checks.length) lines.push("Verify (read-only checks, run them exactly as shown):", "```bash", ...st.checks.map(c => (c.os !== "any" ? `# ${c.os === "mac" ? "Mac" : "Linux"}\n` : "") + c.code), "```");
+    return { url: pg.url, title: pg.title, slug: pg.slug, heading_path: "Done when + Verify", text: lines.join("\n"), step: st.id };
+  }
+  return null;
+}
 
 // ---------------------------------------------------------------- LLM query rewrite (port of hybrid.rewrite)
 const REWRITE_SYS = g => `You turn a visitor's question into search queries for the how-to site how.nixfred.com.
@@ -177,7 +237,7 @@ export async function retrieve(env, idx, question, { k = LIMITS.topK, page = nul
   const add = (list, w) => list.forEach((i, rank) => fused.set(i, (fused.get(i) || 0) + w / (RRF_K + rank + 1)));
   queries.forEach((q, qi) => add(bm25(idx, q), qi === 0 ? 1 : REWRITE_W));
   const syn = synExpand(question); if (syn) add(bm25(idx, syn), SYN_W);
-  const sp = synPages(idx, question); for (const pi of sp) add(bm25(idx, `${question} ${syn}`, { page: pi }), SYN_PAGE_W);
+  const sp = [...new Set([...synPages(idx, question), ...chapterPins(idx, question)])]; for (const pi of sp) add(bm25(idx, `${question} ${syn}`, { page: pi }), SYN_PAGE_W);
   if (page !== null) queries.forEach((q, qi) => add(bm25(idx, q, { page }), qi === 0 ? 1 : REWRITE_W));
   let vecs = null;
   if (env.VECTORIZE && idx.embed) {
@@ -461,12 +521,16 @@ export async function answer(env, request, question, { history = [], page = null
   const rq = fu && !fu.end ? fu.query : question.length < 60 && prevUser ? `${prevUser}\n${question}` : question;   // other short follow-ups keep their thread
   const ret = await retrieve(env, idx, rq, { page: fuPage ?? page });
   // the slang expansion is part of the query when a long chunk is cut down to its best blocks (it holds the site's own words for the visitor's slang)
-  const ctx = pack(idx, ret.hits, ret.syn ? [...ret.queries, ret.syn] : ret.queries, { pinned: fuPage !== undefined ? [...ret.pinned, fuPage] : ret.pinned });
+  // a Done when / Verify / "how do I check it" question gets the step's own lines first (RC3), and the pack makes room for them
+  const sp = fu ? null : stepPassage(idx, question, [...new Set(ret.hits.slice(0, 3).map(i => idx.chunks[i].p))]);
+  const ctx = [...(sp ? [sp] : []), ...pack(idx, ret.hits, ret.syn ? [...ret.queries, ret.syn] : ret.queries, { pinned: fuPage !== undefined ? [...ret.pinned, fuPage] : ret.pinned, budget: LIMITS.budget - (sp ? sp.text.length + 140 : 0) })];
   const top = ret.hits.map(i => idx.pages[idx.chunks[i].p].url), packed = ctx.map(p => p.url);   // top = retrieved, packed = what the model was shown
   await onEvent("meta", { mode: ret.mode, scope: scope ? { slug: scope.slug, title: scope.title, url: scope.url } : null, ...(debug ? { top_urls: top, packed_urls: packed, queries: ret.queries, on_topic: ret.onTopic, retrieve_ms: ret.retrieveMs } : {}) });
   const base = { top_urls: top, packed_urls: packed, queries: ret.queries, retrieve_s: ret.retrieveMs / 1000 };
   const refusal = refusalFor(rq, question);                             // rule 14's line for Fred and his sites, else the bare refusal
-  if (!ret.onTopic && page === null && !fu) {                           // the rewrite's gate: refuse, skip generation
+  const vote = !ret.onTopic && page === null && !fu ? siteVote(idx, rq) : null;   // only asked when the rewrite says off-topic
+  if (vote) base.site_vote = vote;
+  if (vote && !vote.strong) {                                           // both votes say off-topic: refuse, skip generation
     if (dir) return viaDirectory();
     await onEvent("token", { t: refusal });
     const fin = { answer: refusal, sources: [], refused: true, gated: true, mode: ret.mode, ...base, gen_s: 0, total_s: (Date.now() - t0) / 1000 };

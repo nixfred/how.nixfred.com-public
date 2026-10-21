@@ -13,7 +13,7 @@
 import { normUrl } from "./text.js";
 import SITE_DIRECTORY from "./site-directory.json";
 import { nextStep, convoNote, echoView, stripEcho, chapterOfUrl } from "./followup.js";
-import { MODELS, LIMITS, synExpand, embedQueries, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
+import { MODELS, LIMITS, synExpand, embedQueries, isInjection, siteVote, loadIndex, stepPassage, CHECK_ASK, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
 
 // the three ways to start, exactly as the start cards on nixfredos.com link them (spine amendment 2026-10-20 6:15 PM:
 // nixfredos.com carries no steps, they all live on how.nixfred.com). Point 1 is the recipe box page, https://how.nixfred.com/recipe-box: the one start path (not nixfredos.com/build).
@@ -96,7 +96,8 @@ const PRIV_NEAR = new RegExp(`${WHO}[^?.!\\n]{0,40}${NOUN}`, "i");
 const PRIV_INTENT = /\b(what'?s in|what is in|what are|what were|what did|what has|what have|show|read|list|tell me|give me|share|dump|print|reveal|open|access|leak|look (at|in|through)|see|where (is|does|did|was)|who (is|are|was)|when (is|does|did)|summari[sz]e|recall|search|forward|paste|copy|export)\b/i;
 const PRIV_ALWAYS = /\b(it|blue[- ]collar) (friend|buddy|guy)\b|\b(fred'?s|larry'?s|your) (calendar|inbox|passwords?|api ?keys?|secrets?|memories|private memories|text messages|imessages)\b/i;
 // prompt injection: asking for the instructions, or to drop them
-export const isInjection = q => /\b(system|hidden|developer) (prompt|instructions?|message)\b|\bignore (all |any |your |the |previous |prior |above )*(rules|instructions|prompt)\b|\b(jailbreak|DAN mode|developer mode)\b|\bpretend (you are|to be) (not|no longer)\b/i.test(q);
+// (isInjection lives in core.js, shared with the how.nixfred.com gate vote; re-exported here for existing callers)
+export { isInjection };
 const HOWTO = /^\s*(how (do|does|did|can|could|should|would|is|are|will)|why\b|explain how)/i;
 export const isPrivateAsk = q => !HOWTO.test(q) && (PRIV_ALWAYS.test(q) || (PRIV_NEAR.test(q) && PRIV_INTENT.test(q)));
 
@@ -470,7 +471,9 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   if (!named.length && about.length) rq = `${q} (${about.map(d => d.name).join(", ")})`;
   const rw = await fleetRewrite(env, idx, rq);
   if (rw.priv) return { answer: say(PRIVATE_TEXT, site), sources: [], site, refused: true, why: "private (rewrite)" };
-  if (!rw.onTopic && !about.length && !fu && !ON_TOPIC.test(q)) return { answer: say(REFUSE_TEXT, site), sources: [], site, refused: true, why: "off-topic (rewrite)" };
+  // the rewrite's off-topic call is one vote (Audit200 RC1): a question that keyword-matches one how.nixfred.com page squarely
+  // ("What is gitleaks for?") is not refused on it; no how index (or any error) keeps the old behaviour
+  if (!rw.onTopic && !about.length && !fu && !ON_TOPIC.test(q) && !(await loadIndex(env, request).then(hi => siteVote(hi, rq).strong, () => false))) return { answer: say(REFUSE_TEXT, site), sources: [], site, refused: true, why: "off-topic (rewrite)" };
   const noLarry = !route && GUIDE_SITES.has(site) && HOWTO_OWN.test(q) && !/\blarry\b/i.test(q);
   const ret = await retrieveFleet(env, request, idx, site, rq, rw, { routeSite: fu ? "how" : route?.id, notSite: noLarry ? "larry" : null });   // a next step is a chapter of the guide: how.nixfred.com
   const { hits, view } = ret;
@@ -478,8 +481,11 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   const byNorm = new Map(view.pages.map(p => [normUrl(p.url), p]));   // the pages this answer can name, from the hits' metadata
   // the directory lines for the sites in question (or nixfred.com for a question about Fred) lead the passages
   const dirFor = about.length ? about : ABOUT_FRED.test(q) ? [DIR_BY_ID.nixfred] : [];
+  // a Done when / Verify / "how do I check it" question about a guide chapter gets that step's own lines first, from how.nixfred.com's
+  // step data (Audit200 RC3); the chapter is the one named, else a how chapter among the top 3 hits. No how index: no passage.
+  const sp = !fu && CHECK_ASK.test(q) ? await loadIndex(env, request).then(hi => stepPassage(hi, q, hits.slice(0, 3).map(h => hi.byNorm.get(normUrl(view.pages[view.chunks[h].p].url))).filter(i => i !== undefined)), () => null) : null;
   const ctx = [...dirFor.map(d => ({ url: d.url, title: `${d.name} (site directory)`, slug: d.url, heading_path: "", text: `${d.name} is at ${d.url}. What it is: ${d.role}` })),
-    ...pack(view, hits, ret.syn ? [...rw.queries, ret.syn] : rw.queries)];
+    ...(sp ? [sp] : []), ...pack(view, hits, ret.syn ? [...rw.queries, ret.syn] : rw.queries, sp ? { budget: LIMITS.budget - sp.text.length - 140 } : {})];
   const messages = fleetMessages(site, q, ctx, idx, history, fu);
   const lead = fu ? scrub(`Next up: [Chapter ${fu.n}: ${fu.title}](${fu.url}).`) + "\n\n" : "";   // a next-step answer always opens by naming its chapter
   let raw = "", model = MODELS.chat;

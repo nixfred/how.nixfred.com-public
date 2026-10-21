@@ -59,9 +59,23 @@ const NO_CHUNKS = new Set(["map"]);
 // Verbatim file embeds (4+ backtick fences: the seed kit's constitution, hooks, audit spec) are not chunked for
 // chat: they swamped every memory question with hook source. get_page and get_file still return them whole.
 const forChunks = (md: string) => md.replace(/^(`{4,})[^\n]*\n[\s\S]*?\n\1\s*$/gm, "(verbatim file shown on the page; read it with get_file or at its URL)");   // the Map repeats one resume prompt per step and swamps retrieval; still listed + get_page-able
+// ...except the laws (Audit200 RC2): with the constitution a placeholder, no chunk held a single law, so "delete a folder", "the
+// recall ritual" or "settled is settled" got a neighbouring chapter or an invention. One chunk per law (14 to 284 words, under MAX)
+// is topical enough not to swamp unrelated questions the way the 20-law blob did. The other verbatim files stay placeholders.
+const lawChunks = (md: string) => {
+  const m = md.match(/^### seed\/CONSTITUTION\.md\s*\n[\s\S]*?^(`{4,})markdown\n([\s\S]*?)\n\1\s*$/m); if (!m) return [];
+  return m[2].split(/^(?=## Law \d+, )/m).slice(1).map(s => {
+    const [head, ...rest] = s.split("\n"); const h = head.replace(/^##\s+/, "").replace(/`/g, "").trim();
+    return { h, hp: `The Seed Kit: Making an AI Like Larry > The files, verbatim > seed/CONSTITUTION.md > ${h}`, a: "#seedconstitutionmd", t: `seed/CONSTITUTION.md, ${h}\n\n${rest.join("\n").trim()}` };
+  });
+};
+// "Your next step" sections describe the NEXT chapter (Audit200 RC3): the prime audit's "Done when for Chapter 5" was stitched from
+// Ch4's "Next: Chapter 5" teaser. Their chunks say so in a line under the heading; the page text itself is untouched.
+const teasers = (md: string) => md.replace(/^(#{1,3} [^\n]*\b(?:your next step|here's your next step)\b[^\n]*)$/gim, "$1\n(This part points to the NEXT chapter; it is not about this chapter.)");
 pages.forEach((pg, pi) => {
   if (NO_CHUNKS.has(pg.slug)) return;
-  for (const c of chunkMd(forChunks(pg.md))) chunks.push({ p: pi, ...c });
+  for (const c of chunkMd(teasers(forChunks(pg.md)))) chunks.push({ p: pi, ...c });
+  if (pg.slug === "seed-kit") for (const c of lawChunks(pg.md)) chunks.push({ p: pi, ...c });
 });
 
 // ── 3. BM25 postings: term -> [chunkIndex, tf, chunkIndex, tf, ...] ──
