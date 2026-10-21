@@ -3,7 +3,7 @@
   --bg:#0e1116; --bg2:#151a21; --bg3:#1b222b; --line:#262f3a;
   --ink:#dbe3ec; --ink2:#9aa7b6; --ink3:#8893a3;
   --accent:#39d0a8; --accent2:#5aa9ff; --warn:#f2b441;
-  --max:760px; --nav:300px;
+  --max:760px; --nav:300px; --rail:340px;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
 }
@@ -125,13 +125,18 @@ a:hover{text-decoration:underline}
 .meta-foot{color:var(--ink3);font-size:12.5px;font-family:var(--mono);margin-top:60px;border-top:1px solid var(--line);padding-top:18px}
 
 /* mobile */
-.navtoggle{display:none}
+.navtoggle,.topbar{display:none}
 @media(max-width:860px){
+  /* the header bar: the nixfred logo top left (the nav, which also holds it, is off-canvas here), the menu toggle at the right */
+  .topbar{display:flex;align-items:center;position:fixed;top:0;left:0;right:0;height:56px;z-index:25;padding:0 12px;
+    background:var(--bg2);border-bottom:1px solid var(--line)}
+  .topbar-logo{display:block;line-height:0}
+  .topbar-logo img{display:block;width:114px;height:44px}
   .nav{position:fixed;left:0;top:0;z-index:30;transform:translateX(-100%);transition:transform .2s;box-shadow:0 0 40px #000a}
   .nav.open{transform:translateX(0)}
-  .navtoggle{display:flex;align-items:center;gap:8px;position:fixed;top:12px;left:12px;z-index:40;
+  .navtoggle{display:flex;align-items:center;gap:8px;position:fixed;top:9px;right:12px;z-index:40;
     background:var(--bg3);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:8px 13px;font-size:14px;cursor:pointer}
-  .main{padding:64px 18px 100px}
+  .main{padding:76px 18px 100px}
   .col h1{font-size:28px}.hero h1{font-size:32px}
 }
 
@@ -418,11 +423,17 @@ body:not(.al-min) .al-pill{display:none}
   display:flex;flex-direction:column;background:var(--bg2);border:1px solid var(--line);border-radius:16px;
   box-shadow:0 18px 60px rgba(0,0,0,.6);overflow:hidden}
 .al-panel[hidden],body.al-min .al-panel{display:none}
-/* keep reading room clear of the dock: wide screens reserve a right gutter, mid screens let the page scroll past it */
-@media(min-width:1360px){body:not(.al-min) .main{padding-right:428px}}
-@media(min-width:641px) and (max-width:1359.98px){body:not(.al-min) .main{padding-bottom:calc(min(520px,60vh) + 56px)}}
+/* keep reading room clear of the floating card: mid screens let the page scroll past it */
+@media(min-width:641px) and (max-width:1199.98px){body:not(.al-min) .main{padding-bottom:calc(min(520px,60vh) + 56px)}}
 @media(min-width:641px) and (max-width:1023.98px){.al-panel{width:340px;height:min(460px,55vh)}
   body:not(.al-min) .main{padding-bottom:calc(min(460px,55vh) + 56px)}}
+/* wide screens (1200px+): on how.nixfred.com the panel is a full-height right rail, the third column of .wrap (nav | main | rail),
+   sticky top to bottom, so the page content gets the rest of the width and nothing sits under it. The selector names .wrap, so
+   the embed (which cannot reflow a host page) keeps the floating card. */
+@media(min-width:1200px){
+  .wrap .al-panel{position:sticky;top:0;right:auto;bottom:auto;align-self:flex-start;flex:0 0 var(--rail);width:var(--rail);max-width:none;
+    height:100vh;height:100dvh;min-height:0;border-radius:0;border-width:0 0 0 1px;box-shadow:none;z-index:20}
+}
 @media(max-width:860px){.nav{z-index:80}.navtoggle{z-index:90}}
 .al-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--bg3)}
 .al-head div{flex:1;min-width:0}

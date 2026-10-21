@@ -89,7 +89,8 @@
 // Concatenated at build time into how.nixfred.com's assets/app.js (driven by ask/widget.js) and into /embed.js
 // (driven by ask/embed.js), so every fleet site gets how.nixfred.com's exact chat. Markup: ask/panel-build.js.
 // CSS: the "ask-larry-panel" block of site/assets/style.css (the embed gets the same block, extracted at build).
-// Desktop: docked bottom right; the close button minimizes it to the pill for this browser session.
+// Desktop: a floating card docked bottom right (the embed, and how.nixfred.com below 1200px), or on how.nixfred.com at 1200px+
+// a full-height sticky right rail (CSS only: .wrap .al-panel); the close button minimizes either to the pill for this browser session.
 // Phones (max-width 640px): a compact ask bar docked across the bottom that expands to a 72dvh sheet on focus or
 // when a question goes; the close button folds it back to the bar. Safe markdown: everything is HTML-escaped
 // first, and a link is kept only when o.href() accepts its URL.
