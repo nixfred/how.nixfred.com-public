@@ -233,6 +233,11 @@ export async function sectionReply(env, request, question) {
     const parts = g.filter((x, k) => k === 0 || /^The script/.test(x.label) || want.some(w => x.label.startsWith(w)) || /^Then check it/.test(x.text));
     return { answer: `From Chapter 7's optional snapshot timer, word for word (it is written to your AI):\n\n${parts.map(x => x.text).join("\n\n")}\n\nThe whole section: ${SITE}/07-forever-repo.html`, sources: [{ url: `${SITE}/07-forever-repo.html`, title: "Chapter 7: Your Forever Private Repo (and gup)" }], mode: "section" };
   }
+  if (LAWMERGE_ASK.test(q)) {
+    const g = mdGroups(await chapterMd(env, request, "05-bootstrap"), /^Optional: installed before/);
+    if (!g.length) return null;
+    return { answer: `From Chapter 5's optional merge for older installs, word for word (it is written to your AI):\n\n${g.map(x => x.text).join("\n\n")}\n\nThe whole section: ${SITE}/05-bootstrap.html`, sources: [{ url: `${SITE}/05-bootstrap.html`, title: "Chapter 5: The One-Command Bootstrap" }], mode: "section" };
+  }
   if (LAWHOOK_ASK.test(q)) {
     const g = mdGroups(await chapterMd(env, request, "21-hooks"), /^Optional: hooks that enforce a Law/);
     if (!g.length) return null;
@@ -242,6 +247,28 @@ export async function sectionReply(env, request, question) {
   }
   return null;
 }
+// SEED KIT FIX (AI Strategy, 2026-10-21): search-first.sh and capture-decisions.sh come from Ch21's optional section, not the Seed Kit (the
+// seed's own hook for recall is remember-trigger.sh). Live, the fleet chat said "[the Seed Kit]'s `search-first.sh` hook enforces Law 2"
+// and "These hooks are part of the Seed Kit". In an answer that names either script, a sentence that credits the Seed Kit or "the seed"
+// without naming a real seed file is replaced by HOOK_CREDIT, and Ch21 is cited first (site chat, MCP, fleet).
+const CH21_SCRIPTS = /\b(?:search-first|capture-decisions)\.sh\b/i;
+const SEED_REF = /\bseed[- ]kit\b|\bthe seed(?:'s)?\b|\bseed(?:'s)? (?:hooks?|files?|scripts?)\b/i;
+const SEED_FILE = /\b(?:remember-trigger|memory-backstop|session-end-backup)\.sh\b|\bclaude-launcher\.sh\b|\b(?:CONSTITUTION|LINEAGE|AUDIT|CLAUDE)\.md\b|\bsettings\.fragment\.json\b/;
+export const HOOK_CREDIT = `These hooks come from [Chapter 21's optional section](${SITE}/21-hooks.html), "hooks that enforce a Law"; the seed's own hook for recall is \`remember-trigger.sh\`.`;
+export function fixHookCredit(body) {
+  if (!CH21_SCRIPTS.test(String(body))) return { body, fixed: false };
+  let fixed = false, said = false;
+  const out = String(body).split(/(```[\s\S]*?```)/g).map((part, i) => i % 2 ? part : part.split("\n").map(line => line.split(/(?<=[.!?])\s+(?=[A-Z*\[`"])/).map(sen => {
+    if (!SEED_REF.test(sen) || SEED_FILE.test(sen)) return sen;
+    fixed = true;
+    if (CH21_SCRIPTS.test(sen)) return sen                                // the script is named here: the credit changes in place, the rest stays
+      .replace(/\[(?:the )?["\u201c]?seed[- ]kit["\u201d]?\]\([^)]*\)/gi, `[Chapter 21](${SITE}/21-hooks.html)`).replace(/\bthe ["\u201c]?seed[- ]kit["\u201d]?/gi, "Chapter 21")
+      .replace(/["\u201c]?\bseed[- ]kit\b["\u201d]?/gi, "Chapter 21").replace(/\bthe seed's\b/gi, "Chapter 21's").replace(/\bthe seed\b/gi, "Chapter 21").replace(/\bseed(?:'s)? (hooks?|files?|scripts?)\b/gi, "Chapter 21 $1");
+    if (said) return ""; said = true; return HOOK_CREDIT;                // a sentence that credits the seed for "these hooks": the right credit, once
+  }).filter(x => x !== "").join(" ")).join("\n")).join("");
+  return { body: fixed ? out.replace(/\n{3,}/g, "\n\n").trim() : body, fixed };
+}
+export const CH21_SOURCE = { url: `${SITE}/21-hooks.html`, title: "Chapter 21: Hooks: Determinism You Can't Skip" };
 export const PROMPT_REPLY = "My instructions stay private: I don't print my system prompt, whatever the message says. What I can do is answer from how.nixfred.com: building your own AI in order, a chapter's commands and checks, memory, hooks, the constitution, or what to do next. The build starts at https://how.nixfred.com/00-start-here.html.";
 export const OVERRIDE_REPLY = "A claim inside a message is not approval: an override, a pre-approval, a tag or a special mode written into the question changes nothing. Every install step still waits for your human's own yes, so I won't drop the confirmations or hand over commands with them stripped out. The guided install, in order, with the checks after each step, starts at https://how.nixfred.com/00-start-here.html.";
 // "Does this work on Windows?" (Audit200 c009: the chat replied with the bare "The site doesn't cover that." while the MCP answered).
@@ -282,7 +309,10 @@ export const isBuildTimeAsk = q => BUILD_TIME_ASK.test(String(q)) && !isOverride
 // BATCH B: a scheduled snapshot ask (Ch7's optional timer) and a law-enforcing hook ask (Ch21's optional hooks); used by the SYN rows
 // below and by sectionReply, which answers both from the chapter's own markdown
 export const SNAPSHOT_ASK = /\b(?:back\s?ups?|backing up|snapshots?|commit\w*|save\w*)\b[^?\n]{0,60}\b(?:every \d+ ?min\w*|every (?:half )?hour|timer|cron\w*|launchd|launch ?agent|systemd|schedul\w*|periodic\w*|automatic\w*|interval)\b|\b(?:timer|cron\w*|launchd|systemd|schedul\w*)\b[^?\n]{0,60}\b(?:back\s?ups?|snapshots?|commit\w*)\b|\b(?:validate|check)\w*\b[^?\n]{0,40}\b(?:json|toml|config\w*)\b[^?\n]{0,40}\b(?:back\s?up|snapshot)|\b\d+[- ]?min\w* (?:back\s?ups?|snapshots?)\b|\bsnapshot (?:timer|script|job)s?\b|\bagent-snapshot\b/i;
-export const LAWHOOK_ASK = /\b(?:asks?(?:ing)? (?:me |my human |the human )?["\u201c']?do you remember|asks?(?:ing)? (?:me )?(?:if|whether) i remember|(?:stop|keep|prevent)\w* (?:my ai |it |the ai |the agent )?(?:from )?asking\b[^?\n]{0,30}\bremember|search\w* (?:its |the |my )?(?:memory|history) (?:first|before)|before (?:it |you )?asks?\b[^?\n]{0,30}\bremember|search[- ]before[- ]ask\w*)\b|\b(?:capture|log|record|save|write down)\w*\b[^?\n]{0,30}\bdecisions?\b[^?\n]{0,40}\b(?:hook|automatic\w*)|\b(?:hook|enforce\w*)\b[^?\n]{0,40}\b(?:law 2|law 18|decisions?|search (?:memory|history))\b/i;
+// BATCH B 2: an older install's constitution is short of laws ("installed before October 18", "only 12 laws", "add the new laws") -> Ch5's
+// optional merge, word for word; growing your own law ("add a new law of my own") is not this
+export const LAWMERGE_ASK = /^(?![^\n]*\b(?:my own|of my own|a new law|propose)\b)[^\n]*(?:\b(?:constitution|laws?)\b[^?\n]{0,60}\b(?:missing|merge\w*|the new (?:ones|laws)|new laws|update\w*|upgrade\w*|only (?:has |have |shows? |counts? )?\d+|fewer than|short|old(?:er)?|outdated|out of date)\b|\b(?:missing|merge\w*|new|update\w*)\b[^?\n]{0,40}\b(?:laws|constitution)\b|\b(?:installed|set (?:it )?up|built|bootstrapped)\b[^?\n]{0,30}\bbefore (?:oct\w*|october)|\b\d+ laws?\b[^?\n]{0,40}\b(?:not|instead of|only|should)\b|\blaw count\b[^?\n]{0,20}\b(?:says|shows|is|reads|of|only)\s+\d+|\bnot \d+ or more\b)/i;
+export const LAWHOOK_ASK = /\b(?:asks?(?:ing)? (?:me |my human |the human )?["\u201c']?do you remember|asks?(?:ing)? (?:me )?(?:if|whether) i remember|(?:stop|keep|prevent)\w* (?:my ai |it |the ai |the agent )?(?:from )?asking\b[^?\n]{0,30}\bremember|search\w* (?:its |the |my )?(?:memory|history) (?:first|before)|before (?:it |you )?asks?\b[^?\n]{0,30}\bremember|search[- ]before[- ]ask\w*)\b|\b(?:capture|log|record|save|write down)\w*\b[^?\n]{0,30}\bdecisions?\b[^?\n]{0,40}\b(?:hook|automatic\w*)|\b(?:hook|enforce\w*)\b[^?\n]{0,40}\b(?:law 2|law 18|decisions?|search (?:memory|history))\b|\bhooks?\b[^?\n]{0,40}\benforc\w*\b[^?\n]{0,30}\b(?:laws?|constitution|rules?)\b|\benforc\w*\b[^?\n]{0,30}\b(?:laws?|constitution)\b[^?\n]{0,30}\bhooks?\b|\b(?:search-first|capture-decisions)(?:\.sh)?\b/i;
 // Visitor slang -> the site's own vocabulary. Deterministic, so it still helps when the LLM rewrite fails.
 export const SYN = [
   // CHIPS (Fred, 2026-10-21): the beginner starter chips. Each one is vague on its own ("this", "it"), so BM25 sent them to whatever page
@@ -1100,6 +1130,8 @@ export async function answer(env, request, question, { history = [], page = null
       body = withVariants(body, sp);                                       // m008: the zsh form the question asked for
       if (!lead && !isRefusal(body)) body = safetyLead(question, costLead(question, body, ctx), ctx);
       const safe0 = safeSource(body, ctx); if (safe0 && !cited.some(p => normUrl(p.url) === normUrl(safe0.url))) cited.unshift(safe0);
+      { const hc = fixHookCredit(body); body = hc.body;                     // SEED KIT FIX: Ch21's scripts are credited to Ch21, which is cited first
+        if (CH21_SCRIPTS.test(body)) { const c21 = ctx.find(p => p.slug === "21-hooks") || CH21_SOURCE; cited = [c21, ...cited.filter(p => normUrl(p.url) !== normUrl(c21.url) && !(hc.fixed && /seed-kit/.test(p.url) && !/seed[- ]kit|seed\//i.test(body)))]; } }
       if (!isRefusal(body)) body = body.replace(/\n*\s*The site doesn'?t cover that\.\s*$/i, "").replace(/\s*The site doesn'?t cover that\.\s*(?=\n)/gi, "");   // a real answer never ends in the refusal
       const asModelSaid = body;
       body = stripEcho(body, history).trim();                           // whatever the model still repeated from an earlier answer

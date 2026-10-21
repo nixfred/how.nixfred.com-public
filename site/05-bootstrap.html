@@ -144,6 +144,30 @@ test -f ~/.claude/CLAUDE.md &amp;&amp; test -f ~/.claude/CONSTITUTION.md &amp;&a
 grep -n &#39;LEAD WITH CHOICES&#39; ~/.claude/CLAUDE.md                                 # the Chapter 3 habit is in your identity file
 grep -n &#39;^## Law 10,&#39; ~/.claude/CONSTITUTION.md                                 # and in your laws
 </code></pre>
+<h3>Optional: installed before October 18, 2026? Add the new laws</h3>
+<p>The seed&#39;s constitution gained new laws on October 18, 2026. The bootstrap never overwrites a file you already have, so an earlier install keeps its older <code>CONSTITUTION.md</code> and the law count above comes up short. This adds only the laws your file is missing, from <a href="https://how.nixfred.com/seed/CONSTITUTION.md">https://how.nixfred.com/seed/CONSTITUTION.md</a>, to the end of your file. It never changes a word you already have. A seed law counts as present when your file has a law with the same title under any number, or the same number with a title that starts the same way, so a law you retitled stays yours. Show your human both blocks, say what each does, and run the second only after their yes.</p>
+<p><strong>Look first</strong> (it changes nothing): it downloads the seed to a temporary file and lists the laws it would add.</p>
+<pre><code class="language-bash">curl -fsSL https://how.nixfred.com/seed/CONSTITUTION.md -o &quot;${TMPDIR:-/tmp}/seed-constitution.md&quot;
+awk &#39;
+function norm(t) { t = tolower(t); gsub(/`/, &quot;&quot;, t); gsub(/[^a-z0-9]+/, &quot; &quot;, t); sub(/^ /, &quot;&quot;, t); sub(/ $/, &quot;&quot;, t); return t }
+function first(t,  w) { split(t, w, &quot; &quot;); return w[1] }
+FNR == 1 { file++ }
+file == 1 &amp;&amp; /^## Law [0-9]+/ { n = $3; gsub(/[^0-9]/, &quot;&quot;, n); t = $0; sub(/^## Law [0-9]+[^A-Za-z0-9`&quot;]*/, &quot;&quot;, t); have[norm(t)] = 1; num[n] = first(norm(t)); next }
+file == 2 &amp;&amp; (/^#/ || /^---/) { keep = 0 }
+file == 2 &amp;&amp; /^## Law [0-9]+/ { n = $3; gsub(/[^0-9]/, &quot;&quot;, n); t = $0; sub(/^## Law [0-9]+[^A-Za-z0-9`&quot;]*/, &quot;&quot;, t); k = norm(t); keep = !(k in have) &amp;&amp; !((n in num) &amp;&amp; num[n] == first(k)) }
+file == 2 &amp;&amp; keep { print }
+&#39; ~/.claude/CONSTITUTION.md &quot;${TMPDIR:-/tmp}/seed-constitution.md&quot; &gt; &quot;${TMPDIR:-/tmp}/laws-to-add.md&quot;
+grep &#39;^## Law &#39; &quot;${TMPDIR:-/tmp}/laws-to-add.md&quot; || echo &quot;nothing missing: your constitution already has every seed law&quot;
+</code></pre>
+<p><strong>Then add them, after your human&#39;s yes.</strong> It backs up your file to a timestamped copy, appends the missing laws under a dated note, and checks the result:</p>
+<pre><code class="language-bash">f=~/.claude/CONSTITUTION.md; add=&quot;${TMPDIR:-/tmp}/laws-to-add.md&quot;; b=&quot;$f.bak.$(date +%Y%m%d%H%M%S)&quot;
+if [ -s &quot;$add&quot; ] &amp;&amp; cp &quot;$f&quot; &quot;$b&quot;; then
+  { printf &#39;\n&lt;!-- Added %s from https://how.nixfred.com/seed/CONSTITUTION.md: only the laws this file did not have, numbered as the seed numbers them. Nothing above this line was changed. --&gt;\n\n&#39; &quot;$(date +%F)&quot;; cat &quot;$add&quot;; } &gt;&gt; &quot;$f&quot; &amp;&amp; echo &quot;added; backup: $b&quot;
+else echo &quot;nothing added&quot;; fi
+grep -c &#39;^## Law &#39; &quot;$f&quot;                          # 20 or more
+grep -o &#39;^## Law [0-9]*&#39; &quot;$f&quot; | sort | uniq -d   # a number listed here appears twice: your own law and a seed law; your text is untouched, renumber with your human if you like
+</code></pre>
+<p>The count should now be 20 or more. If the last line prints a law number, your file and the seed both use that number (an older seed numbered its last laws differently): both texts are kept, and you can renumber them with your human.</p>
 <hr>
 <h2>5.6 Your next step</h2>
 <p>The engine is built. Now extend and protect it, in order:</p>

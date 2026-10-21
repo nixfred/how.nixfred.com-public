@@ -13,7 +13,7 @@
 import { normUrl } from "./text.js";
 import SITE_DIRECTORY from "./site-directory.json";
 import { nextStep, convoNote, echoView, stripEcho, chapterOfUrl } from "./followup.js";
-import { MODELS, LIMITS, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, isPromptAsk, sectionReply, isAgentAsk, agentReply, AGENT_SOURCES, isBuildTimeAsk, TIME_REPLY, TIME_SOURCES, isExistingAsk, EXISTING_REPLY, EXISTING_SOURCES, isPrivateDetail, PRIVATE_REPLY, isPlatformAsk, platformReply, unPremise, withVariants, synHeadChunks, sectionChunks, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, costLead, safetyLead, safeSource, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
+import { MODELS, LIMITS, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, isPromptAsk, sectionReply, isAgentAsk, agentReply, AGENT_SOURCES, isBuildTimeAsk, TIME_REPLY, TIME_SOURCES, isExistingAsk, EXISTING_REPLY, EXISTING_SOURCES, isPrivateDetail, PRIVATE_REPLY, isPlatformAsk, platformReply, unPremise, withVariants, synHeadChunks, sectionChunks, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, costLead, safetyLead, safeSource, fixHookCredit, CH21_SOURCE, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
 
 // the three ways to start, exactly as the start cards on nixfredos.com link them (spine amendment 2026-10-20 6:15 PM:
 // nixfredos.com carries no steps, they all live on how.nixfred.com). Point 1 is the recipe box page, https://how.nixfred.com/recipe-box: the one start path (not nixfredos.com/build).
@@ -43,6 +43,7 @@ const START_ASK_BASE = /\b(start|starting|begin|beginner|first step|new to|newco
 const START_ASK = { test: t => START_ASK_BASE.test(t) || START_PATH.test(t) };
 // "how do I ... my AI" on the guide's sites is the guide's job: larry.nixfred.com tells Larry's own (older) setup, so it is
 // left out of those answers unless the question is about Larry (it was passing SOULTOOLS off as a how.nixfred.com chapter)
+const CH21_SCRIPTS_RE = /\b(?:search-first|capture-decisions)\.sh\b/i;
 const GUIDE_SITES = new Set(["how", "nixfredos", "ladder"]);
 const HOWTO_OWN = /\b(my|your own|our) ai\b|^\s*how (do|can|should|would) i\b|\bhow to\b|\bset ?up\b/i;
 // "hire Fred" is one quiet line, and only when the visitor asked for help or hiring (the model adds it unprompted otherwise)
@@ -558,7 +559,9 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   if (premise) body = falsePremise(q, isFleetRefusal(body) ? "" : body, ctx); else body = unPremise(q, body);   // CHIPS: no "No, the site does not say that." for a question that claims nothing
   body = withVariants(noMeta(body), sp);                                  // m008: the zsh form the question asked for
   if (!premise && !fu && !isFleetRefusal(body)) body = safetyLead(q, costLead(q, body, ctx), ctx);
-  { const safe0 = safeSource(body, ctx); if (safe0 && !cited.some(p => normUrl(p.url) === normUrl(safe0.url))) cited.unshift(safe0); }   // the site chat's path and model-id guards (PR #29, eval c05) apply here too
+  { const safe0 = safeSource(body, ctx); if (safe0 && !cited.some(p => normUrl(p.url) === normUrl(safe0.url))) cited.unshift(safe0); }
+  { const hc = fixHookCredit(body); body = hc.body;   // SEED KIT FIX: search-first.sh / capture-decisions.sh are Ch21's, never the Seed Kit's
+    if (CH21_SCRIPTS_RE.test(body)) { const c21 = ctx.find(c => /\/21-hooks(?:\.html)?$/.test(c.url)) || { title: CH21_SOURCE.title, url: CH21_SOURCE.url.replace(/\.html$/, "") }; cited = [c21, ...cited.filter(p => normUrl(p.url) !== normUrl(c21.url) && !(hc.fixed && /seed-kit/.test(p.url) && !/seed[- ]kit|seed\//i.test(body)))]; } }   // the site chat's path and model-id guards (PR #29, eval c05) apply here too
   body = guard(body.replace(/\n*\s*The sites? (?:don'?t|doesn'?t) cover that\.\s*$/i, "")).replace(/^(\s*>?\s*)\**\s*(snark|snarky line|wry line)\s*\**\s*:\s*\**\s*/gim, "$1");   // a voice label is not part of the answer
   const asModelSaid = body;
   body = stripEcho(body, history).trim();   // whatever the model still repeated from an earlier answer
