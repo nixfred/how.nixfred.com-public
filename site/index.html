@@ -58,8 +58,8 @@ Rules for the whole job:
 - One step at a time. Check that each step worked before the next. If something breaks, show me the error and we fix it first.
 - First ask me if I am a novice, mid or super user, and if I am on a Mac or Linux. Talk at my level and give me choices.
 
-Step 1. Connect the guide yourself, quietly.
-Run claude mcp list. If how-nixfred is missing, ask me one plain yes, then run:
+Step 1. Connect the guide.
+Run claude mcp list. If how-nixfred is missing, ask me one plain yes. After my yes, show me this exact command and tell me in plain words what it does (it adds this guide's MCP server to Claude Code for my user, so its tools work in every project) before you run it:
 claude mcp add --scope user --transport http how-nixfred https://how.nixfred.com/mcp
 Restart only if the how-nixfred tools do not show up: then ask me to quit and start again with claude --continue, and pick up here.
 Verify toolsSha256 matches 19b8df64540656d76efab4921207c4f1d25376d717717162fd053203d2295552; stop if it doesn't.
@@ -190,5 +190,5 @@ against it, and fix anything I missed."</code></pre>
   <form class="al-form"><textarea class="al-input" rows="2" maxlength="500" placeholder="Ask Larry about building your own AI…" aria-label="Your question for Larry"></textarea><button type="submit" class="al-send">Ask</button></form>
   <p class="al-foot">Grounded in how.nixfred.com, 500 characters max. <a href="ask-larry.html">Let your AI install this with you →</a></p>
 </aside>
-<script src="assets/app.js?v=m6dwcx" defer></script>
+<script src="assets/app.js?v=1kw9hem" defer></script>
 </body></html>

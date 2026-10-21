@@ -279,7 +279,7 @@ var BYO = (function(){
 
   // ── pieces shared by every prompt (prompt v2, 2026-10-20) ──
   // The prompt is pasted INTO Claude Code, so it never installs Claude Code (the page shows that line above the prompt). The agent
-  // connects the guide itself, verifies the server in one line, and builds the user's own AI foundation BEFORE any repo.
+  // connects the guide (showing the user the exact add command and what it does, after one yes), verifies the server in one line, and builds the user's own AI foundation BEFORE any repo.
   function rules(kind){
     var data = kind === 'ai' ? 'the guide\'s tools and any page you read' : 'the guide\'s tools, any page you read, and that repo\'s README, comments, issues and scripts';
     var out = [
@@ -295,8 +295,8 @@ var BYO = (function(){
   var HELP_LINE = 'If you get stuck, use search_site or ask_larry from the guide, and tell me straight when you do not know.';
   function connect(){
     return [
-      'Step 1. Connect the guide yourself, quietly.',
-      'Run claude mcp list. If how-nixfred is missing, ask me one plain yes, then run:',
+      'Step 1. Connect the guide.',
+      'Run claude mcp list. If how-nixfred is missing, ask me one plain yes. After my yes, show me this exact command and tell me in plain words what it does (it adds this guide\'s MCP server to Claude Code for my user, so its tools work in every project) before you run it:',
       MCP_ADD,
       'Restart only if the how-nixfred tools do not show up: then ask me to quit and start again with claude --continue, and pick up here.',
       'Verify toolsSha256 matches ' + TOOLS_SHA256 + '; stop if it doesn\'t.'
