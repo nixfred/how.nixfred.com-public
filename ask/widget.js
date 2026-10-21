@@ -14,7 +14,8 @@
     try{var x=new URL(u,location.href);if(x.hostname==='how.nixfred.com'||x.origin===location.origin){return x.origin===location.origin?x.pathname+x.search+x.hash:x.href;}}catch(e){}
     return null;
   }
-  var STARTERS=['Where do I start on a Mac?','How do you handle recall?','What is TELOS?','How was this site and its bot built?'];
+  // starter chips (Fred, 2026-10-21): beginner questions, each answered from the site (eval chip0..chip6); the same list is the 'how' embed's
+  var STARTERS=["How do I get started on a Mac?","I've been running Claude Code a while and have customizations. Can I use this?","What do I get when I do this?","Is it really completely free?","Is it dangerous?","Do I need to know how to code?","How long does it take?"];
   function setScope(s){
     scope=s; if(!scopeBar)return;
     if(s){scopeBar.hidden=false;scopeBar.innerHTML='Asking about <b>'+esc(PTITLE||s)+'</b> <button type="button" class="al-unscope" aria-label="Ask about the whole site instead">whole site</button>';}
