@@ -311,6 +311,23 @@ export async function fleetRewrite(env, idx, q) {
 // is embedded once and searched with filter {v} (+ site for a routed card-site question, site != larry for a guide
 // how-to); the asking site gets its own small list. Lists are fused with weighted Reciprocal Rank Fusion.
 const RRF_K = 60, TOPK = 20, REWRITE_W = 0.5, PART_W = 0.7, SYN_W = 0.5, HOME_W = 0.35, MAX_PER_PAGE = 3;
+// The index is there but the embedding or vector call failed at request time (2026-10-21: Workers AI embeddings took 0.9 to 8.6 s and
+// hit the 5 s timeout, so EVERY fleet answer was 503 brain_down while the site chat, which falls back to keywords, kept answering).
+// The fleet then answers from how.nixfred.com's own keyword index, the same BM25 + slang rules as the site chat. A question routed to a
+// card site has no keyword index and stays brain_down; so does a failure to load the how index.
+async function keywordFleet(env, request, rw, syn, k, routeSite, why) {
+  if (routeSite && routeSite !== "how") throw new BrainDown(why);
+  const hi = await loadIndex(env, request).catch(() => null); if (!hi) throw new BrainDown(why);
+  const fused = new Map(), add = (list, w) => list.forEach((i, r) => fused.set(i, (fused.get(i) || 0) + w / (RRF_K + r + 1)));
+  rw.queries.slice(0, 4).forEach((x, qi) => add(bm25(hi, x), qi ? REWRITE_W : 1));
+  if (syn) add(bm25(hi, syn), SYN_W);
+  for (const pi of [...synPages(hi, rw.queries[0]), ...chapterPins(hi, rw.queries[0])]) add(bm25(hi, `${rw.queries[0]} ${syn || ""}`, { page: pi }), SYN_W);
+  const out = [], perPage = new Map();
+  for (const [i] of [...fused.entries()].sort((a, b) => b[1] - a[1])) { if (out.length === k) break; const p = hi.chunks[i].p; if ((perPage.get(p) || 0) >= MAX_PER_PAGE) continue; perPage.set(p, (perPage.get(p) || 0) + 1); out.push(i); }
+  const pages = [], pIdx = new Map(), chunks = {};
+  out.forEach((i, ci) => { const c = hi.chunks[i], pg = hi.pages[c.p]; if (!pIdx.has(c.p)) { pIdx.set(c.p, pages.length); pages.push({ url: pg.url, slug: pg.url, title: pg.title, short: pg.short, site: "how" }); } chunks[ci] = { p: pIdx.get(c.p), t: c.t, hp: c.hp }; });
+  return { hits: out.map((_, ci) => ci), view: { pages, chunks }, syn, mode: "keyword", degraded: why };
+}
 export async function retrieveFleet(env, request, idx, site, q, rw, { k = LIMITS.topK, routeSite = null, notSite = null } = {}) {
   if (!env.FLEET_VECTORIZE || !idx.embed?.model) throw new BrainDown("the fleet Vectorize index is not there");
   const fused = new Map(), meta = new Map();
@@ -321,14 +338,14 @@ export async function retrieveFleet(env, request, idx, site, q, rw, { k = LIMITS
   const syn = synExpand(q);
   const texts = [...rw.queries.slice(0, 4), ...(parts.length > 1 ? parts : []), ...(syn ? [syn] : [])];
   let vecs;
-  try { vecs = await embedQueries(env, { embed: idx.embed }, texts); } catch (e) { throw new BrainDown(`embedding failed: ${e}`); }
+  try { vecs = await embedQueries(env, { embed: idx.embed }, texts); } catch (e) { return keywordFleet(env, request, rw, syn, k, routeSite, `embedding failed: ${e}`); }
   const base = { v: idx.version, ...(routeSite ? { site: routeSite } : notSite ? { site: { $ne: notSite } } : {}) };
   const jobs = [], must = [];
   rw.queries.slice(0, 4).forEach((_, qi) => jobs.push(vquery(env, vecs[qi], TOPK, base).then(l => add(l, qi ? REWRITE_W : 1))));
   if (parts.length > 1) parts.forEach((_, pi) => jobs.push(vquery(env, vecs[Math.min(rw.queries.length, 4) + pi], TOPK, base).then(l => { add(l, PART_W); must.push(...l.slice(0, 2).map(m => m.id)); })));
   if (syn) jobs.push(vquery(env, vecs.at(-1), TOPK, base).then(l => add(l, SYN_W)));
   if (!routeSite && site !== notSite) jobs.push(vquery(env, vecs[0], 8, { v: idx.version, site }).then(l => add(l, HOME_W)));
-  try { await Promise.all(jobs); } catch (e) { throw new BrainDown(`vector query failed: ${e}`); }
+  try { await Promise.all(jobs); } catch (e) { return keywordFleet(env, request, rw, syn, k, routeSite, `vector query failed: ${e}`); }
   const out = [], perPage = new Map();
   for (const id of [...new Set([...must, ...[...fused.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => id)])]) {
     if (out.length === k) break;
