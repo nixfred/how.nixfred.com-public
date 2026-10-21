@@ -65,6 +65,7 @@ a:hover{text-decoration:underline}
 .invite-msg .sig{display:block;margin-top:14px;font-style:normal;font-family:var(--mono);font-size:13px;color:var(--accent2)}
 .invite-foot{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);font-size:15px;color:var(--ink2);text-align:center}
 .brand .by{color:var(--accent)}
+.brand-logo{display:block;height:44px;width:auto}
 .brand-sub{color:var(--ink3);font-size:12px;margin:0 0 20px;font-family:var(--mono)}
 .nav .part{color:var(--accent);font-size:11px;font-weight:700;text-transform:uppercase;
   letter-spacing:.12em;margin:18px 0 6px}
