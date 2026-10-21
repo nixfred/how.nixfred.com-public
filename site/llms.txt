@@ -8,7 +8,7 @@
 # Clean markdown for every chapter: same URL with .md (e.g. /04-larry-stack.md).
 
 ## Part I · Foundations, Understand Before You Install
-Ch0: Start Here: Get Claude Code Running (Mac or Linux) · https://how.nixfred.com/00-start-here.md · done when: Claude Code installed, logged in, danger mode on, a real shell, and you're on Tailscale. The only all-human step.
+Ch0: Start Here: Get Claude Code Running (Mac or Linux) · https://how.nixfred.com/00-start-here.md · done when: Claude Code installed, a subscription plan picked on purpose, logged in, danger mode on, a real shell, and you're on Tailscale. The only all-human step.
 Ch1: The Paradigm: Why You Live in the Terminal · https://how.nixfred.com/01-the-paradigm.md · done when: you've read it, and you can say in one line why your AI lives in the terminal instead of a chat window. Nothing to install, so there is nothing to check by command.
 Ch2: Your First Session: Earn Trust Early · https://how.nixfred.com/02-first-session.md · done when: your first project has a `CLAUDE.md` map from `/init`, the status line is on (or your human declined it on purpose), and you have told your human at least once what you don't know instead of bluffing.
 Ch3: Talk in Choices: The AskUserQuestion Habit · https://how.nixfred.com/03-ask.md · done when: you lead with 2 to 4 choices plus "or type your own" on every real decision, you have asked your human's level (novice, mid, super user), and the habit is written into your identity files.

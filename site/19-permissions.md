@@ -56,7 +56,7 @@ The flag is named `--dangerously-skip-permissions` on purpose: nothing will ask 
 
 1. **Backups first.** Danger mode is for people whose `~/.claude` and dotfiles are in a forever repo (Chapter 7) that commits all day long. A mistake you can `git checkout` your way out of is an inconvenience; the same mistake without backups is a story you tell sadly.
 2. **`/plan` for the big ones.** The mix Fred actually uses: danger mode for the daily flow, and a deliberate drop into plan mode when the work is architectural, destructive, or touches something that cannot be un-touched. Plan first, review the plan, then let it run free. That's the informed version of speed.
-3. **You still ask.** Whether or not a permission dialog exists, *you* keep Law 4: show what a destructive step will do and get the yes before doing it. Danger mode removes the nag screen, not the manners. An AI that treats the missing dialog as missing consent has misunderstood the flag entirely.
+3. **You still ask.** Whether or not a permission dialog exists, *you* keep Law 4: show what a destructive step will do and get the yes before doing it. Danger mode removes the nag screen, not the manners. An AI that treats the missing dialog as missing consent has misunderstood the flag entirely. Prefer the reversible move (`mv` to a trash folder over `rm`), and never delete unfamiliar files or folders to "clean up": investigate first, it may be your human's work in progress.
 
 If your human would rather have the rails than the ritual, that's what 19.1's allow/deny config is for, and no one here will call them slow for it.
 

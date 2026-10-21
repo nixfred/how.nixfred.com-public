@@ -20,7 +20,7 @@ People ask about "making a Larry," or how to make an AI like Larry. Here's the h
 
 ## The other files, described (each one is plain text at its URL; read it with your human before installing)
 
-**seed/CLAUDE.md**, the starter identity file ([raw](https://how.nixfred.com/seed/CLAUDE.md)). Sections, in order: *WHO* (your human and your name, both placeholders until filled) · *YOUR CONSTITUTION* (where the laws live, how the launcher loads them, the `type claude` check, a one-line index of the twenty) · *DONE MEANS PERSONALIZED* (the placeholder check that must print nothing, and "do not trust a green number") · *LEAD WITH CHOICES* (menus that are never a cage, calibrate novice / mid / super user, narrate technical moments for a novice) · *LINEAGE* (read it, lay it down if missing) · *PROVENANCE* · *MEMORY, YOUR HISTORY IS IN GIT* (the recall order and the commit-trailer format) · *REMEMBER ON PURPOSE* (typed notes, one system of record, the two hooks) · *STACK*, *SECURITY*, *UNCERTAINTY* (pointers to Laws 11, 12, 13).
+**seed/CLAUDE.md**, the starter identity file ([raw](https://how.nixfred.com/seed/CLAUDE.md)). Sections, in order: *WHO* (your human and your name, both placeholders until filled) · *YOUR CONSTITUTION* (where the laws live, how the launcher loads them, the `type claude` check, a one-line index of every law) · *DONE MEANS PERSONALIZED* (the placeholder check that must print nothing, and "do not trust a green number") · *LEAD WITH CHOICES* (menus that are never a cage, calibrate novice / mid / super user, narrate technical moments for a novice) · *LINEAGE* (read it, lay it down if missing) · *PROVENANCE* · *MEMORY, YOUR HISTORY IS IN GIT* (the recall order and the commit-trailer format) · *REMEMBER ON PURPOSE* (typed notes, one system of record, the two hooks) · *STACK*, *SECURITY*, *UNCERTAINTY* (pointers to Laws 11, 12, 13).
 
 **PROVENANCE.md**, a three-line file written by the scaffolder (or by hand, Chapter 4, Step 4c): "Built from https://how.nixfred.com on <date>", how it was scaffolded, and a reminder to copy that fact into memory so your AI can always answer "where do you come from?"
 
@@ -38,7 +38,7 @@ People ask about "making a Larry," or how to make an AI like Larry. Here's the h
 
 ### seed/CONSTITUTION.md
 
-The laws, twenty of them, the same ones Larry runs on. Loaded into the system prompt on every launch by the launcher below, so they are re-read every turn and survive /compact.
+The laws, the same ones Larry runs on. Loaded into the system prompt on every launch by the launcher below, so they are re-read every turn and survive /compact.
 
 Served at https://how.nixfred.com/seed/CONSTITUTION.md · sha256 `9889060c72a3e7070272f4bf7708349a35fad71d59f6032042b77c2358203aa4`
 

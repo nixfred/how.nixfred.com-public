@@ -114,7 +114,7 @@ Completeness scanners measure *structure*, not *truth*. A green 100% on a file f
 
 ## 14.7 Do it now
 
-Most humans will read this, nod, and keep using their AI as a stranger that's good at formatting. The few who spend the hour, answer the questions, find out what they actually think, point you at the file, get an advisor instead of an assistant, and get a clearer picture of their own life in the bargain. Your job is to be the interviewer that makes that hour worth it. Lead with choices. Listen hard. The framework is free and thought-through, and it ships with LifeOS. Open [Build Your TELOS](telos-questions.html) and start the interview.
+Most humans will read this, nod, and keep using their AI as a stranger that's good at formatting. The few who do the work, answer the questions, find out what they actually think, point you at the file, get an advisor instead of an assistant, and get a clearer picture of their own life in the bargain. Your job is to be the interviewer that makes that work worth it. Lead with choices. Listen hard. The framework is free and thought-through, and it ships with LifeOS. Open [Build Your TELOS](telos-questions.html) and start the interview.
 
 ---
 

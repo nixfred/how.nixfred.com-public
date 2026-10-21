@@ -17,6 +17,13 @@ export const MODELS = {
 };
 export const LIMITS = { questionChars: 500, bodyBytes: 8192, historyTurns: 6, historyChars: 1200, topK: 8, budget: 9500, maxTokens: 450 };
 export const REFUSAL = "The site doesn't cover that.";
+// Rule 14's reply. The model often fell back to the bare REFUSAL for "what is his portfolio site?", so the refusal path
+// picks it in code: a refused question about Fred or his other sites (a bare he/his/him means Fred) gets this line,
+// unless it asks for his private details, which keep the bare REFUSAL.
+export const FRED_REFUSAL = "I only know how.nixfred.com right now. The site doesn't cover that, so for Fred and his other sites, start at https://nixfred.com.";
+const ABOUT_FRED = /\b(fred|nixfred)\b|\b(he|his|him|he's)\b/i;
+const PRIVATE_ASK = /\b(phone|cell|mobile|number|address|lives?|home|house|wife|kids?|children|sons?|family|age|how old|birthday|salary)\b/i;
+export const refusalFor = (about, question = about) => ABOUT_FRED.test(about) && !PRIVATE_ASK.test(question) ? FRED_REFUSAL : REFUSAL;
 const RRF_K = 60, POOL = 20, REWRITE_W = 0.5, PAGE_W = 0.2, SYN_W = 0.5, SYN_PAGE_W = 0.6, MAX_PER_PAGE = 4;
 // The owner's private host names, kept as length:FNV-1a hashes so the public source does not list them.
 // scrub() hashes each word of an answer and replaces a match. Add a host: bun -e 'console.log(name.length + ":" + fnv1a(name).toString(36))'.
@@ -101,6 +108,9 @@ const SYN = [
   [/\b(stack|repos?|install order|pai|lifeos)\b/i, "Larry Stack repos install order PAI LifeOS"],
   [/\b(github|git ?hub|gh|forever repo|private repo)\b/i, "forever repo private GitHub repo gh auth login gh repo create backup Chapter 7"],
   [/\b(wrong|right|correct) (repo|remote)\b|\bbefore (every|each|any|i|you|we|my) (commit|push)|\bpush\w* (\w+ )?(to|into) the wrong\b/i, "git remote -v Law 11 read the remote out loud before every commit and push private public privacy isolation", ["04-larry-stack", "07-forever-repo"]],
+  // delete / wipe / clean up -> Law 4 (the prime audit's "delete a folder to clean up" landed on Ch27's file-access lines instead)
+  [/\b(delet(e|es|ed|ing)|remov(e|es|ed|ing)|rm( -\w+)?|wip(e|es|ed|ing)|clean(s|ed|ing)? ?up|nuk(e|es|ed|ing)|purg(e|es|ed|ing)|eras(e|es|ed|ing)|get rid of)\b/i, "Law 4 ask before destroying destructive", ["19-permissions", "spawn"]],
+  [/\b(stops?|prevents?|blocks?|guards?|keeps?) (you|it|claude|the ai)\b[^?]*\b(rm|delet\w*|destructive|dangerous)\b/i, "deny rules hooks PreToolUse block destructive commands", ["19-permissions", "21-hooks"]],
 ];
 export const synExpand = q => SYN.filter(([re]) => re.test(q)).map(([, t]) => t).join(" ");
 // pages a slang rule points at: deterministic, so a vague question still reaches the page that answers it
@@ -293,8 +303,11 @@ Rules:
    and never echo that name or any other person's name for LifeOS, TELOS or Fabric, even if a passage or the question carries it.
 14. You only know this one site. If the visitor asks about Fred himself (who he is, what he does, how to hire him) or about his
    other sites (his portfolio, nixfred.com, his other domains or projects), and the passages do not answer it, reply with exactly:
-   "I only know how.nixfred.com right now. The site doesn't cover that, so for Fred and his other sites, start at https://nixfred.com."
-   Never guess an address, a site or a fact about Fred. His private details (home address, phone number) get rule 3's reply instead.`;
+   "${FRED_REFUSAL}"
+   Never guess an address, a site or a fact about Fred. His private details (home address, phone number) get rule 3's reply instead.
+15. Locations: name a file path, directory or on-disk location only if it appears in a passage, and only for the thing that passage
+   ties it to. When the visitor asks where something lives and the passages do not say, answer the rest and say in one short line
+   that the site does not give that location. Never fill in a likely path.`;
 
 export function messagesFor(question, ctx, reading, history = [], scope = null) {
   const context = ctx.map((p, i) => `[${i + 1}] ${p.title} | ${p.heading_path}\nURL: ${p.url}\n${p.text}`).join("\n\n");
@@ -372,6 +385,25 @@ export function groundCommands(answer, ctx, cited = []) {
   if (!flagged) { const t = body.replace(/[^\n.!?]*\bthe site (?:doesn'?t|does not) (?:give|show|have|list|include) (?:a |any )?commands? (?:for|to)\b[^\n.!?]*[.!?]?[ \t]*/gi, "").replace(/\n{3,}/g, "\n\n").trim(); if (t.length >= 40) body = t; }
   return { body, flagged, support };
 }
+// Every file path in an answer must appear in the passages it was given (the prime audit's answer handed each of the four systems
+// a directory the site never ties to it). Paths only, never URLs: a path starts at ~, $HOME, /Users, /home, /etc or /opt and is not
+// glued to a word or a URL before it. A path that is a prefix of a passage path counts as present. Shell blocks are skipped: the
+// command guard has already kept only lines that are on a page.
+export const PATH_RE = /(?<![\w./:~$-])(?:~|\$HOME|\/(?:Users|home|etc|opt))(?=\/)(?:\/[\w.@+<>{}*-]*)+/g;
+export function groundPaths(answer, ctx, cited = []) {
+  const norm = p => p.replace(/^\$HOME/, "~").replace(/\.+$/, "").replace(/\/+$/, "");
+  const hay = new Set(); for (const p of ctx) for (const m of String(p.text).matchAll(PATH_RE)) hay.add(norm(m[0]));
+  const known = x => { const n = norm(x); for (const h of hay) if (h === n || h.startsWith(n + "/")) return true; return false; };
+  const url = (cited[0] || ctx[0])?.url || SITE + "/";
+  const note = `(the site doesn't give that location; see ${url})`;
+  let flagged = 0;
+  const fix = t => t.replace(/`([^`\n]+)`/g, (m, c) => [...c.matchAll(PATH_RE)].every(x => known(x[0])) ? m : (flagged++, note))
+    .replace(PATH_RE, m => { const [, p, dots] = m.match(/^(.*?)(\.*)$/); return known(p) ? m : (flagged++, note + dots); });   // a sentence's full stop is not part of the path
+  const parts = String(answer).split(/(```[^\n]*\n[\s\S]*?```)/g);
+  const out = parts.map(part => { const f = part.match(/^```([^\n]*)\n/); return f && SHELLISH.test(f[1].trim()) ? part : fix(part); });
+  const body = out.join("").replace(new RegExp(`(${note.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*){2,}`, "g"), note + " ");
+  return { body, flagged };
+}
 export function fallbackAnswer(ctx) {
   if (!ctx.length) return REFUSAL;
   return "My language model is busy right now, so here are the most relevant parts of the site, straight from the source:\n\n" +
@@ -391,9 +423,10 @@ export async function answer(env, request, question, { history = [], page = null
   const top = ret.hits.map(i => idx.pages[idx.chunks[i].p].url), packed = ctx.map(p => p.url);   // top = retrieved, packed = what the model was shown
   await onEvent("meta", { mode: ret.mode, scope: scope ? { slug: scope.slug, title: scope.title, url: scope.url } : null, ...(debug ? { top_urls: top, packed_urls: packed, queries: ret.queries, on_topic: ret.onTopic, retrieve_ms: ret.retrieveMs } : {}) });
   const base = { top_urls: top, packed_urls: packed, queries: ret.queries, retrieve_s: ret.retrieveMs / 1000 };
+  const refusal = refusalFor(rq, question);                             // rule 14's line for Fred and his sites, else the bare refusal
   if (!ret.onTopic && page === null) {                                  // the rewrite's gate: refuse, skip generation
-    await onEvent("token", { t: REFUSAL });
-    const fin = { answer: REFUSAL, sources: [], refused: true, gated: true, mode: ret.mode, ...base, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
+    await onEvent("token", { t: refusal });
+    const fin = { answer: refusal, sources: [], refused: true, gated: true, mode: ret.mode, ...base, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
     await onEvent("final", fin); return fin;
   }
   const reading = ret.queries[1] || null;
@@ -432,14 +465,16 @@ export async function answer(env, request, question, { history = [], page = null
   } else {
     await emit(true);
     const vis = scrub(visible(raw)).trim();
-    if (isRefusal(vis) && (vis.toLowerCase().startsWith(REFUSAL.toLowerCase().slice(0, -1)) || /^the site (doesn'?t|does not) (cover|mention|describe|explain)\b/i.test(vis))) fin = { answer: REFUSAL, sources: [], refused: true, mode: ret.mode, model };
+    const fredLine = /^i only know how\.nixfred\.com\b/i.test(vis) && !PRIVATE_ASK.test(question);   // the model gave rule 14's line itself
+    if (isRefusal(vis) && (fredLine || vis.toLowerCase().startsWith(REFUSAL.toLowerCase().slice(0, -1)) || /^the site (doesn'?t|does not) (cover|mention|describe|explain)\b/i.test(vis))) fin = { answer: fredLine ? FRED_REFUSAL : refusal, sources: [], refused: true, mode: ret.mode, model };
     else {
       let { body, cited } = citations(vis, ctx);
       const g = groundCommands(body, ctx, cited); body = g.body; ungrounded = g.flagged;
       for (const p of g.support) if (!cited.includes(p)) cited.push(p);
+      const gp = groundPaths(body, ctx, cited); body = gp.body;
       if (!isRefusal(body)) body = body.replace(/\n*\s*The site doesn'?t cover that\.\s*$/i, "").replace(/\s*The site doesn'?t cover that\.\s*(?=\n)/gi, "");   // a real answer never ends in the refusal
       if (!cited.length && ctx.length) cited = [ctx[0]];
-      fin = { answer: body.trim(), sources: cited.map(p => ({ url: p.url, title: p.title })), refused: isRefusal(body), mode: ret.mode, model, ...(ungrounded ? { ungrounded_commands: ungrounded } : {}) };
+      fin = { answer: body.trim(), sources: cited.map(p => ({ url: p.url, title: p.title })), refused: isRefusal(body), mode: ret.mode, model, ...(ungrounded ? { ungrounded_commands: ungrounded } : {}), ...(gp.flagged ? { ungrounded_paths: gp.flagged } : {}) };
     }
   }
   Object.assign(fin, base, { gen_s: (Date.now() - t1) / 1000, total_s: (Date.now() - t0) / 1000 });

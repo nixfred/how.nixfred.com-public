@@ -36,7 +36,7 @@ function htmlToMd(html: string): string {
 
 // ── 2. chunking: ask/chunk.js (shared with scripts/fleet-index.ts) ──
 
-type Page = { url: string; slug: string; title: string; covers: string; md: string };
+type Page = { url: string; slug: string; title: string; covers: string; gloss: string; md: string };
 const pages: Page[] = [];
 for (const loc of locs) {
   const path = loc.replace(SITE + "/", "");
@@ -48,7 +48,7 @@ for (const loc of locs) {
   const md = existsSync(`${OUT}/${slug}.md`) ? clean(read(`${OUT}/${slug}.md`)) : htmlToMd(html);
   const cov = md.match(/\*\*What it covers[^*]*\*\*:?\s*(.+)/)?.[1]?.replace(/[`*]/g, "")
     ?? decode(html.match(/<meta name="description" content="([^"]*)"/)?.[1] ?? "");
-  pages.push({ url: path === "" ? `${SITE}/` : loc, slug, title, covers: cov.slice(0, 220), md });
+  pages.push({ url: path === "" ? `${SITE}/` : loc, slug, title, covers: cov.slice(0, 220), gloss: cov.trim(), md });
 }
 // the served runbook for installing agents: retrievable via MCP get_page, and used by the install tools
 const runbook = existsSync(`${OUT}/install.md`) ? read(`${OUT}/install.md`) : "";
@@ -74,7 +74,9 @@ chunks.forEach((c, i) => {
 
 // ── 4. glossary (one line per page, the page's own "What it covers" vocabulary) for the query rewrite ──
 const shortTitle = (t: string) => t.replace(/^Chapter \d+:\s*/, "").split(":")[0].trim();
-const glossary = pages.map(p => `- ${shortTitle(p.title)}: ${p.covers.length > 150 ? p.covers.slice(0, 150).replace(/,[^,]*$/, "") : p.covers}`).sort().join("\n");
+// The WHOLE covers line: the gate (on_topic) only knows the topics it sees here. A 150-char cut once dropped "gitleaks" from
+// Chapter 7 when its line grew at the front, and "how do I install gitleaks on ubuntu?" was refused as general coding help.
+const glossary = pages.map(p => `- ${shortTitle(p.title)}: ${p.gloss}`).sort().join("\n");
 
 // ── 5. guided-install route (only what the site itself says) ──
 // order + "done when" come from llms.txt, which build.ts generates from the manifest + DONE table.
