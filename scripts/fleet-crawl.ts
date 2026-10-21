@@ -76,7 +76,7 @@ export function robotsRules(txt: string): (path: string) => boolean {
     return best ? best[0] : true; };
 }
 const ROOT = `${import.meta.dir}/..`;
-const EXTRA: { extra?: { host: string; name: string; role: string; about?: string }[]; keys?: Record<string, string[]> } = existsSync(`${ROOT}/fleet/extra-sites.json`) ? JSON.parse(readFileSync(`${ROOT}/fleet/extra-sites.json`, "utf8")) : {};
+const EXTRA: { render?: string[]; extra?: { host: string; name: string; role: string; about?: string }[]; keys?: Record<string, string[]> } = existsSync(`${ROOT}/fleet/extra-sites.json`) ? JSON.parse(readFileSync(`${ROOT}/fleet/extra-sites.json`, "utf8")) : {};
 
 export function redact(t: string): string {
   t = t.replace(/\b[A-Za-z0-9]+\b/g, w => w.length <= 8 && HOST_HASHES.has(`${w.length}:${fnv1a(w.toLowerCase()).toString(36)}`) ? "one of my machines" : w);
@@ -145,7 +145,7 @@ async function knowledgeSites(): Promise<{ list: any[]; out: { host: string; why
     const host = String(x.host || ""); if (WIDGET_HOSTS.has(host)) continue;
     if (!KNOWLEDGE_HOST.test(host)) { out.push({ host, why: DENY_HOSTS.has(host) ? "family / personal denylist" : "not on *.nixfred.com (out of scope)" }); continue; }
     if (DENY_HOSTS.has(host) || (x.aliases || []).some((a: string) => DENY_HOSTS.has(a))) { out.push({ host, why: "family / personal denylist" }); continue; }
-    list.push({ id: host, origin: `https://${host}`, url: x.url || `https://${host}/`, kind: "knowledge", title: x.title || host, about: x.desc?.line || x.title || "", card: x.desc?.card || x.desc?.long || "" });
+    list.push({ id: host, origin: `https://${host}`, url: x.url || `https://${host}/`, kind: "knowledge", title: x.title || host, titleFull: x.titleFull || x.title || host, about: x.desc?.line || x.title || "", card: x.desc?.card || x.desc?.long || "", long: x.desc?.long || "" });
   }
   // live *.nixfred.com sites the registry does not list yet (fleet/extra-sites.json, each one checked with curl)
   for (const x of EXTRA.extra || []) {
@@ -154,6 +154,51 @@ async function knowledgeSites(): Promise<{ list: any[]; out: { host: string; why
     list.push({ id: x.host, origin: `https://${x.host}`, url: `https://${x.host}/`, kind: "knowledge", title: x.name, about: x.role, card: x.about || x.role });
   }
   return { list, out };
+}
+
+// ---- script-rendered sites (mac, townhop, go, omarchy, filter): their HTML has under 25 words, so a plain fetch finds nothing.
+// Each gets ONE card page at its home URL, built from its nixfred.com/sites.json card (title, card line, long line). With --render
+// (local only, headless Chromium, software rendering, no window, never the GPU) the sites listed in fleet/extra-sites.json "render"
+// also get the text the browser shows, chunked like any page. Sites whose page is live data (go: today's events, townhop: a demo
+// route with creators' view counts) or a desktop UI (mac) stay card-only, so the index never holds stale listings. A site that is
+// robots-blocked or noindex (ddn, aiwatch) never gets here: it stays a directory link.
+const RENDER = process.argv.includes("--render");
+const RENDER_HOSTS = new Set<string>(EXTRA.render || []);
+const undash = (t: string) => t.replace(/\s*[\u2013\u2014]\s*/g, ", ");
+async function renderHtml(url: string): Promise<string | null> {
+  try {
+    const PW = process.env.PLAYWRIGHT || `${process.env.HOME}/.local/share/mise/installs/npm-playwright/latest/node_modules/playwright/index.mjs`;
+    const { chromium } = await import(PW);
+    const browser = await chromium.launch({ headless: true, executablePath: existsSync("/usr/bin/chromium") ? "/usr/bin/chromium" : undefined, args: ["--disable-gpu", "--disable-gpu-compositing", "--use-gl=disabled", "--mute-audio"] });
+    try {
+      const page = await (await browser.newContext({ viewport: { width: 1280, height: 900 }, userAgent: UA })).newPage();
+      await page.goto(url, { waitUntil: "load", timeout: 30000 }); await page.waitForTimeout(6000);
+      return await page.content();
+    } finally { await browser.close(); }
+  } catch (e) { console.warn(`! render ${url} failed: ${String(e).slice(0, 120)}`); return null; }
+}
+// repo-card chrome on rendered catalog pages (stars, forks, language, "Install / Clone" ...): no meaning as search text
+const CHROME = /^(\*\*)?\d+(\*\*)?\s*(stars|forks|watching|open PRs|open issues|commits? shown)$|^\*\*\d+\*\*(stars|forks|watching|open PRs|open issues|commits? shown)$|(language|licen[cs]e(, release)?|release|created|last push|branch|(contributors?|commits?) shown)$|^(not )?listed\s*(ALPHA|developing|shelved)?\s*(fork)?\s*\d*$|^(Install|Clone|Source|Details)$/i;
+const RENDER_MAX_CHARS = 40000;
+async function cardDoc(s: any): Promise<{ doc: Doc; rendered: boolean }> {
+  const home = canon(`${s.origin}/`), title = undash(s.titleFull || s.title);
+  const card = undash(String(s.card || s.about || "")).trim(), long = undash(String(s.long || "")).trim();
+  const norm = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  let body = "";
+  if (RENDER && RENDER_HOSTS.has(s.id)) {
+    const html = await renderHtml(home);
+    if (html && !/<meta[^>]+name=["']robots["'][^>]+content=["'][^"']*noindex/i.test(html)) {
+      body = dropFamily(pageToMd(html)).split("\n").filter(l => !CHROME.test(l.trim())).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+      if (body.length > RENDER_MAX_CHARS) { const cut = body.lastIndexOf("\n\n", RENDER_MAX_CHARS); body = body.slice(0, cut > RENDER_MAX_CHARS / 2 ? cut : RENDER_MAX_CHARS); }
+      if (body.split(/\s+/).length < 25) body = "";
+    }
+  }
+  // the registry's long line can be stale (omarchy: "Thirty plugins" while the page lists 74): with real page text, the page wins
+  let md = `# ${title}\n\n${card}`;
+  if (!body && long && !norm(card).includes(norm(long))) md += `\n\n${long}`;
+  md += `\n\nThis is the site at ${home}`;
+  if (body) md += `\n\n## What the page shows\n\n${undash(body)}`;
+  return { doc: { url: home, title: redact(title), description: redact(card), md: redact(md) }, rendered: !!body };
 }
 
 async function crawlSite(s: any, skipped: { url: string; why: string }[]) {
@@ -174,6 +219,11 @@ async function crawlSite(s: any, skipped: { url: string; why: string }[]) {
     else if (res.why) skipped.push({ url, why: res.why });
     if (source === "links" && depth < MAX_DEPTH) for (const l of res.links || []) if (!seen.has(l) && seen.size < MAX_BFS) { seen.add(l); queue.push([l, depth + 1]); }
   }
+  // script-rendered home page (under 25 words): a card page instead of nothing (never for a robots-blocked or noindex site)
+  if (know && !docs.size && skipped.some(k => k.url === canon(`${s.origin}/`) && k.why === "under 25 words of text")) {
+    const { doc, rendered } = await cardDoc(s); docs.set(doc.url, doc);
+    return { docs, source: rendered ? "render+card" : "card", why: "" };
+  }
   return { docs, source, why: docs.size ? "" : "no page with readable text (all skipped, see below)" };
 }
 
@@ -190,6 +240,8 @@ if (import.meta.main) {
     const { docs, source, why } = await crawlSite(s, skipped);
     // a site that is down right now keeps its last snapshot instead of vanishing from the index
     const old = prev?.sites?.find((x: any) => x.id === s.id);
+    // a plain crawl (CI) has no browser: it keeps the committed rendered text instead of dropping it to the card
+    if (!RENDER && source === "card" && old?.source === "render+card") { console.log(`${s.id}: keeping the committed rendered snapshot (${old.pages.length} page)`); sites.push(old); continue; }
     if (!docs.size && old?.pages?.length && source !== "robots") { console.warn(`! ${s.id}: no pages reachable now, keeping the previous ${old.pages.length} from ${prev.crawled}`); sites.push(old); continue; }
     console.log(`${s.id}: ${docs.size} pages from ${source} (${s.origin})${why ? ", " + why : ""}`);
     sites.push({ ...s, source, ...(why ? { why } : {}), pages: [...docs.values()] });
