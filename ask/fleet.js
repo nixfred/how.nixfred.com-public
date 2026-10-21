@@ -13,7 +13,7 @@
 import { normUrl } from "./text.js";
 import SITE_DIRECTORY from "./site-directory.json";
 import { nextStep, convoNote, echoView, stripEcho, chapterOfUrl } from "./followup.js";
-import { MODELS, LIMITS, synExpand, embedQueries, isInjection, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
+import { MODELS, LIMITS, synExpand, embedQueries, isInjection, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
 
 // the three ways to start, exactly as the start cards on nixfredos.com link them (spine amendment 2026-10-20 6:15 PM:
 // nixfredos.com carries no steps, they all live on how.nixfred.com). Point 1 is the recipe box page, https://how.nixfred.com/recipe-box: the one start path (not nixfredos.com/build).
@@ -506,7 +506,8 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   }
   const vis = scrub(visible(raw)).trim();
   if (isPrivateReply(vis)) return { answer: say(PRIVATE_TEXT, site), sources: [], site, refused: true, why: "private (model)" };
-  if (isFleetRefusal(vis)) {
+  const premise = falsePremise(q, vis, ctx) !== null;                    // a false destructive premise gets a no, never a refusal (RC4)
+  if (isFleetRefusal(vis) && !premise) {
     // a start question is never "not covered": the recipe box is the one start path
     if (!fu && START_PATH.test(q)) return { answer: `Start here, the recipe box: ${RECIPE_URL}`, sources: [{ title: byNorm.get(normUrl(RECIPE_URL))?.title || "The Recipe Box", url: RECIPE_URL }], site, refused: false, why: "start path", mode: ret.mode, model };
     if (route || dirFor.length) return { answer: route ? nothingOn(route) : directoryAnswer(dirFor), sources: dirSources(route ? [route] : dirFor), site, refused: false, why: "directory (model had nothing)" };
@@ -514,9 +515,16 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   }
   // a next-step ask is never refused (Audit200: live "what comes after telos?" was): the model's refusal becomes its chapter's own words
   let { body, cited } = citations(fu && isFleetRefusal(vis) ? (ctx.find(c => normUrl(c.url) === normUrl(fu.url))?.text.slice(0, 420).trim() || "") : vis, ctx);
-  const g = groundCommands(body, ctx, cited); body = g.body;
+  let g = groundCommands(body, ctx, cited);
+  if (g.flagged) {                                                          // Audit200 RC6: the whole guide pages behind its passages, then
+    const hx = hi || await loadIndex(env, request).catch(() => null);
+    const pis = hx ? [...ctx, ...cited].map(p => hx.byNorm.get(normUrl(p.url))).filter(i => i !== undefined) : [];
+    if (pis.length) { const whole = sitePages(hx, pis); g = groundCommands(body, ctx, cited, { more: whole, verifyUrl: whole.find(w => w.verify && normUrl(w.url) === normUrl((cited[0] || ctx[0])?.url || ""))?.url || null }); }
+  }
+  body = g.body;
   for (const p of g.support) if (!cited.includes(p)) cited.push(p);
-  body = groundModelIds(groundPaths(body, ctx, cited).body, ctx).body;   // the site chat's path and model-id guards (PR #29, eval c05) apply here too
+  body = groundModelIds(groundPaths(body, ctx, cited).body, ctx).body;
+  if (premise) body = falsePremise(q, isFleetRefusal(body) ? "" : body, ctx);   // the site chat's path and model-id guards (PR #29, eval c05) apply here too
   body = guard(body.replace(/\n*\s*The sites? (?:don'?t|doesn'?t) cover that\.\s*$/i, "")).replace(/^(\s*>?\s*)\**\s*(snark|snarky line|wry line)\s*\**\s*:\s*\**\s*/gim, "$1");   // a voice label is not part of the answer
   const asModelSaid = body;
   body = stripEcho(body, history).trim();   // whatever the model still repeated from an earlier answer
@@ -525,7 +533,7 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   if (fu || !START_ASK.test(q)) { const plain = l => l.replace(/[*_`]|\[|\]\([^)]*\)/g, "").replace(/^\s*(\d+[.)]|[-*])\s*/, "").trim(); const kept = body.split("\n").filter(l => !START.some(t => plain(l).startsWith(t.split(":")[0]) && plain(l).includes(t.slice(t.lastIndexOf("https://")).replace(/[\s)].*$/, "")))); if (kept.join("").trim().length >= 40) body = kept.join("\n").replace(/\n{3,}/g, "\n\n").trim(); }
   const hireOk = HIRE_ASK.test(q);
   if (!hireOk) { body = body.split("\n").filter(l => !HIRE_LINE.test(l)).join("\n").replace(/\n{3,}/g, "\n\n").trim(); cited = cited.filter(p => !/get-in-touch/.test(p.url)); }
-  if (!fu && (isFleetRefusal(body) || !body)) return { answer: say(REFUSE_TEXT, site), sources: [], site, refused: true, why: "not covered (model)" };
+  if (!fu && !premise && (isFleetRefusal(body) || !body)) return { answer: say(REFUSE_TEXT, site), sources: [], site, refused: true, why: "not covered (model)" };
   // a bare fleet address with a path ("nixfred.com/portfolio/") becomes a real link first
   body = body.replace(/(?<![\w\/.:@-])((?:[a-z0-9-]+\.)?(?:nixfred\.com|nixfredos\.com)\/[^\s)\]>"'<`*]*)/gi, "https://$1");
   // a link to an indexed page is written exactly as the page's canonical URL (no stray trailing slash or .html)

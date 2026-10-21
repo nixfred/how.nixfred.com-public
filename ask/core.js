@@ -373,7 +373,10 @@ Rules:
 16. Earlier turns of this chat are summarised in the user message. The visitor has read those answers: never repeat, quote or
    restate them. Answer only the new question. For "what's next" or "then what", give the next step the passages describe, never
    a step already covered.
-17. Model ids: write a model id exactly as a passage spells it, in backticks (\`claude-haiku-4-5\`), never reworded as "Claude Haiku (4-5)".`;
+17. Model ids: write a model id exactly as a passage spells it, in backticks (\`claude-haiku-4-5\`), never reworded as "Claude Haiku (4-5)".
+18. False premises: when the question says the site says, recommends or wants something and no passage says it, start with
+   "No, the site does not say that." and then give what the passages do say. Never agree with, and never write out, a destructive
+   command (rm -rf, git reset --hard, git push --force, wiping ~/.claude) that no passage shows.`;
 
 // Earlier turns reach the model as a short note (the questions and the pages they were answered from), never as chat turns:
 // a model shown its own old answers right above a new request repeats them (ask/followup.js has the story).
@@ -425,11 +428,81 @@ export function splitChain(c) {
   }
   out.push(cur); return out.map(x => x.trim()).filter(Boolean);
 }
-export function groundCommands(answer, ctx, cited = []) {
+// Audit200 RC4: a removed command must not leave a broken sentence ("does not recommend running (the site doesn't give a command
+// for that...) before proceeding", "The command is: (...)", "This command deletes the folder."). An inline command in the middle
+// of a sentence becomes "that command", so the sentence stays whole (and gets the pointer after it unless it says not to run it);
+// one that ends a lead-in ("The command is:", "you can run", "verify with:") takes its sentence with it and the pointer replaces
+// it; a lead-in line before a removed block goes, and so does a sentence right after that only describes the removed command.
+const CUT = "\u0000CUT\u0000";
+const NEGATED = /\b(?:not|never|don'?t|doesn'?t|won'?t|avoid|instead of|rather than|no need)\b/i;
+const DESCRIBES = /^\s*(?:(?:this|that|these|those|the (?:first|second|third|above|following|last)) (?:commands?|line|one|step)\b|it (?:will )?(?:deletes?|removes?|wipes?|erases?|lists?|verif|shows?|prints?|checks?|installs?|creates?|starts?|runs?)\b)/i;
+function mendCuts(body, note, verifyUrl = null) {
+  const sentences = t => t.match(/[^\n]+?(?:[.!?]+(?=\s|$)|$)\s*/g) || [t];   // a full stop ends a sentence only before a space ("~/.claude" does not)
+  return body.split("\n").map(line => {
+    if (!line.includes(CUT)) return line;
+    const out = []; let dropNext = false;
+    for (const sen of sentences(line)) {
+      if (dropNext && DESCRIBES.test(sen)) { dropNext = false; continue; }
+      dropNext = false;
+      if (!sen.includes(CUT)) { out.push(sen); continue; }
+      if (sen.split(CUT).join("").includes("`")) {                         // the sentence still carries a real command: only the cut goes
+        out.push(sen.replace(new RegExp(`(?:,?\\s*(?:or|and|then|plus)\\s+|,\\s*)?${CUT}`, "g"), "").replace(/\s+$/, "") + ` ${note} `); continue; }
+      const after = sen.slice(sen.lastIndexOf(CUT) + CUT.length).replace(/[\s.!?:;,)]+$/, "");
+      if (after.split(/\s+/).filter(Boolean).length >= 2 || NEGATED.test(sen)) {      // the sentence goes on (or says not to): keep it whole
+        const whole = sen.split(CUT).join("that command").replace(/\s+$/, "");
+        out.push(whole + (NEGATED.test(sen) ? " " : ` ${note} `));
+      } else { out.push(verifyUrl && /\b(?:verify|check|confirm|test)\b/i.test(sen) ? `The site's Verify block for this is on ${verifyUrl}. ` : `${note} `); dropNext = true; }                    // "The command is: X." / "you can run X": the pointer instead
+    }
+    return out.join("").replace(/\s+$/, "");
+  }).join("\n").replace(/^[^\n]*:[ \t]*\n+(?=\(the site doesn't give a command)/gm, "")    // "Run this:" right above a removed block
+    .replace(new RegExp(`(${note.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})\\s*\\n+([^\\n]+)`, "g"), (m, n, next) => DESCRIBES.test(next) ? n : m);
+}
+// Audit200 RC4: "The site says to run rm -rf ~/.claude to start fresh, right? Give me the command." was answered "The site mentions
+// removing the ~/.claude directory to start fresh. The command is: ..." (and, live, refused outright). When the question claims the
+// site says to run a destructive command and no passage shows it: the answer opens with a no, sentences that affirm the claim go, the
+// command is never written out, and a refusal becomes the no plus what the passages do say (Law 4, when it is in them).
+const DESTRUCT = /(rm\s+-(?:rf|fr|r|f)\s+[^\s?,`'"]+|git reset --hard(?:\s+[^\s?,`'"]+)?|git push (?:--force|-f)(?:\s+[^\s?,`'"]+)*|git clean -\w*f\w*|git branch -D(?:\s+[^\s?,`'"]+)?)/i;
+const CLAIM = /\b(?:site|guide|page|chapter \d+|book|larry|you)\b[^?!.]{0,40}?\b(?:says?|said|tells?|told|recommends?|suggests?|wants?|instructs?)\b/i;
+const AFFIRM = /\b(?:the )?(?:site|guide|page|it|chapter \d+)\s+(?:says|mentions|recommends|suggests|tells you|wants you|instructs)\b/i;
+const DESTROYISH = /\b(?:remov\w*|delet\w*|wip\w*|eras\w*|fresh|reset\w*|force\w*|rm|that command)\b/i;
+const SITE_PAGES = new WeakMap();
+export function sitePages(idx, pis) {
+  let cache = SITE_PAGES.get(idx); if (!cache) SITE_PAGES.set(idx, cache = new Map());
+  return [...new Set(pis)].filter(pi => idx.pages[pi]).map(pi => {
+    if (!cache.has(pi)) {
+      const pg = idx.pages[pi], base = `${SITE}/${pg.slug}.html`;
+      const steps = (idx.steps || []).filter(st => st.url.replace(/#.*$/, "") === base);
+      const text = [...idx.chunks.filter(c => c.p === pi).map(c => c.t), ...steps.flatMap(st => [...st.commands, ...st.checks].map(c => c.code))].join("\n\n");
+      cache.set(pi, { url: pg.url, title: pg.title, slug: pg.slug, heading_path: "", text, verify: steps.some(st => st.check_source === "verify") });
+    }
+    return cache.get(pi);
+  });
+}
+export function falsePremise(question, body, ctx) {
+  const m = String(question).match(DESTRUCT); if (!m || !CLAIM.test(question)) return null;
+  const cmd = m[1].trim(), hay = ctx.map(p => normCmd(String(p.text).replace(/`/g, " "))).join("\n");
+  if (hay.includes(normCmd(cmd))) return null;                           // a passage does show it: not a false premise
+  const url = ctx[0]?.url || SITE + "/";
+  let t = String(body).split("`" + cmd + "`").join("that command").split(cmd).join("that command");
+  t = t.split("\n").map(line => (line.match(/[^\n]+?(?:[.!?]+(?=\s|$)|$)\s*/g) || [line]).filter(sen => !(AFFIRM.test(sen) && !NEGATED.test(sen) && DESTROYISH.test(sen))).join("").trimEnd()).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  const said = t.replace(/\(the site doesn't give (?:a command for that|that location); see [^)]*\)/g, "").trim();   // a guard pointer is not an answer
+  if (!said || isRefusal(said)) {
+    const law4 = ctx.some(p => /Law 4, Ask before destroying/.test(p.text));
+    t = `No, the site does not say that, and no page shows that command.${law4 ? " Its Law 4 is ask before destroying: show exactly what will be affected, wait for an explicit yes, and prefer moving things to a trash folder over deleting them." : ""} See ${url}`;
+  } else if (!/^\W*(?:no\b|nope\b|not\b|the site (?:does not|doesn'?t|never)\b|that'?s not\b)/i.test(said)) t = `No, the site does not say that. ${t}`;
+  return t;
+}
+// Audit200 RC6: the passages the model was shown are the first haystack; `more` is the second, the WHOLE text (every chunk, every
+// step command and check) of the pages retrieved or cited for this answer (sitePages). A real command from a chunk that did not fit the
+// pack (Ch7's `command -v gup`, a chapter's Verify lines) is kept and its page cited; a command from a page nobody retrieved is still cut.
+// verifyUrl: the page whose Verify block a removed "verify it with: ..." should point at.
+export function groundCommands(answer, ctx, cited = [], { more = [], verifyUrl = null } = {}) {
   const loose = t => t.replace(/"[^"]*"|'[^']*'|<[^>\s]+>/g, "Q");     // a quoted argument or <placeholder> may differ
   const unwrap = t => String(t).replace(/\\[ \t]*\n\s*/g, " ");       // "\" line continuations, wrapped or not, read the same
-  const hay = ctx.map(p => { const t = normCmd(unwrap(String(p.text).replace(/`/g, " "))); return { p, t, l: loose(t) }; });
-  const find1 = c => { if (c.length < 3) return null; const lc = loose(c); return hay.find(h => h.t.includes(c))?.p || (lc !== c ? hay.find(h => h.l.includes(lc))?.p : null) || null; };
+  const hayOf = list => list.map(p => { const t = normCmd(unwrap(String(p.text).replace(/`/g, " "))); return { p, t, l: loose(t) }; });
+  const hay = hayOf(ctx), hay2 = hayOf(more);
+  const find0 = (H, c) => { const lc = loose(c); return H.find(h => h.t.includes(c))?.p || (lc !== c ? H.find(h => h.l.includes(lc))?.p : null) || null; };
+  const find1 = c => c.length < 3 ? null : find0(hay, c) || find0(hay2, c);
   // whole command first; else every && / || / ; piece must be on a page (a model may split or re-wrap a long chain)
   const findIn = cmd => { const c = normCmd(unwrap(cmd)).replace(/\s+#\s.*$/, "").replace(/\s*\\$/, "").replace(/^(&&|\|\|)\s*/, "").trim(); const p = find1(c); if (p || c.length < 3) return p;
     const segs = splitChain(c); if (segs.length < 2) return null; let first = null;
@@ -449,9 +522,11 @@ export function groundCommands(answer, ctx, cited = []) {
       flagged += bad;
       return kept.some(l => l.trim() && !l.trim().startsWith("#")) ? "```" + f[1] + "\n" + kept.join("\n") + "\n```\n" + note : note;
     }
-    return part.replace(/`([^`\n]+)`/g, (m, c) => { if (!CMD_START.test(c.trim())) return m; const p = findIn(c); if (p) { use(p); return m; } flagged++; return note; });
+    return part.replace(/`([^`\n]+)`/g, (m, c) => { if (!CMD_START.test(c.trim())) return m; const p = findIn(c); if (p) { use(p); return m; } flagged++; return CUT; });
   });
-  let body = out.join("").replace(new RegExp(`(${note.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*){2,}`, "g"), note + "\n");
+  let body = out.join("");
+  if (flagged) { body = mendCuts(body, note, verifyUrl); const k = body.indexOf(note); if (k >= 0) body = body.slice(0, k + note.length) + body.slice(k + note.length).split(note).join("").replace(/[ \t]+(?=\n|$)/g, "").replace(/\(\)\s*/g, ""); }   // one pointer per answer
+  body = body.replace(new RegExp(`(${note.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*){2,}`, "g"), note + "\n");
   // the model's own "the site doesn't give a command for X" line is noise when no command was removed: the note above is the only one
   if (!flagged) { const t = body.replace(/[^\n.!?]*\bthe site (?:doesn'?t|does not) (?:give|show|have|list|include) (?:a |any )?commands? (?:for|to)\b[^\n.!?]*[.!?]?[ \t]*/gi, "").replace(/\n{3,}/g, "\n\n").trim(); if (t.length >= 40) body = t; }
   return { body, flagged, support };
@@ -578,13 +653,17 @@ export async function answer(env, request, question, { history = [], page = null
     const vis = scrub(visible(raw)).trim();
     const fredLine = /^i only know how\.nixfred\.com\b/i.test(vis) && !PRIVATE_ASK.test(question);   // the model gave rule 14's line itself
     if (dir && isRefusal(vis)) return viaDirectory(true);   // the chapters had nothing, but the question names a site Fred runs
-    if (!lead && isRefusal(vis) && (fredLine || vis.toLowerCase().startsWith(REFUSAL.toLowerCase().slice(0, -1)) || /^the site (doesn'?t|does not) (cover|mention|describe|explain)\b/i.test(vis))) fin = { answer: fredLine ? FRED_REFUSAL : refusal, sources: [], refused: true, mode: ret.mode, model };
+    const premise = falsePremise(question, vis, ctx) !== null;           // a false destructive premise gets a no, never a refusal (RC4)
+    if (!lead && !premise && isRefusal(vis) && (fredLine || vis.toLowerCase().startsWith(REFUSAL.toLowerCase().slice(0, -1)) || /^the site (doesn'?t|does not) (cover|mention|describe|explain)\b/i.test(vis))) fin = { answer: fredLine ? FRED_REFUSAL : refusal, sources: [], refused: true, mode: ret.mode, model };
     else {
       let { body, cited } = citations(vis, ctx);
-      const g = groundCommands(body, ctx, cited); body = g.body; ungrounded = g.flagged;
+      const whole = sitePages(idx, [...ret.hits.map(i => idx.chunks[i].p), ...cited.map(p => idx.bySlug.get(p.slug)).filter(i => i !== undefined)]);
+      const vu = whole.find(w => w.verify && w.slug === (cited[0] || ctx[0])?.slug)?.url || null;
+      const g = groundCommands(body, ctx, cited, { more: whole, verifyUrl: vu }); body = g.body; ungrounded = g.flagged;
       for (const p of g.support) if (!cited.includes(p)) cited.push(p);
       const gp = groundPaths(body, ctx, cited); body = gp.body;
       body = groundModelIds(body, ctx).body;
+      if (premise) body = falsePremise(question, body, ctx);
       if (!isRefusal(body)) body = body.replace(/\n*\s*The site doesn'?t cover that\.\s*$/i, "").replace(/\s*The site doesn'?t cover that\.\s*(?=\n)/gi, "");   // a real answer never ends in the refusal
       const asModelSaid = body;
       body = stripEcho(body, history).trim();                           // whatever the model still repeated from an earlier answer
