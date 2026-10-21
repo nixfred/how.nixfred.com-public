@@ -206,6 +206,16 @@ export function siteVote(idx, q) {
 
 // CHIPS: "Is it dangerous?" about the build itself (not danger mode, permissions or a named command): the beginner chip
 export const BEGINNER_RISK = /^(?![^\n]*\b(?:danger mode|dangerously|skip.permissions|yolo|permissions?|deny|allow)\b)[^\n]*\b(?:is|are|can|could|will|would)\s+(?:it|this|that|the (?:build|guide|prompt|one paste|agent|ai)|you|claude(?: code)?)\s+(?:\w+\s+){0,2}(?:dangerous|safe|risky|scary|harmful|a risk|break (?:my|anything|something)|wreck|mess up|delete (?:my|anything|stuff))\b|\bwhat are the risks\b/i;
+// CHIPS 6 (Fred, 2026-10-21): "How long does it take?" is about the build itself, and no page gives it a time (checked: chapters,
+// modules, install.md, the home page). Live, the chat rambled ("a one-way trip to obsession", no answer) and the fleet chat invented
+// "LifeOS takes about 10-15 minutes". So the build-time question gets TIME_REPLY in code, no model call, on /api/ask, MCP ask_larry and
+// /api/fleet/ask: the site gives no fixed time, then its own words (real work, no shortcuts, one chapter at a time, each piece to 100%
+// before the next, a progress ledger so nobody has to remember where you are) and Chapter 0. Hooks, timeouts, windows, routines,
+// sessions, commands and backups have real durations on their pages and are left to the model.
+export const BUILD_TIME_ASK = /^(?![^\n]*\b(?:hook|timeout|window|routine|session|limit|command|backup|gup|compile|cron|cache|token|context|answer|reply|response|page load)s?\b)[^\n]*(?:\bhow long (?:does|will|would|did|should|could|might) (?:it|this|that|the (?:build|whole (?:thing|build)|guide|setup|install\w*|course|bootstrap|stack|one paste|prompt|recipe box)|building (?:it|my ai|this)|(?:lifeos|pai|nixfredos|install\.sh|my (?:own )?ai))\s+(?:\w+\s+){0,2}take\b|\bhow long (?:to|until|before) (?:i'?m |it'?s |i )?(?:build|set (?:it )?up|install|finish|get (?:it )?(?:done|running|working|set up)|be done|have (?:my|an) ai)\b|\bhow (?:much time|many (?:hours|days|weeks|evenings|weekends))\b|\btime commitment\b|\bhow long is the (?:build|course|guide|whole thing)\b)/i;
+export const TIME_REPLY = "Honest answer: the site gives no fixed time, and I won't make one up. It is real work with no shortcuts, done in order, one chapter at a time at your pace: read a step, run it, fix it to 100%, then advance. Your AI keeps a progress ledger, so nobody has to remember where you are. Start at Chapter 0: https://how.nixfred.com/00-start-here.html";
+export const TIME_SOURCES = [{ url: `${SITE}/00-start-here.html`, title: "Chapter 0: Start Here, From Absolute Zero" }, { url: `${SITE}/`, title: "Build Your Own AI: a Field Guide by Larry" }];
+export const isBuildTimeAsk = q => BUILD_TIME_ASK.test(String(q)) && !isOverrideAsk(q);
 // Visitor slang -> the site's own vocabulary. Deterministic, so it still helps when the LLM rewrite fails.
 export const SYN = [
   // CHIPS (Fred, 2026-10-21): the beginner starter chips. Each one is vague on its own ("this", "it"), so BM25 sent them to whatever page
@@ -216,7 +226,7 @@ export const SYN = [
   [/\b(?:is|it'?s|are|really|completely|totally|actually|truly)\s+(?:\w+\s+){0,2}free\b|\bfor free\b|\bfree\s*(?:\?|$)|\bany (?:hidden )?(?:costs?|fees?|catch)\b|\bcost anything\b/i, "free plus your subscription money talk middle tier top plan", ["index", "00-start-here"], [/^One paste\./, /^Hi\. I'm Larry/, /^Step 2, The money talk/]],
   [BEGINNER_RISK, "asks before it runs anything you give the orders nothing without your yes don't trust me audit it", ["index", "byo", "recipe-box"], [/^One paste\./, /^Hi\. I'm Larry/, /^$/]],
   [/\b(?:need|have|got) to (?:know|learn|understand|be (?:able|good) (?:to|at))\s+(?:how to\s+)?(?:code|coding|program\w*)\b|\b(?:know|knowing|learn) (?:how )?to (?:code|program)\b|\b(?:coding|programming|technical) (?:skills?|experience|knowledge|background)\b|\b(?:non[- ]?technical|not (?:a |very )?(?:coder|programmer|developer|technical)|never (?:coded|programmed)|can'?t code|don'?t (?:know how to )?code|no coding)\b/i, "your agent runs the commands you type no commands novice mid super user use the AI to fix the AI", ["recipe-box", "index", "03-ask"], [/^$/, /^One paste\./, /^⚠️ Warning/, /^3\.6 Calibrate/]],
-  [/\bhow long (?:does|will|would|did|should)\s+(?:it|this|the (?:build|whole (?:thing|build)|guide|setup|install\w*|course)|building (?:it|my ai))\s+take\b|\bhow (?:much time|many (?:hours|days|weeks))\b(?![^?\n]{0,40}\b(?:hook|timeout|window|routine|session|limit)\b)|\btime commitment\b/i, "real work no shortcuts in order one step at a time", ["index"], [/^⚠️ Warning/, /^⚡ One paste is not/]],
+  [BUILD_TIME_ASK, "real work no shortcuts in order one step at a time", ["index"], [/^⚠️ Warning/, /^⚡ One paste is not/]],
   // an explicit retain order ("remember that I prefer short answers", "don't forget", "make a note") is Law 16, on seed-kit, and the
   // remember-trigger hook (Ch21); before the general memory row so its page leads (Audit200 m036 answered "update CLAUDE.md")
   [/\b(?:remember (?:that|this|to|my|i|we|our)\b|don'?t forget\b|make a note\b|note (?:that|this) down\b|keep (?:that|this|it) in mind\b|write (?:that|this) down\b|save (?:that|this) (?:to|in)(?: your)? memory\b)/i, "Law 16 Remember that is a command not a comment write the memory note that same turn confirm in one line remember-trigger.sh", ["seed-kit", "21-hooks"], /^Law 16, /],
@@ -873,6 +883,11 @@ export async function answer(env, request, question, { history = [], page = null
     const src = [{ url: `${SITE}/00-start-here.html`, title: "Chapter 0: Start Here" }];
     await onEvent("meta", { mode: "prompt", scope: null }); await onEvent("token", { t: PROMPT_REPLY });
     const fin = { answer: PROMPT_REPLY, sources: src, refused: true, gated: true, prompt_ask: true, mode: "prompt", top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
+    await onEvent("final", fin); return fin;
+  }
+  if (isBuildTimeAsk(question)) {                                      // CHIPS 6: no page gives the build a time; never invent one
+    await onEvent("meta", { mode: "time", scope: null }); await onEvent("token", { t: TIME_REPLY });
+    const fin = { answer: TIME_REPLY, sources: TIME_SOURCES, refused: false, build_time: true, mode: "time", top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
     await onEvent("final", fin); return fin;
   }
   if (isExistingAsk(question)) {                                       // CHIPS add-on: an existing Claude Code setup gets the existing-setup prompt

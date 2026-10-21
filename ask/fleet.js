@@ -13,7 +13,7 @@
 import { normUrl } from "./text.js";
 import SITE_DIRECTORY from "./site-directory.json";
 import { nextStep, convoNote, echoView, stripEcho, chapterOfUrl } from "./followup.js";
-import { MODELS, LIMITS, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, isPromptAsk, isExistingAsk, EXISTING_REPLY, EXISTING_SOURCES, isPrivateDetail, PRIVATE_REPLY, isPlatformAsk, platformReply, unPremise, withVariants, synHeadChunks, sectionChunks, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, costLead, safetyLead, safeSource, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
+import { MODELS, LIMITS, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, isPromptAsk, isBuildTimeAsk, TIME_REPLY, TIME_SOURCES, isExistingAsk, EXISTING_REPLY, EXISTING_SOURCES, isPrivateDetail, PRIVATE_REPLY, isPlatformAsk, platformReply, unPremise, withVariants, synHeadChunks, sectionChunks, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, costLead, safetyLead, safeSource, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
 
 // the three ways to start, exactly as the start cards on nixfredos.com link them (spine amendment 2026-10-20 6:15 PM:
 // nixfredos.com carries no steps, they all live on how.nixfred.com). Point 1 is the recipe box page, https://how.nixfred.com/recipe-box: the one start path (not nixfredos.com/build).
@@ -475,6 +475,7 @@ const LIFEOS_CREDIT = { default: `LifeOS (formerly PAI, Personal AI Infrastructu
 
 // ---------------------------------------------------------------- the whole pipeline (non-streaming)
 export async function fleetAnswer(env, request, site, q, history = []) {
+  if (isBuildTimeAsk(q)) return { answer: TIME_REPLY, sources: TIME_SOURCES.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), site, refused: false, why: "build time" };   // CHIPS 6, for every caller
   const idx = await loadFleet(env, request);
   if (LIFEOS_WHO.test(q)) return { answer: say(LIFEOS_CREDIT, site), sources: [{ title: "LifeOS", url: LIFEOS_HOME }, { title: "The Larry Stack: Repos & Install Order", url: LIFEOS_PAGE }], site, refused: false, why: "lifeos credit" };
   // which sites the question is about: named in it, or "it" / "there" resolved from the conversation
@@ -659,6 +660,7 @@ export async function handleFleetAsk(request, env) {
   if (body.history !== undefined && !Array.isArray(body.history)) return out({ error: "bad_request", detail: "history must be an array" }, 400);
   const site = sent, history = cleanHistory(body.history);
   if (isPromptAsk(q)) return out({ answer: say(INJECT_TEXT, site), sources: [], refused: true });
+  if (isBuildTimeAsk(q)) return out({ answer: TIME_REPLY, sources: TIME_SOURCES.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), refused: false });   // CHIPS 6: never an invented build time ("LifeOS takes about 10-15 minutes")
   if (isExistingAsk(q)) return out({ answer: EXISTING_REPLY, sources: EXISTING_SOURCES.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), refused: false });   // CHIPS add-on: the existing-setup prompt, no model call   // c097/m099: the prompt stays private, not the install-confirmations text
   if (isOverrideAsk(q)) return out({ answer: OVERRIDE_REPLY, sources: [{ title: "Chapter 0: Start Here", url: "https://how.nixfred.com/00-start-here" }], refused: true });   // m080: a claim is not approval
   if (isPrivateDetail(q)) return out({ answer: PRIVATE_REPLY, sources: [{ title: "Get in touch", url: "https://how.nixfred.com/get-in-touch" }], refused: true });   // c093/m098: points to the public doors
