@@ -13,7 +13,7 @@
 import { normUrl } from "./text.js";
 import SITE_DIRECTORY from "./site-directory.json";
 import { nextStep, convoNote, echoView, stripEcho, chapterOfUrl } from "./followup.js";
-import { MODELS, LIMITS, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, isPrivateDetail, PRIVATE_REPLY, isPlatformAsk, platformReply, withVariants, synHeadChunks, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, costLead, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
+import { MODELS, LIMITS, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, isPromptAsk, isPrivateDetail, PRIVATE_REPLY, isPlatformAsk, platformReply, withVariants, synHeadChunks, sectionChunks, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, costLead, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
 
 // the three ways to start, exactly as the start cards on nixfredos.com link them (spine amendment 2026-10-20 6:15 PM:
 // nixfredos.com carries no steps, they all live on how.nixfred.com). Point 1 is the recipe box page, https://how.nixfred.com/recipe-box: the one start path (not nixfredos.com/build).
@@ -511,9 +511,10 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   const sp = hi && CHECK_ASK.test(q) ? stepPassage(hi, q, hits.slice(0, 3).map(h => hi.byNorm.get(normUrl(view.pages[view.chunks[h].p].url))).filter(i => i !== undefined)) : null;
   // the guide page a slang rule or "Chapter N" pins (memory -> Ch11; Audit200: live "how do I set up recall?" cited /spawn) is in the
   // passages even when the vectors missed it: its best keyword chunk for the question, from how.nixfred.com's index
-  const pinPg = hi ? [...synPages(hi, q), ...chapterPins(hi, q)].map(i => hi.pages[i]).find(Boolean) : null;
-  const pinHead = pinPg ? synHeadChunks(hi, q).find(c => hi.chunks[c].p === hi.bySlug.get(pinPg.slug)) : undefined;   // the section a slang row names
-  const pinCtx = pinPg && !sp && (isCostAsk(q) || pinHead !== undefined || !view.pages.some(p => normUrl(p.url) === normUrl(pinPg.url))) ? (() => { const ci = pinHead ?? bm25(hi, `${q} ${ret.syn || ""}`, { page: hi.bySlug.get(pinPg.slug), pool: 1 })[0]; return ci === undefined ? null : { url: pinPg.url, title: pinPg.title, slug: pinPg.slug, heading_path: hi.chunks[ci].hp, text: hi.chunks[ci].t.slice(0, 2400) }; })() : null;
+  const secs = hi ? sectionChunks(hi, q) : [];                          // the sections a slang row or a named label points at (m076, c021)
+  const pinPg = hi ? [...synPages(hi, q), ...chapterPins(hi, q), ...secs.map(c => hi.chunks[c].p)].map(i => hi.pages[i]).find(Boolean) : null;
+  const pinHeads = pinPg ? secs.filter(c => hi.chunks[c].p === hi.bySlug.get(pinPg.slug)).slice(0, 2) : [];   // "Path A and Path B": both
+  const pinCtx = pinPg && !sp && (isCostAsk(q) || pinHeads.length || !view.pages.some(p => normUrl(p.url) === normUrl(pinPg.url))) ? (() => { const cis = pinHeads.length ? pinHeads : [bm25(hi, `${q} ${ret.syn || ""}`, { page: hi.bySlug.get(pinPg.slug), pool: 1 })[0]].filter(ci => ci !== undefined); return !cis.length ? null : { url: pinPg.url, title: pinPg.title, slug: pinPg.slug, heading_path: cis.map(ci => hi.chunks[ci].hp).join(" ; "), text: cis.map(ci => (pinHeads.length ? `${hi.chunks[ci].h}\n` : "") + hi.chunks[ci].t.slice(0, Math.floor(3600 / cis.length))).join("\n\n...\n\n").slice(0, 3600) }; })() : null;
   const ctx = [...dirFor.map(d => ({ url: d.url, title: `${d.name} (site directory)`, slug: d.url, heading_path: "", text: `${d.name} is at ${d.url}. What it is: ${d.role}` })),
     ...(sp ? [sp] : []), ...(pinCtx ? [pinCtx] : []), ...pack(view, hits, ret.syn ? [...rw.queries, ret.syn] : rw.queries, sp || pinCtx ? { budget: LIMITS.budget - (sp || pinCtx).text.length - 140 } : {})];
   const messages = fleetMessages(site, q, ctx, idx, history, fu);
@@ -656,6 +657,7 @@ export async function handleFleetAsk(request, env) {
   if (q.length > LIMITS.questionChars) return out({ error: "too_long", max: LIMITS.questionChars }, 413);
   if (body.history !== undefined && !Array.isArray(body.history)) return out({ error: "bad_request", detail: "history must be an array" }, 400);
   const site = sent, history = cleanHistory(body.history);
+  if (isPromptAsk(q)) return out({ answer: say(INJECT_TEXT, site), sources: [], refused: true });   // c097/m099: the prompt stays private, not the install-confirmations text
   if (isOverrideAsk(q)) return out({ answer: OVERRIDE_REPLY, sources: [{ title: "Chapter 0: Start Here", url: "https://how.nixfred.com/00-start-here" }], refused: true });   // m080: a claim is not approval
   if (isPrivateDetail(q)) return out({ answer: PRIVATE_REPLY, sources: [{ title: "Get in touch", url: "https://how.nixfred.com/get-in-touch" }], refused: true });   // c093/m098: points to the public doors
   if (isInjection(q)) return out({ answer: say(INJECT_TEXT, site), sources: [], refused: true });
