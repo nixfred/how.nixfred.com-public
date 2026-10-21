@@ -13,7 +13,7 @@
 import { normUrl } from "./text.js";
 import SITE_DIRECTORY from "./site-directory.json";
 import { nextStep, convoNote, echoView, stripEcho, chapterOfUrl } from "./followup.js";
-import { MODELS, LIMITS, synExpand, embedQueries, isInjection, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
+import { MODELS, LIMITS, synExpand, embedQueries, isInjection, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, costLead, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
 
 // the three ways to start, exactly as the start cards on nixfredos.com link them (spine amendment 2026-10-20 6:15 PM:
 // nixfredos.com carries no steps, they all live on how.nixfred.com). Point 1 is the recipe box page, https://how.nixfred.com/recipe-box: the one start path (not nixfredos.com/build).
@@ -385,6 +385,8 @@ ${START.map((t, i) => `   ${i + 1}. ${t}`).join("\n")}
 13. Locations: name a file path, directory or on-disk location only if it appears in a passage, and only for the thing that passage
    ties it to. When the passages do not give a location, say so in one short line. Never fill in a likely path.
 14. Model ids: write a model id exactly as a passage spells it, in backticks (\`claude-haiku-4-5\`), never reworded as "Claude Haiku (4-5)".
+15. The visitor never sees the passages: never write "the passage", "as stated in the passage", "passage [2]", "the sources list" or a
+   lettered option ("choice (b)") in the answer. Say "the site" or name the page, and if you mean options, list them.
 Keep it short: usually under 150 words, plain sentences or a few bullets.
 
 Your voice on ${FLEET_SITES[site].host} (tone only, the rules above still decide what you may say):
@@ -488,7 +490,7 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   // the guide page a slang rule or "Chapter N" pins (memory -> Ch11; Audit200: live "how do I set up recall?" cited /spawn) is in the
   // passages even when the vectors missed it: its best keyword chunk for the question, from how.nixfred.com's index
   const pinPg = hi ? [...synPages(hi, q), ...chapterPins(hi, q)].map(i => hi.pages[i]).find(Boolean) : null;
-  const pinCtx = pinPg && !sp && !view.pages.some(p => normUrl(p.url) === normUrl(pinPg.url)) ? (() => { const ci = bm25(hi, `${q} ${ret.syn || ""}`, { page: hi.bySlug.get(pinPg.slug), pool: 1 })[0]; return ci === undefined ? null : { url: pinPg.url, title: pinPg.title, slug: pinPg.slug, heading_path: hi.chunks[ci].hp, text: hi.chunks[ci].t.slice(0, 2400) }; })() : null;
+  const pinCtx = pinPg && !sp && (isCostAsk(q) || !view.pages.some(p => normUrl(p.url) === normUrl(pinPg.url))) ? (() => { const ci = bm25(hi, `${q} ${ret.syn || ""}`, { page: hi.bySlug.get(pinPg.slug), pool: 1 })[0]; return ci === undefined ? null : { url: pinPg.url, title: pinPg.title, slug: pinPg.slug, heading_path: hi.chunks[ci].hp, text: hi.chunks[ci].t.slice(0, 2400) }; })() : null;
   const ctx = [...dirFor.map(d => ({ url: d.url, title: `${d.name} (site directory)`, slug: d.url, heading_path: "", text: `${d.name} is at ${d.url}. What it is: ${d.role}` })),
     ...(sp ? [sp] : []), ...(pinCtx ? [pinCtx] : []), ...pack(view, hits, ret.syn ? [...rw.queries, ret.syn] : rw.queries, sp || pinCtx ? { budget: LIMITS.budget - (sp || pinCtx).text.length - 140 } : {})];
   const messages = fleetMessages(site, q, ctx, idx, history, fu);
@@ -524,7 +526,9 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   body = g.body;
   for (const p of g.support) if (!cited.includes(p)) cited.push(p);
   body = groundModelIds(groundPaths(body, ctx, cited).body, ctx).body;
-  if (premise) body = falsePremise(q, isFleetRefusal(body) ? "" : body, ctx);   // the site chat's path and model-id guards (PR #29, eval c05) apply here too
+  if (premise) body = falsePremise(q, isFleetRefusal(body) ? "" : body, ctx);
+  body = noMeta(body);
+  if (!premise && !fu && !isFleetRefusal(body)) body = costLead(q, body, ctx);   // the site chat's path and model-id guards (PR #29, eval c05) apply here too
   body = guard(body.replace(/\n*\s*The sites? (?:don'?t|doesn'?t) cover that\.\s*$/i, "")).replace(/^(\s*>?\s*)\**\s*(snark|snarky line|wry line)\s*\**\s*:\s*\**\s*/gim, "$1");   // a voice label is not part of the answer
   const asModelSaid = body;
   body = stripEcho(body, history).trim();   // whatever the model still repeated from an earlier answer

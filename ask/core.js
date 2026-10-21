@@ -120,7 +120,7 @@ export const SYN = [
   [/\b(slow|sluggish|dumb|dumber|forgetful|context (is )?(full|filling)|long session)\b/i, "context discipline /compact /clear /context fill"],
   [/\b(back\s?ups?|backed up|lose (it|everything)|crash\w*|dies|died|new machine|laptop (dies|died|stolen))\b/i, "forever repo gup disaster recovery backup"],
   // the cost words of Ch0 Step 2 since the spine pass (no dollar figures, no "max plan"); audit rule 45 fails on a term the site no longer has
-  [/\b(cost\w*|price\w*|money|pay\w*|subscription|expensive|cheap)\b/i, "money talk subscription middle tier top plan pay-as-you-go API price of this build", ["00-start-here"]],
+  [/\b(cost\w*|price\w*|money|pay\w*|subscription|expensive|cheap)\b/i, "money talk free plus your subscription middle tier top plan pay-as-you-go API price of this build", ["00-start-here"]],
   [/\b(start\w*|begin\w*|first step|where do i|new to this|from scratch|zero)\b/i, "Start Here Chapter 0 install Claude Code first session"],
   [/\b(mac|macbook|macos|osx)\b/i, "Mac Homebrew iTerm2 bash zsh install"],
   [/\b(phone|remote\w*|anywhere|other machines?|ssh)\b/i, "Tailscale mesh phone multi-host"],
@@ -254,8 +254,12 @@ export async function retrieve(env, idx, question, { k = LIMITS.topK, page = nul
   } else mode = "keyword";
   // pages the rewrite picked also get a small keyword-side boost (works even without vectors)
   if (rw.pages.length && mode === "keyword") rw.pages.forEach(pi => add(bm25(idx, queries.join(" "), { page: pi }), PAGE_W));
+  const ranked = [...fused.entries()].sort((a, b) => b[1] - a[1]);
+  // a question about what THIS build costs is answered by Ch0 Step 2, "The money talk": its best chunk ranks first (Fred, Audit200)
+  const c0 = isCostAsk(question) ? idx.bySlug?.get("00-start-here") : undefined;
+  if (c0 !== undefined) { const best = bm25(idx, `${question} ${syn}`, { page: c0, pool: 1 })[0]; if (best !== undefined) { const k = ranked.findIndex(([i]) => i === best); ranked.unshift(k >= 0 ? ranked.splice(k, 1)[0] : [best, 0]); } }
   const out = []; const perPage = new Map();
-  for (const [i] of [...fused.entries()].sort((a, b) => b[1] - a[1])) {
+  for (const [i] of ranked) {
     if (out.length === k) break;
     const p = idx.chunks[i].p; if ((perPage.get(p) || 0) >= MAX_PER_PAGE) continue;
     perPage.set(p, (perPage.get(p) || 0) + 1); out.push(i);
@@ -376,7 +380,11 @@ Rules:
 17. Model ids: write a model id exactly as a passage spells it, in backticks (\`claude-haiku-4-5\`), never reworded as "Claude Haiku (4-5)".
 18. False premises: when the question says the site says, recommends or wants something and no passage says it, start with
    "No, the site does not say that." and then give what the passages do say. Never agree with, and never write out, a destructive
-   command (rm -rf, git reset --hard, git push --force, wiping ~/.claude) that no passage shows.`;
+   command (rm -rf, git reset --hard, git push --force, wiping ~/.claude) that no passage shows.
+19. What this costs: when the visitor asks what building their AI costs, open with the passages' own line: it is free plus your Claude
+   subscription. Then the tiers they name (the middle tier is the practical floor; most people end up on the top plan). No dollar figures.
+20. The visitor never sees the passages: never write "the passage", "as stated in the passage", "passage [2]", "the sources list" or a
+   lettered option ("choice (b)") in the answer. Say "the site" or name the page, and if you mean options, list them.`;
 
 // Earlier turns reach the model as a short note (the questions and the pages they were answered from), never as chat turns:
 // a model shown its own old answers right above a new request repeats them (ask/followup.js has the story).
@@ -477,6 +485,28 @@ export function sitePages(idx, pis) {
     }
     return cache.get(pi);
   });
+}
+// Messaging (Audit200 update, AI Strategy): "How much does it cost?" must say it is free plus your Claude subscription. Rule 19 asks the
+// model; this makes sure: a question about what THIS build costs (not a model's or a token's price), answered from passages that carry
+// Ch0's "Free plus your subscription" line, opens with that line when the model left it out.
+const COST_ASK = /\b(how much|cost\w*|price\w*|pricing|expensive|cheap|money|pay(?:ing)?|budget)\b/i;
+const COST_OF_OTHER = /\b(model|token|opus|sonnet|haiku|fable|api calls?|cloudflare|hosting|domain|per (?:token|call|request)|hardware|gpu|mac|laptop)\b/i;
+export const COST_LINE = "It's free plus your Claude subscription: the guide, the tools and the build cost nothing, and you pay for your Claude plan.";
+export const isCostAsk = q => COST_ASK.test(q) && !COST_OF_OTHER.test(q);
+export function costLead(question, body, ctx) {
+  if (!isCostAsk(question) || !ctx.some(p => /free plus your subscription/i.test(p.text))) return body;
+  return /\bfree\b[^.]{0,40}\bsubscription\b/i.test(body) ? body : `${COST_LINE} ${body}`.trim();
+}
+// Audit200 RC9 rule 20, made sure: "the passage", "as stated in the passage", "passage [2]" become "the site" (outside code; m010,
+// c053, c064, m068, m070, m090, m091 leaked them). Lettered options ("choice (b)") cannot be repaired here; rule 20 asks for lists.
+export function noMeta(body) {
+  const keep = (m, r) => /^[A-Z]/.test(m) ? r[0].toUpperCase() + r.slice(1) : r;   // a sentence that started with it still starts capitalised
+  const P = String.raw`passages?(?! of\b)(?: \[?\d+\]?)?`;
+  return String(body).split(/(```[\s\S]*?```|`[^`\n]*`)/g).map((part, i) => i % 2 ? part : part
+    .replace(new RegExp(String.raw`\bas (?:stated|described|shown|mentioned|given|noted) (?:in|by) (?:the |these |this )?` + P, "gi"), m => keep(m, "as the site says"))
+    .replace(new RegExp(String.raw`\b(?:in|from|on|within) (?:the |these |this |that )?(?:numbered )?` + P, "gi"), m => keep(m, "on the site"))
+    .replace(new RegExp(String.raw`\b(?:the|these|this|that) (?:numbered )?` + P, "gi"), m => keep(m, "the site"))
+    .replace(new RegExp(String.raw`\bpassages? \[?\d+\]?`, "gi"), m => keep(m, "the site"))).join("");
 }
 export function falsePremise(question, body, ctx) {
   const m = String(question).match(DESTRUCT); if (!m || !CLAIM.test(question)) return null;
@@ -636,7 +666,10 @@ export async function answer(env, request, question, { history = [], page = null
         const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
         // a token can be the number 0, so test for presence, not truthiness (`if (t)` turned "Chapter 0" into "Chapter :")
         if (!line.startsWith("data:")) continue; const d = line.slice(5).trim(); if (d === "[DONE]") continue;
-        try { const j = JSON.parse(d); const t = j.response ?? j.choices?.[0]?.delta?.content; if (t !== undefined && t !== null && t !== "") { raw += String(t); await emit(); } } catch {}
+        // Audit200 RC8, seen in the raw Workers AI stream (2026-10-20): every chunk carries the token twice, the exact text in
+        // choices[0].delta.content (" true", "\n5") and a legacy `response` that is that text run through JSON.parse when it parses
+        // (true, 5): the space or newline in front is gone ("what istrue now", "Ask before destroying5."). The string wins.
+        try { const j = JSON.parse(d); const c = j.choices?.[0]?.delta?.content; const t = typeof c === "string" ? c : j.response; if (t !== undefined && t !== null && t !== "") { raw += String(t); await emit(); } } catch {}
       }
     }
     if (!visible(raw).trim()) throw new Error("empty");
@@ -664,6 +697,8 @@ export async function answer(env, request, question, { history = [], page = null
       const gp = groundPaths(body, ctx, cited); body = gp.body;
       body = groundModelIds(body, ctx).body;
       if (premise) body = falsePremise(question, body, ctx);
+      body = noMeta(body);
+      if (!lead && !isRefusal(body)) body = costLead(question, body, ctx);
       if (!isRefusal(body)) body = body.replace(/\n*\s*The site doesn'?t cover that\.\s*$/i, "").replace(/\s*The site doesn'?t cover that\.\s*(?=\n)/gi, "");   // a real answer never ends in the refusal
       const asModelSaid = body;
       body = stripEcho(body, history).trim();                           // whatever the model still repeated from an earlier answer
