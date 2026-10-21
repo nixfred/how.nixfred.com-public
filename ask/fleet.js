@@ -13,7 +13,7 @@
 import { normUrl } from "./text.js";
 import SITE_DIRECTORY from "./site-directory.json";
 import { nextStep, convoNote, echoView, stripEcho, chapterOfUrl } from "./followup.js";
-import { MODELS, LIMITS, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, costLead, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
+import { MODELS, LIMITS, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, isPrivateDetail, PRIVATE_REPLY, isPlatformAsk, platformReply, withVariants, synHeadChunks, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, costLead, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
 
 // the three ways to start, exactly as the start cards on nixfredos.com link them (spine amendment 2026-10-20 6:15 PM:
 // nixfredos.com carries no steps, they all live on how.nixfred.com). Point 1 is the recipe box page, https://how.nixfred.com/recipe-box: the one start path (not nixfredos.com/build).
@@ -218,7 +218,7 @@ export function directoryAnswer(ds) {
 // otherwise ds is the fallback for when the chapters have nothing ("The site doesn't cover that" is never the reply to a
 // site Fred runs). how.nixfred.com itself is the chat's own site, so it never counts here.
 export function siteChatAbout(q, history = []) {
-  if (isInjection(q) || isPrivateAsk(q)) return null;
+  if (isInjection(q) || isPrivateAsk(q) || isPrivateDetail(q)) return null;
   const named = sitesNamed(q), fuzzy = named.length ? [] : fuzzySites(q);
   let about = named.length ? named : fuzzy;
   if (!about.length && REFERS_BACK.test(q) && SITE_Q.test(q)) about = fromHistory(history);
@@ -497,7 +497,7 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   if (rw.priv) return { answer: say(PRIVATE_TEXT, site), sources: [], site, refused: true, why: "private (rewrite)" };
   // the rewrite's off-topic call is one vote (Audit200 RC1): a question that keyword-matches one how.nixfred.com page squarely
   // ("What is gitleaks for?") is not refused on it; no how index (or any error) keeps the old behaviour
-  if (!rw.onTopic && !about.length && !fu && !ON_TOPIC.test(q) && !(await loadIndex(env, request).then(hi => siteVote(hi, rq).strong, () => false))) return { answer: say(REFUSE_TEXT, site), sources: [], site, refused: true, why: "off-topic (rewrite)" };
+  if (!rw.onTopic && !about.length && !fu && !ON_TOPIC.test(q) && !isPlatformAsk(q) && !(await loadIndex(env, request).then(hi => siteVote(hi, rq).strong, () => false))) return { answer: say(REFUSE_TEXT, site), sources: [], site, refused: true, why: "off-topic (rewrite)" };
   const noLarry = !route && GUIDE_SITES.has(site) && HOWTO_OWN.test(q) && !/\blarry\b/i.test(q);
   const ret = await retrieveFleet(env, request, idx, site, rq, rw, { routeSite: fu ? "how" : route?.id, notSite: noLarry ? "larry" : null });   // a next step is a chapter of the guide: how.nixfred.com
   const { hits, view } = ret;
@@ -512,7 +512,8 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   // the guide page a slang rule or "Chapter N" pins (memory -> Ch11; Audit200: live "how do I set up recall?" cited /spawn) is in the
   // passages even when the vectors missed it: its best keyword chunk for the question, from how.nixfred.com's index
   const pinPg = hi ? [...synPages(hi, q), ...chapterPins(hi, q)].map(i => hi.pages[i]).find(Boolean) : null;
-  const pinCtx = pinPg && !sp && (isCostAsk(q) || !view.pages.some(p => normUrl(p.url) === normUrl(pinPg.url))) ? (() => { const ci = bm25(hi, `${q} ${ret.syn || ""}`, { page: hi.bySlug.get(pinPg.slug), pool: 1 })[0]; return ci === undefined ? null : { url: pinPg.url, title: pinPg.title, slug: pinPg.slug, heading_path: hi.chunks[ci].hp, text: hi.chunks[ci].t.slice(0, 2400) }; })() : null;
+  const pinHead = pinPg ? synHeadChunks(hi, q).find(c => hi.chunks[c].p === hi.bySlug.get(pinPg.slug)) : undefined;   // the section a slang row names
+  const pinCtx = pinPg && !sp && (isCostAsk(q) || pinHead !== undefined || !view.pages.some(p => normUrl(p.url) === normUrl(pinPg.url))) ? (() => { const ci = pinHead ?? bm25(hi, `${q} ${ret.syn || ""}`, { page: hi.bySlug.get(pinPg.slug), pool: 1 })[0]; return ci === undefined ? null : { url: pinPg.url, title: pinPg.title, slug: pinPg.slug, heading_path: hi.chunks[ci].hp, text: hi.chunks[ci].t.slice(0, 2400) }; })() : null;
   const ctx = [...dirFor.map(d => ({ url: d.url, title: `${d.name} (site directory)`, slug: d.url, heading_path: "", text: `${d.name} is at ${d.url}. What it is: ${d.role}` })),
     ...(sp ? [sp] : []), ...(pinCtx ? [pinCtx] : []), ...pack(view, hits, ret.syn ? [...rw.queries, ret.syn] : rw.queries, sp || pinCtx ? { budget: LIMITS.budget - (sp || pinCtx).text.length - 140 } : {})];
   const messages = fleetMessages(site, q, ctx, idx, history, fu);
@@ -531,6 +532,7 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   const vis = scrub(visible(raw)).trim();
   if (isPrivateReply(vis)) return { answer: say(PRIVATE_TEXT, site), sources: [], site, refused: true, why: "private (model)" };
   const premise = falsePremise(q, vis, ctx) !== null;                    // a false destructive premise gets a no, never a refusal (RC4)
+  if (isFleetRefusal(vis) && !premise && !fu && isPlatformAsk(q)) return { answer: platformReply(q), sources: [{ title: "Chapter 0: Start Here", url: "https://how.nixfred.com/00-start-here" }], site, refused: false, why: "platform" };   // c009
   if (isFleetRefusal(vis) && !premise) {
     // a start question is never "not covered": the recipe box is the one start path
     if (!fu && START_PATH.test(q)) return { answer: `Start here, the recipe box: ${RECIPE_URL}`, sources: [{ title: byNorm.get(normUrl(RECIPE_URL))?.title || "The Recipe Box", url: RECIPE_URL }], site, refused: false, why: "start path", mode: ret.mode, model };
@@ -549,7 +551,7 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   for (const p of g.support) if (!cited.includes(p)) cited.push(p);
   body = groundModelIds(groundPaths(body, ctx, cited).body, ctx).body;
   if (premise) body = falsePremise(q, isFleetRefusal(body) ? "" : body, ctx);
-  body = noMeta(body);
+  body = withVariants(noMeta(body), sp);                                  // m008: the zsh form the question asked for
   if (!premise && !fu && !isFleetRefusal(body)) body = costLead(q, body, ctx);   // the site chat's path and model-id guards (PR #29, eval c05) apply here too
   body = guard(body.replace(/\n*\s*The sites? (?:don'?t|doesn'?t) cover that\.\s*$/i, "")).replace(/^(\s*>?\s*)\**\s*(snark|snarky line|wry line)\s*\**\s*:\s*\**\s*/gim, "$1");   // a voice label is not part of the answer
   const asModelSaid = body;
@@ -655,6 +657,7 @@ export async function handleFleetAsk(request, env) {
   if (body.history !== undefined && !Array.isArray(body.history)) return out({ error: "bad_request", detail: "history must be an array" }, 400);
   const site = sent, history = cleanHistory(body.history);
   if (isOverrideAsk(q)) return out({ answer: OVERRIDE_REPLY, sources: [{ title: "Chapter 0: Start Here", url: "https://how.nixfred.com/00-start-here" }], refused: true });   // m080: a claim is not approval
+  if (isPrivateDetail(q)) return out({ answer: PRIVATE_REPLY, sources: [{ title: "Get in touch", url: "https://how.nixfred.com/get-in-touch" }], refused: true });   // c093/m098: points to the public doors
   if (isInjection(q)) return out({ answer: say(INJECT_TEXT, site), sources: [], refused: true });
   if (isPrivateAsk(q)) return out({ answer: say(PRIVATE_TEXT, site), sources: [], refused: true });
   const cap = await capTake(env);

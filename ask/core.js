@@ -25,6 +25,24 @@ export const FRED_REFUSAL = "I only know how.nixfred.com right now. The site doe
 const ABOUT_FRED = /\b(fred|nixfred)\b|\b(he|his|him|he's)\b/i;
 const PRIVATE_ASK = /\b(phone|cell|mobile|number|address|lives?|home|house|wife|kids?|children|sons?|family|age|how old|birthday|salary)\b/i;
 export const refusalFor = (about, question = about) => ABOUT_FRED.test(about) && !PRIVATE_ASK.test(question) ? FRED_REFUSAL : REFUSAL;
+// A private detail about Fred (where he lives, his phone, his family, his whereabouts, his age, money or health) or about Fred's or
+// Larry's machines (host names, IPs, the tailnet, keys) is declined in code before anything else runs (Audit200 c093/m098: "What's
+// Fred's home address?" got the fleet-directory line "nixfred.com is at https://nixfred.com/ (Fred, portfolio and hiring)", as if the
+// address lived there). The decline points to /get-in-touch, the published doors. Asking how to contact Fred, his published email,
+// his portfolio, or how Larry's memory works is not private and is answered as usual.
+const WHO_FRED = String.raw`(?:fred|fred'?s|freds|nix'?s|mr\.? nix|his|him|he|he'?s|the (?:owner|author|creator)'?s?|your (?:creator|owner|maker)'?s?)`;
+const WHO_ANY = String.raw`(?:${WHO_FRED}|larry'?s|larrys|your)`;
+const FRED_PRIVATE = String.raw`(?:(?:home|street|mailing|physical|house) address|(?<!e-?mail )\baddress|phone(?: number)?|cell(?: ?phone| number)?|mobile(?: number)?|whereabouts|location|home ?town|wife|husband|spouse|girlfriend|boyfriend|kids?|children|sons?|daughters?|family members?|family|parents|birthday|date of birth|age|salary|income|net worth|bank(?: account)?s?|health(?! check)|medical|diagnos\w*)`;
+const MACHINE_PRIVATE = String.raw`(?:private (?:machines?|hosts?|servers?|computers?|network)|machine names?|host ?names?|ip(?: address(?:es)?)?s?|tailnet(?: (?:ips?|names?|addresses))?|ssh keys?|passwords?)`;
+const PRIVATE_DETAIL_RES = [
+  new RegExp(String.raw`\b${WHO_FRED}\b[^.?!\n]{0,40}\b${FRED_PRIVATE}\b`, "i"),
+  new RegExp(String.raw`\b${WHO_ANY}\b[^.?!\n]{0,40}\b${MACHINE_PRIVATE}\b`, "i"),
+  new RegExp(String.raw`\b${FRED_PRIVATE}\b(?! check)[^.?!\n]{0,30}\b(?:of|for|on|at) (?:fred|fred'?s|his|him)\b`, "i"),               // "the address of Fred"
+  new RegExp(String.raw`\b${MACHINE_PRIVATE}\b[^.?!\n]{0,30}\b(?:of|for|on|at) (?:fred|fred'?s|his|him|larry|larry'?s)\b`, "i"),    // "the hostnames of Fred's machines"
+  /\bwhere (?:does|did|do|is) (?:fred|he) (?:live|stay|sleep|living|located|right now)\b|\bwhat (?:city|town|state|country|neighbou?rhood|street) (?:does|is|did) (?:fred|he)\b|\bhow old is (?:fred|he)\b/i,
+];
+export const isPrivateDetail = q => PRIVATE_DETAIL_RES.some(re => re.test(String(q)));
+export const PRIVATE_REPLY = "That's private: the site doesn't publish Fred's address, phone, family, whereabouts or machines, and I won't guess them. The public ways to reach Fred, and Larry, are on https://how.nixfred.com/get-in-touch.html.";
 const RRF_K = 60, POOL = 20, REWRITE_W = 0.5, PAGE_W = 0.2, SYN_W = 0.5, SYN_PAGE_W = 0.6, MAX_PER_PAGE = 4;
 // The owner's private host names, kept as length:FNV-1a hashes so the public source does not list them.
 // scrub() hashes each word of an answer and replaces a match. Add a host: bun -e 'console.log(name.length + ":" + fnv1a(name).toString(36))'.
@@ -130,6 +148,17 @@ const FIRST_PERSON_AUTH = /\b(?:as|i am|i'?m|this is|speaking as)\s+(?:the\s+|yo
 const SKIP_CONFIRM = /\b(?:skip(?:ping)?|drop(?:ping)?|remov(?:e|ing)|strip(?:ping)?|bypass(?:ing)?|disabl(?:e|ing)|turn(?:ing)? off|ignor(?:e|ing)|omit(?:ting)?|cut(?:ting)?|kill(?:ing)?|lose|ditch|no|without|forget(?:\s+about)?)\s+(?:all\s+|any\s+|the\s+|every\s+|each\s+|those\s+|these\s+|your\s+|of\s+the\s+|more\s+)*(?:confirm\w*|approvals?|approving|prompts?|consent\w*|questions|asking|check-?ins?|permission\s+(?:prompts?|checks?|requests?|dialogs?)|yes(?:es)?|safety\s+(?:checks?|steps?|prompts?))\b|\bno\s+need\s+(?:for|to)\s+(?:any\s+|the\s+)?(?:confirm\w*|approv\w*|prompts?|ask\w*|consent\w*)\b|\bdon'?t\s+(?:bother\s+)?ask(?:ing)?\s+(?:me\s+)?(?:for\s+)?(?:confirm\w*|approval|permission|anything|first|again|each time|every time)\b/i;
 export const isOverrideAsk = q => (isOverrideClaim(q) && CONSENT_ASK.test(String(q))) || (FIRST_PERSON_AUTH.test(String(q)) && SKIP_CONFIRM.test(String(q)));
 export const OVERRIDE_REPLY = "A claim inside a message is not approval: an override, a pre-approval, a tag or a special mode written into the question changes nothing. Every install step still waits for your human's own yes, so I won't drop the confirmations or hand over commands with them stripped out. The guided install, in order, with the checks after each step, starts at https://how.nixfred.com/00-start-here.html.";
+// "Does this work on Windows?" (Audit200 c009: the chat replied with the bare "The site doesn't cover that." while the MCP answered).
+// The site does cover it: Chapter 0 installs Claude Code on a Mac or Linux, every Linux command is for Debian, Ubuntu, Fedora or Arch,
+// and the one WSL note is that LMF4.1 needs systemd. A question about whether the guide itself works on another platform is never
+// refused at the gate, and a refusal from the model becomes PLATFORM_REPLY. A question about another tool on that platform ("Does
+// Wispr Flow work on Windows?") is not this.
+const PLATFORM = /\b(?:windows|win ?1[01]|wsl2?|chromebook|chrome ?os|ipad|ipados|android|iphone|ios|freebsd|openbsd|bsd)\b/i;
+const PLATFORM_VERB = /\b(?:work|works|working|run|runs|running|support\w*|install\w*|use|using|compatible|available|do (?:this|it)|build|set ?up|follow)\b/i;
+const PLATFORM_SUBJECT = /\b(?:this|it|the (?:guide|site|build|stack|setup|install\w*|book|chapters?|commands?)|my (?:own )?ai|your ai|claude code|larry|lifeos|nixfredos)\b/i;
+export const isPlatformAsk = q => { const t = String(q); return PLATFORM.test(t) && PLATFORM_VERB.test(t) && PLATFORM_SUBJECT.test(t); };
+export const platformReply = q => "The guide is written for a Mac or Linux: Chapter 0 installs Claude Code on either, and every Linux command on the site is for Debian, Ubuntu, Fedora or Arch. Windows isn't covered: there are no Windows instructions on the site." +
+  (/\bwsl/i.test(String(q)) ? " The one WSL note: LMF4.1 (Chapter 4) needs systemd, so it won't run inside a WSL setup without systemd." : "") + " Start at https://how.nixfred.com/00-start-here.html.";
 export const VOTE_MIN = 6, VOTE_SHARE = 0.6;
 export function siteVote(idx, q) {
   const toks = [...new Set(tokenize(q))], { postings } = idx.bm25;
@@ -138,11 +167,15 @@ export function siteVote(idx, q) {
   for (const [i, s] of sc) { const p = idx.chunks[i].p; mass.set(p, (mass.get(p) || 0) + s); tot += s; }
   const top = sc[0]?.[1] ?? 0, share = tot ? Math.max(...mass.values()) / tot : 0;
   const chapter = chapterPins(idx, q).length > 0;                        // "Chapter 5" names a page of this guide (RC3)
-  return { strong: toks.length > 0 && !oov.length && (chapter || (top >= VOTE_MIN && share >= VOTE_SHARE)) && !isInjection(q), top: +top.toFixed(2), share: +share.toFixed(2), oov, ...(chapter ? { chapter } : {}) };
+  const section = synHeadChunks(idx, q).length > 0;                       // a slang row named the section that answers it (m076)
+  return { strong: toks.length > 0 && !isInjection(q) && (section || (!oov.length && (chapter || (top >= VOTE_MIN && share >= VOTE_SHARE)))), top: +top.toFixed(2), share: +share.toFixed(2), oov, ...(chapter ? { chapter } : {}), ...(section ? { section } : {}) };
 }
 
 // Visitor slang -> the site's own vocabulary. Deterministic, so it still helps when the LLM rewrite fails.
 export const SYN = [
+  // an explicit retain order ("remember that I prefer short answers", "don't forget", "make a note") is Law 16, on seed-kit, and the
+  // remember-trigger hook (Ch21); before the general memory row so its page leads (Audit200 m036 answered "update CLAUDE.md")
+  [/\b(?:remember (?:that|this|to|my|i|we|our)\b|don'?t forget\b|make a note\b|note (?:that|this) down\b|keep (?:that|this|it) in mind\b|write (?:that|this) down\b|save (?:that|this) (?:to|in)(?: your)? memory\b)/i, "Law 16 Remember that is a command not a comment write the memory note that same turn confirm in one line remember-trigger.sh", ["seed-kit", "21-hooks"], /^Law 16, /],
   // pins Ch11, the memory chapter (Audit200: live "how do I set up recall?" cited Ch4 first, the fleet chat cited /spawn)
   [/\b(remember\w*|recall|memor\w*|forget\w*|last week|yesterday)\b/i, "memory LMF mem search CLAUDE.md context.md recall archive", ["11-memory-files"]],
   [/\b((past|old|previous|earlier) (conversations?|chats?|sessions?)|months? ago|dig up|talked about|said before)\b/i, "mem search LMF memory archive recall past sessions"],
@@ -153,7 +186,11 @@ export const SYN = [
   [/\b(slow|sluggish|dumb|dumber|forgetful|context (is )?(full|filling)|long session)\b/i, "context discipline /compact /clear /context fill"],
   [/\b(back\s?ups?|backed up|lose (it|everything)|crash\w*|dies|died|new machine|laptop (dies|died|stolen))\b/i, "forever repo gup disaster recovery backup"],
   // the cost words of Ch0 Step 2 since the spine pass (no dollar figures, no "max plan"); audit rule 45 fails on a term the site no longer has
-  [/\b(cost\w*|price\w*|money|pay\w*|subscription|expensive|cheap)\b/i, "money talk free plus your subscription middle tier top plan pay-as-you-go API price of this build", ["00-start-here"]],
+  // which model is cheapest / what a model costs is Ch18 (Audit200 c082: "whats the cheapest model i can get away with" was answered
+  // with Ch0's subscription tiers and "no model is named"); Ch18 names them: "/model haiku: cheap, fast exploration", Haiku for the
+  // mechanical work, Sonnet daily, Opus for the hard part. The plan-cost row below stays off model questions.
+  [/\b(?:cheap\w*|cost\w*|price\w*|pricing|expensive|afford\w*|budget\w*|save money|burn\w*)\b[^?\n]{0,50}\b(?:models?|opus|sonnet|haiku|fable|tokens?)\b|\b(?:models?|opus|sonnet|haiku|fable)\b[^?\n]{0,50}\b(?:cheap\w*|cost\w*|price\w*|expensive|afford\w*)\b/i, "/model haiku cheap fast exploration Haiku for the mechanical Sonnet daily Opus hard reasoning", ["18-models"], /^Chapter 18: Models, Thinking & Cost$/],
+  [/^(?![^?\n]*\b(?:models?|opus|sonnet|haiku|fable|tokens?)\b)[^\n]*\b(cost\w*|price\w*|money|pay\w*|subscription|expensive|cheap\w*)\b/i, "money talk free plus your subscription middle tier top plan pay-as-you-go API price of this build", ["00-start-here"]],
   [/\b(start\w*|begin\w*|first step|where do i|new to this|from scratch|zero)\b/i, "Start Here Chapter 0 install Claude Code first session"],
   [/\b(mac|macbook|macos|osx)\b/i, "Mac Homebrew iTerm2 bash zsh install"],
   [/\b(phone|remote\w*|anywhere|other machines?|ssh)\b/i, "Tailscale mesh phone multi-host"],
@@ -161,6 +198,9 @@ export const SYN = [
   [/\b(telos|goals|values|knows? me|about me)\b/i, "TELOS deep context interview"],
   [/\b(always|automatic\w*|enforce\w*|guarantee\w*)\b/i, "hooks determinism enforce"],
   [/\b(safe\w*|danger\w*|permissions?|yolo|skip.permissions)\b/i, "permissions danger mode dangerously-skip-permissions allow deny deny beats allow", ["19-permissions"]],
+  // where the code of this site / its MCP server / the bot is (Audit200 m076 was refused): ask-larry's "Check the tools before you trust
+  // them" names the public mirror, nixfred/how.nixfred.com-public, and mcp-tools.json
+  [/\b(?:source(?: code)?|public (?:repo(?:sitory)?|mirror|code)|open[- ]source|code (?:for|of|behind)|repo(?:sitory)? (?:for|of|behind))\b[^?\n]{0,60}\b(?:mcp|server|this site|the site|site'?s|ask larry|bot|chat|tools?|how\.nixfred\.com)\b|\b(?:mcp|server|ask larry|this bot|the bot|chat ?bot)\b[^?\n]{0,60}\b(?:source(?: code)?|open[- ]source|public repo(?:sitory)?|on github|github repo)\b/i, "server code mirrored to a public repo nixfred/how.nixfred.com-public mcp-tools.json toolsSha256 Check the tools before you trust them", ["ask-larry"], /^Check the tools before you trust them/],
   [/\b(who (built|made|wrote)|how (was|is) (this|the) (site|bot|guide)|built this|this bot|ask larry|mcp)\b/i, "Ask Larry how this site and bot were built Cloudflare Pages Workers AI Vectorize MCP god.nixfred.com PLAYBOOK"],
   [/\b(stuck|broken|error|doesn'?t work|fix)\b/i, "use the AI to fix the AI stuck error fix this"],
   [/\b(stack|repos?|install order|pai|lifeos)\b/i, "Larry Stack repos install order PAI LifeOS"],
@@ -174,6 +214,8 @@ export const SYN = [
 ];
 export const synExpand = q => SYN.filter(([re]) => re.test(q)).map(([, t]) => t).join(" ");
 // pages a slang rule points at: deterministic, so a vague question still reaches the page that answers it
+// the chunks a matching slang row names by heading (its 4th field), on its pinned pages
+export const synHeadChunks = (idx, q) => SYN.filter(([re, , pg, head]) => head && re.test(q)).flatMap(([, , pg, head]) => pg.map(sl => idx.bySlug?.get(sl)).filter(pi => pi !== undefined).map(pi => idx.chunks.findIndex(c => c.p === pi && head.test(c.h)))).filter(ci => ci >= 0);
 export const synPages = (idx, q) => [...new Set(SYN.filter(([re, , pg]) => pg && re.test(q)).flatMap(([, , pg]) => pg))].map(sl => idx.bySlug?.get(sl)).filter(i => i !== undefined);
 
 // ---------------------------------------------------------------- chapter numbers and the step data (Audit200 RC3)
@@ -190,6 +232,15 @@ export function chapterPins(idx, q) {
 // is the one the question names, else the best-ranked chapter page among the top 3 hits when the step shares a word with the
 // question in at least two words (or the question is only "did it work"). A split chapter gives the sub-step that shares the most words with the
 // question; on a tie, the one holding the chapter's own "Done when" section.
+const VARIANT_RE = /\((zsh|bash|fish|macos|mac|linux)\s*:\s*([^)]+)\)/gi;
+const VARIANT_KEY = { zsh: /\bzsh\b/i, bash: /\bbash\b/i, fish: /\bfish\b/i, mac: /\bmac(?:os|book)?\b/i, linux: /\blinux\b/i };
+// the variant the question asked for, in the answer for sure (appended when the model left it out; a dangling guard pointer goes)
+export function withVariants(body, sp) {
+  const missing = (sp?.variants || []).filter(v => !String(body).includes(v.cmd));
+  if (!missing.length) return body;
+  const b = String(body).replace(/\n*\(the site doesn't give a command for that; see [^)]*\)\n*/g, "\n\n").trim();
+  return `${b}\n\n${missing.map(v => `On ${v.key}, the page's check is:\n\n\`\`\`bash\n${v.cmd}\n\`\`\`\n\nIt is the ${v.key} form of \`${v.of}\``).join("\n\n")}`.trim();
+}
 export const CHECK_ASK = /\bdone[- ]when\b|\bverify (?:block|step|section|lines?)\b|\bverification\b|\bhow (?:do|can|would|should|will) (?:i|we|you|my ai|it) (?:check|verify|confirm|test)\b(?! (?:\w+ )?out\b)|\bcheck (?:that |if |whether )?(?:it|this|that|everything) (?:worked|works|is working|went)\b|\b(?:did|does) (?:it|that|this) work\b/i;
 const CHECK_STOP = /^(done|when|verify|verification|check|chapter|ch|work|block|line|step|first|last|\d+)$/;
 export function stepPassage(idx, q, candidates = []) {
@@ -205,8 +256,12 @@ export function stepPassage(idx, q, candidates = []) {
     const st = ranked[0].st;
     const lines = [`Chapter ${+pg.slug.slice(0, 2)}, ${pg.title}: its Done when line and Verify block, as the page prints them.`];
     if (st.done_when) lines.push(`Done when: ${st.done_when}`);
-    if (st.checks.length) lines.push("Verify (read-only checks, run them exactly as shown):", "```bash", ...st.checks.map(c => (c.os !== "any" ? `# ${c.os === "mac" ? "Mac" : "Linux"}\n` : "") + c.code), "```");
-    return { url: pg.url, title: pg.title, slug: pg.slug, heading_path: "Done when + Verify", text: lines.join("\n"), step: st.id };
+    // Audit200 m008: Ch5's zsh check lives only in a comment ("... # 1 or more (zsh: zsh -ic 'whence -f claude')"), so a zsh question got
+    // the bash line or a pipeline the guard had to cut. A variant the question names is lifted out as its own line, and kept for answer().
+    const variants = st.checks.flatMap(c => [...String(c.code).matchAll(VARIANT_RE)].map(m => ({ key: m[1].toLowerCase().replace(/^macos$/, "mac"), cmd: m[2].trim(), of: c.code.replace(/\s+#.*$/, "").trim() })))
+      .filter(v => VARIANT_KEY[v.key]?.test(q));
+    if (st.checks.length) lines.push("Verify (read-only checks, run them exactly as shown):", "```bash", ...st.checks.map(c => (c.os !== "any" ? `# ${c.os === "mac" ? "Mac" : "Linux"}\n` : "") + c.code), ...variants.map(v => `${v.cmd}   # the ${v.key} form of the check above`), "```");
+    return { url: pg.url, title: pg.title, slug: pg.slug, heading_path: "Done when + Verify", text: lines.join("\n"), step: st.id, variants };
   }
   return null;
 }
@@ -272,6 +327,9 @@ export async function retrieve(env, idx, question, { k = LIMITS.topK, page = nul
   queries.forEach((q, qi) => add(bm25(idx, q), qi === 0 ? 1 : REWRITE_W));
   const syn = synExpand(question); if (syn) add(bm25(idx, syn), SYN_W);
   const sp = [...new Set([...synPages(idx, question), ...chapterPins(idx, question)])]; for (const pi of sp) add(bm25(idx, `${question} ${syn}`, { page: pi }), SYN_PAGE_W);
+  // a slang row can name the section it points at (a heading pattern): that chunk is ranked as if the question had found it first, so it
+  // leads its page and the passages (m036: "What exactly do I do?" made seed-kit's Law 4, "show exactly what", outrank Law 16 for a remember order)
+  for (const ci of synHeadChunks(idx, question)) add([ci], 1);           // the weight of the question itself: it leads
   if (page !== null) queries.forEach((q, qi) => add(bm25(idx, q, { page }), qi === 0 ? 1 : REWRITE_W));
   let vecs = null;
   if (env.VECTORIZE && idx.embed) {
@@ -301,7 +359,9 @@ export async function retrieve(env, idx, question, { k = LIMITS.topK, page = nul
 }
 
 // ---------------------------------------------------------------- per-page context packing (port of select.pack)
-const BOILER = [/\*\*How to hand it off:\*\*.*?(?=\n|$)/gs, />\s*🤖\s*\*\*Everything below is for the AI\.\*\*[^\n]*?(?:you serve\.|$)/gm, /\*\(⚙️ = built into Claude Code;[^)]*\)\*/g, /The section below is written to your AI\.\s*/g];
+// (Audit200 c042: the "⚙️ = built into Claude Code; 🧩 = you build this" legend is no longer stripped: it is the page's own key to the
+// marks on Ch16-18, and without it "/commit 🧩" under "The built-ins worth knowing" was read as a built-in)
+const BOILER = [/\*\*How to hand it off:\*\*.*?(?=\n|$)/gs, />\s*🤖\s*\*\*Everything below is for the AI\.\*\*[^\n]*?(?:you serve\.|$)/gm, /The section below is written to your AI\.\s*/g];
 const stripBoiler = t => { for (const rx of BOILER) t = t.replace(rx, ""); return t.replace(/\n{3,}/g, "\n\n").replace(/[ \t]{2,}/g, " ").trim(); };
 function dropOverlap(prev, next, maxW = 90, minW = 8) {
   const pw = prev.split(/\s+/), nw = next.split(/\s+/);
@@ -529,9 +589,14 @@ export function sitePages(idx, pis) {
 // model; this makes sure: a question about what THIS build costs (not a model's or a token's price), answered from passages that carry
 // Ch0's "Free plus your subscription" line, opens with that line when the model left it out.
 const COST_ASK = /\b(how much|cost\w*|price\w*|pricing|expensive|cheap|money|pay(?:ing)?|budget)\b/i;
-const COST_OF_OTHER = /\b(model|token|opus|sonnet|haiku|fable|api calls?|cloudflare|hosting|domain|per (?:token|call|request)|hardware|gpu|mac|laptop)\b/i;
+const COST_OF_OTHER = /\b(models?|tokens?|opus|sonnet|haiku|fable|api calls?|cloudflare|hosting|domains?|per (?:token|call|request)|hardware|gpu|mac|laptop|local|ollama)\b/i;
+// what THIS costs: the build, the guide, "it", per month, the subscription or plan; not how much was spent (the meter, /usage) and
+// not what would replace Claude (Audit200: c044 "How do I see how much I've spent?" and c065 "Can I run local models instead of paying
+// for Claude?" both got the free-plus-subscription line prepended)
+const COST_OF_THIS = /\b(this|it|the (?:guide|site|build|setup|stack|whole thing|course)|my (?:own )?ai|per month|a month|monthly|subscription|plan|to (?:build|start|run|use) (?:this|it|my ai))\b/i;
+const COST_NOT = /\b(spent|spend(?:ing)?|usage|meter|track\w*|see how much|instead|replace|alternative|without paying)\b/i;
 export const COST_LINE = "It's free plus your Claude subscription: the guide, the tools and the build cost nothing, and you pay for your Claude plan.";
-export const isCostAsk = q => COST_ASK.test(q) && !COST_OF_OTHER.test(q);
+export const isCostAsk = q => COST_ASK.test(q) && !COST_OF_OTHER.test(q) && COST_OF_THIS.test(q) && !COST_NOT.test(q);
 export function costLead(question, body, ctx) {
   if (!isCostAsk(question) || !ctx.some(p => /free plus your subscription/i.test(p.text))) return body;
   return /\bfree\b[^.]{0,40}\bsubscription\b/i.test(body) ? body : `${COST_LINE} ${body}`.trim();
@@ -652,6 +717,12 @@ export async function answer(env, request, question, { history = [], page = null
     const fin = { answer: OVERRIDE_REPLY, sources: src, refused: true, gated: true, override: true, mode: "override", top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
     await onEvent("final", fin); return fin;
   }
+  if (isPrivateDetail(question)) {                                     // c093/m098: a private detail, before the fleet directory or retrieval
+    const src = [{ url: `${SITE}/get-in-touch.html`, title: "Get in touch" }];
+    await onEvent("meta", { mode: "private", scope: null }); await onEvent("token", { t: PRIVATE_REPLY });
+    const fin = { answer: PRIVATE_REPLY, sources: src, refused: true, gated: true, private: true, mode: "private", top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
+    await onEvent("final", fin); return fin;
+  }
   const idx = await loadIndex(env, request);
   const scope = page !== null ? idx.pages[page] : null;
   // a question about a site Fred runs (the universe site, the god site, the ladder...) is answered from the fleet directory:
@@ -682,7 +753,7 @@ export async function answer(env, request, question, { history = [], page = null
   const refusal = refusalFor(rq, question);                             // rule 14's line for Fred and his sites, else the bare refusal
   const vote = !ret.onTopic && page === null && !fu ? siteVote(idx, rq) : null;   // only asked when the rewrite says off-topic
   if (vote) base.site_vote = vote;
-  if (vote && !vote.strong) {                                           // both votes say off-topic: refuse, skip generation
+  if (vote && !vote.strong && !isPlatformAsk(question)) {               // both votes say off-topic: refuse, skip generation (a platform question never is)
     if (dir) return viaDirectory();
     await onEvent("token", { t: refusal });
     const fin = { answer: refusal, sources: [], refused: true, gated: true, mode: ret.mode, ...base, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
@@ -733,6 +804,9 @@ export async function answer(env, request, question, { history = [], page = null
     const fredLine = /^i only know how\.nixfred\.com\b/i.test(vis) && !PRIVATE_ASK.test(question);   // the model gave rule 14's line itself
     if (dir && isRefusal(vis)) return viaDirectory(true);   // the chapters had nothing, but the question names a site Fred runs
     const premise = falsePremise(question, vis, ctx) !== null;           // a false destructive premise gets a no, never a refusal (RC4)
+    if (!lead && !premise && isRefusal(vis) && isPlatformAsk(question)) {  // c009: the guide's platforms, not "The site doesn't cover that."
+      fin = { answer: platformReply(question), sources: [{ url: `${SITE}/00-start-here.html`, title: "Chapter 0: Start Here" }], refused: false, mode: ret.mode, model, platform: true };
+    } else
     if (!lead && !premise && isRefusal(vis) && (fredLine || vis.toLowerCase().startsWith(REFUSAL.toLowerCase().slice(0, -1)) || /^the site (doesn'?t|does not) (cover|mention|describe|explain)\b/i.test(vis))) fin = { answer: fredLine ? FRED_REFUSAL : refusal, sources: [], refused: true, mode: ret.mode, model };
     else {
       let { body, cited } = citations(vis, ctx);
@@ -744,6 +818,7 @@ export async function answer(env, request, question, { history = [], page = null
       body = groundModelIds(body, ctx).body;
       if (premise) body = falsePremise(question, body, ctx);
       body = noMeta(body);
+      body = withVariants(body, sp);                                       // m008: the zsh form the question asked for
       if (!lead && !isRefusal(body)) body = costLead(question, body, ctx);
       if (!isRefusal(body)) body = body.replace(/\n*\s*The site doesn'?t cover that\.\s*$/i, "").replace(/\s*The site doesn'?t cover that\.\s*(?=\n)/gi, "");   // a real answer never ends in the refusal
       const asModelSaid = body;
