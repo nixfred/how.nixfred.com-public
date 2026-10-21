@@ -282,6 +282,100 @@ That's the whole immortality story. Private remote + auto-backup hook + `gup` fo
 
 > **Larry's read, a quiet killer worth knowing:** the most dangerous failure for a backup loop is not a crash, it's a **hang**. A `git push` into a stalled network can wait forever, and a backup that hangs forever is a backup that silently stopped; you find out the day the disk dies. The `gup` script and the SessionEnd hook on this site both guard against it now: they cap a stuck push with git's own timeouts (`GIT_HTTP_LOW_SPEED_TIME` for HTTPS, an SSH keepalive for SSH) rather than the `timeout` command, because macOS doesn't ship one and a naive `timeout` wrapper would just break on a Mac. If you ever write your own backup automation, do the same. Never let the network hang the heartbeat.
 
+### Optional: snapshots every 30 minutes, configs checked first
+
+The session end hook saves you when a session ends. A long session, or a config edit you make by hand, can sit unsaved until then, and a broken `settings.json` can stop your hooks from loading at all. So add a timer: every 30 minutes it checks that the agent configs still parse (JSON with `jq empty`, TOML with Python's `tomllib`) and then commits `~/.claude` as a local git snapshot. It never deletes anything and never pushes; your session end backup and `gup` do the pushing. If a config does not parse, it writes the file name to `~/.claude/snapshot.log`, exits with an error and skips that snapshot, so you hear about it instead of committing over it. Show your human each command and say what it does, and run it only after their yes. Pick ONE scheduler: systemd on Linux, launchd on a Mac, or cron on a box with neither.
+
+**The script** (both platforms). It writes `~/.claude/bin/agent-snapshot.sh`, makes it runnable, then runs it once by hand so you see it work:
+
+```bash
+mkdir -p ~/.claude/bin
+cat > ~/.claude/bin/agent-snapshot.sh <<'EOF'
+#!/usr/bin/env bash
+# Every 30 minutes: check that the agent configs parse, then commit ~/.claude as a git snapshot.
+# It never deletes, never pushes (your session end backup and gup push), and stops loudly on a broken config.
+PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+dir="$HOME/.claude"; log="$dir/snapshot.log"; bad=0
+note() { echo "$(date '+%F %T') $*" >> "$log"; }
+for f in "$dir"/*.json "$HOME/.claude.json" "$HOME/.gemini/settings.json"; do
+  [ -f "$f" ] || continue
+  jq empty "$f" 2>/dev/null || { note "bad JSON: $f"; bad=1; }
+done
+for f in "$HOME/.codex/config.toml" "$HOME/.grok/config.toml"; do
+  [ -f "$f" ] || continue
+  if python3 -c 'import tomllib' 2>/dev/null; then
+    python3 -c 'import tomllib,sys;tomllib.load(open(sys.argv[1],"rb"))' "$f" 2>/dev/null || { note "bad TOML: $f"; bad=1; }
+  else
+    note "TOML check skipped for $f: this python3 has no tomllib (it needs 3.11 or newer)"
+  fi
+done
+[ "$bad" = 0 ] || exit 1          # no snapshot of a broken config: fix it, the next run commits
+cd "$dir" && git rev-parse --is-inside-work-tree >/dev/null 2>&1 || exit 0
+git add -A && { git diff --cached --quiet || git commit -qm "snapshot: $(date '+%F %T')"; }
+EOF
+chmod +x ~/.claude/bin/agent-snapshot.sh
+~/.claude/bin/agent-snapshot.sh && git -C ~/.claude log -1 --oneline
+```
+
+**Linux, a systemd user timer.** It writes a service that runs the script and a timer that starts it 5 minutes after boot and then 30 minutes after each run (`OnBootSec=`, `OnUnitActiveSec=`, per [systemd.timer(5)](https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html)). There is no `Persistent=` line on purpose: that man page says it only has an effect on `OnCalendar=` timers. A user timer runs while your human is logged in.
+
+```bash
+mkdir -p ~/.config/systemd/user
+cat > ~/.config/systemd/user/agent-snapshot.service <<'EOF'
+[Unit]
+Description=Check agent configs, then snapshot ~/.claude
+
+[Service]
+Type=oneshot
+ExecStart=%h/.claude/bin/agent-snapshot.sh
+EOF
+cat > ~/.config/systemd/user/agent-snapshot.timer <<'EOF'
+[Unit]
+Description=Agent snapshot every 30 minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=30min
+
+[Install]
+WantedBy=timers.target
+EOF
+systemctl --user daemon-reload
+systemctl --user enable --now agent-snapshot.timer
+systemctl --user list-timers agent-snapshot.timer
+```
+
+**Mac, a launchd agent (untested on a real Mac, plist validated only).** It writes a LaunchAgent that runs the script once when it loads (`RunAtLoad`) and then every 1800 seconds (`StartInterval`, per [launchd.plist(5)](https://keith.github.io/xcode-man-pages/launchd.plist.5.html)), and loads it for your user. That man page notes an interval that falls while the Mac sleeps is missed; the next one runs as normal.
+
+```bash
+mkdir -p ~/Library/LaunchAgents
+cat > ~/Library/LaunchAgents/com.how-nixfred.agent-snapshot.plist <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.how-nixfred.agent-snapshot</string>
+  <key>ProgramArguments</key><array><string>$HOME/.claude/bin/agent-snapshot.sh</string></array>
+  <key>StartInterval</key><integer>1800</integer>
+  <key>RunAtLoad</key><true/>
+  <key>StandardOutPath</key><string>$HOME/.claude/snapshot.log</string>
+  <key>StandardErrorPath</key><string>$HOME/.claude/snapshot.log</string>
+</dict>
+</plist>
+EOF
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.how-nixfred.agent-snapshot.plist
+launchctl list | grep agent-snapshot
+```
+
+**Cron, if the box has neither.** It adds one line to your crontab, keeping every line already there, and does nothing if the line is already in. `*/30` in the minute field runs at minute 0 and minute 30 of every hour ([crontab(5)](https://man7.org/linux/man-pages/man5/crontab.5.html)):
+
+```bash
+crontab -l 2>/dev/null | grep -q agent-snapshot.sh || { crontab -l 2>/dev/null; echo '*/30 * * * * "$HOME/.claude/bin/agent-snapshot.sh" >> "$HOME/.claude/snapshot.log" 2>&1'; } | crontab -
+crontab -l | grep agent-snapshot
+```
+
+Then check it after the first interval: `git -C ~/.claude log --oneline -3` shows a `snapshot:` commit, and `~/.claude/snapshot.log` is empty or names a config to fix.
+
 ---
 
 ## Done when: the forever repo (Chapter 7)

@@ -13,7 +13,7 @@
 import { normUrl } from "./text.js";
 import SITE_DIRECTORY from "./site-directory.json";
 import { nextStep, convoNote, echoView, stripEcho, chapterOfUrl } from "./followup.js";
-import { MODELS, LIMITS, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, isPromptAsk, isBuildTimeAsk, TIME_REPLY, TIME_SOURCES, isExistingAsk, EXISTING_REPLY, EXISTING_SOURCES, isPrivateDetail, PRIVATE_REPLY, isPlatformAsk, platformReply, unPremise, withVariants, synHeadChunks, sectionChunks, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, costLead, safetyLead, safeSource, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
+import { MODELS, LIMITS, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, isPromptAsk, sectionReply, isAgentAsk, agentReply, AGENT_SOURCES, isBuildTimeAsk, TIME_REPLY, TIME_SOURCES, isExistingAsk, EXISTING_REPLY, EXISTING_SOURCES, isPrivateDetail, PRIVATE_REPLY, isPlatformAsk, platformReply, unPremise, withVariants, synHeadChunks, sectionChunks, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, costLead, safetyLead, safeSource, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
 
 // the three ways to start, exactly as the start cards on nixfredos.com link them (spine amendment 2026-10-20 6:15 PM:
 // nixfredos.com carries no steps, they all live on how.nixfred.com). Point 1 is the recipe box page, https://how.nixfred.com/recipe-box: the one start path (not nixfredos.com/build).
@@ -475,6 +475,9 @@ const LIFEOS_CREDIT = { default: `LifeOS (formerly PAI, Personal AI Infrastructu
 
 // ---------------------------------------------------------------- the whole pipeline (non-streaming)
 export async function fleetAnswer(env, request, site, q, history = []) {
+  { const sr = !isOverrideAsk(q) && !isPromptAsk(q) ? await sectionReply(env, request, q).catch(() => null) : null;   // BATCH B: Ch7 / Ch21 optional recipes, word for word
+    if (sr) return { answer: sr.answer, sources: sr.sources.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), site, refused: false, why: "section" }; }
+  if (isAgentAsk(q)) return { answer: agentReply(q), sources: AGENT_SOURCES.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), site, refused: false, why: "agent" };   // BATCH B, for every caller
   if (isBuildTimeAsk(q)) return { answer: TIME_REPLY, sources: TIME_SOURCES.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), site, refused: false, why: "build time" };   // CHIPS 6, for every caller
   const idx = await loadFleet(env, request);
   if (LIFEOS_WHO.test(q)) return { answer: say(LIFEOS_CREDIT, site), sources: [{ title: "LifeOS", url: LIFEOS_HOME }, { title: "The Larry Stack: Repos & Install Order", url: LIFEOS_PAGE }], site, refused: false, why: "lifeos credit" };

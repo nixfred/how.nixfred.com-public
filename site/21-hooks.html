@@ -86,6 +86,80 @@ jq -s &#39;.[1] as $f | .[0] as $s | reduce ($f.hooks | to_entries[]) as $e ($s;
 jq -r &#39;.hooks | keys[]&#39; ~/.claude/settings.json    # should list SessionEnd, SessionStart, UserPromptSubmit
 </code></pre>
 <p>Then prove they fire (Law 8): start a fresh session, type &quot;remember that hooks are wired&quot;, and watch the order appear and the note get written.</p>
+<h3>Optional: hooks that enforce a Law (search before you ask, capture decisions)</h3>
+<p>The seed&#39;s <code>remember-trigger.sh</code> tells you to search when your human asks about the past. These go further. One holds you to Law 2 when <em>you</em> are the one about to ask &quot;do you remember&quot;. The other writes your settled decisions down (Law 18) without you having to remember to. Both follow Claude Code&#39;s hooks reference (<a href="https://code.claude.com/docs/en/hooks">https://code.claude.com/docs/en/hooks</a>): a <code>Stop</code> hook receives your final reply as <code>last_assistant_message</code>, and printing <code>{&quot;decision&quot;: &quot;block&quot;, &quot;reason&quot;: &quot;...&quot;}</code> keeps you working, with the reason as your next instruction. Show your human each file and the settings change, say in plain words what each does, and write them only after their yes. They need <code>jq</code>.</p>
+<p><strong>Search before you ask (Law 2).</strong> One script, three events. A new prompt (<code>UserPromptSubmit</code>) resets a marker for the session. A memory search (<code>mem search</code>, a <code>git log --grep</code> or <code>-S</code>, or a memory MCP tool) sets it (<code>PostToolUse</code>). When you finish a reply that asks your human &quot;do you remember&quot; with no search behind it, the <code>Stop</code> hook sends you back to search first. It checks <code>stop_hook_active</code>, so it never blocks twice in a row.</p>
+<pre><code class="language-bash">mkdir -p ~/.claude/hooks ~/.claude/state
+cat &gt; ~/.claude/hooks/search-first.sh &lt;&lt;&#39;EOF&#39;
+#!/usr/bin/env bash
+# Law 2, enforced: no &quot;do you remember&quot; before a memory search this turn. Modes: prompt | tool | stop
+in=&quot;$(cat)&quot;
+sid=&quot;$(printf &#39;%s&#39; &quot;$in&quot; | jq -r &#39;.session_id // &quot;none&quot;&#39;)&quot;
+mark=&quot;$HOME/.claude/state/searched-$sid&quot;
+case &quot;$1&quot; in
+  prompt) printf 0 &gt; &quot;$mark&quot; ;;
+  tool)
+    cmd=&quot;$(printf &#39;%s&#39; &quot;$in&quot; | jq -r &#39;.tool_input.command // &quot;&quot;&#39;)&quot;
+    tool=&quot;$(printf &#39;%s&#39; &quot;$in&quot; | jq -r &#39;.tool_name // &quot;&quot;&#39;)&quot;
+    if printf &#39;%s&#39; &quot;$cmd&quot; | grep -qE &#39;(^|[;&amp;|( ])mem(-fleet)? search|git .*log .*(--grep|-S)&#39; || printf &#39;%s&#39; &quot;$tool&quot; | grep -qi &#39;^mcp__.*mem&#39;; then
+      printf 1 &gt; &quot;$mark&quot;
+    fi ;;
+  stop)
+    [ &quot;$(printf &#39;%s&#39; &quot;$in&quot; | jq -r &#39;.stop_hook_active&#39;)&quot; = true ] &amp;&amp; exit 0
+    printf &#39;%s&#39; &quot;$in&quot; | jq -r &#39;.last_assistant_message // &quot;&quot;&#39; | grep -qiE &#39;do you remember|did we (ever|already)|remind me (what|which|how|where)&#39; || exit 0
+    [ &quot;$(cat &quot;$mark&quot; 2&gt;/dev/null)&quot; = 1 ] &amp;&amp; exit 0
+    printf &#39;%s\n&#39; &#39;{&quot;decision&quot;:&quot;block&quot;,&quot;reason&quot;:&quot;Law 2: you asked your human to remember something, but no memory search ran this turn. Search first (Law 14: mem search, then git log --grep), answer from what you find, and ask only if the record is empty.&quot;}&#39; ;;
+esac
+exit 0
+EOF
+chmod +x ~/.claude/hooks/search-first.sh
+</code></pre>
+<p><strong>Capture decisions (Law 18).</strong> When a decision is settled, put it in your reply on its own line, starting with <code>Decision:</code>. This <code>Stop</code> hook appends each of those lines, dated, to <code>~/.claude/DECISIONS.md</code>, and your session end backup commits it. It never blocks. If your decisions note lives somewhere else (Claude Code&#39;s auto memory keeps notes per project), change the <code>log=</code> line to its path.</p>
+<pre><code class="language-bash">cat &gt; ~/.claude/hooks/capture-decisions.sh &lt;&lt;&#39;EOF&#39;
+#!/usr/bin/env bash
+# Law 18, captured: every &quot;Decision: ...&quot; line of a finished reply lands in the decisions note, dated.
+log=&quot;$HOME/.claude/DECISIONS.md&quot;
+jq -r &#39;.last_assistant_message // &quot;&quot;&#39; | grep -E &#39;^[*_ ]*Decision:&#39; | sed -E &#39;s/^[*_ ]*Decision:[*_ ]*//&#39; | while IFS= read -r d; do
+  [ -n &quot;$d&quot; ] &amp;&amp; printf -- &#39;- %s %s\n&#39; &quot;$(date +%F)&quot; &quot;$d&quot; &gt;&gt; &quot;$log&quot;
+done
+exit 0
+EOF
+chmod +x ~/.claude/hooks/capture-decisions.sh
+</code></pre>
+<p><strong>Wire them.</strong> This backs up <code>~/.claude/settings.json</code> to a timestamped file (so it never overwrites an older backup), writes the merged settings to <code>settings.json.new</code>, checks that file with <code>jq empty</code> and that it still has <code>hooks</code>, and only then moves it into place. If any of that fails, <code>settings.json</code> is left exactly as it was. It appends the entries and leaves every hook you already have in place, and it skips the whole step if <code>search-first.sh</code> is already wired, so it is safe to re-run:</p>
+<pre><code class="language-bash">f=~/.claude/settings.json; b=&quot;$f.bak.$(date +%Y%m%d%H%M%S)&quot;
+if grep -q search-first.sh &quot;$f&quot;; then echo &quot;already wired&quot;
+elif cp &quot;$f&quot; &quot;$b&quot; &amp;&amp; jq &#39;.hooks.UserPromptSubmit += [{&quot;hooks&quot;:[{&quot;type&quot;:&quot;command&quot;,&quot;command&quot;:&quot;bash ~/.claude/hooks/search-first.sh prompt&quot;,&quot;timeout&quot;:10}]}]
+  | .hooks.PostToolUse += [{&quot;matcher&quot;:&quot;Bash|mcp__.*&quot;,&quot;hooks&quot;:[{&quot;type&quot;:&quot;command&quot;,&quot;command&quot;:&quot;bash ~/.claude/hooks/search-first.sh tool&quot;,&quot;timeout&quot;:10}]}]
+  | .hooks.Stop += [{&quot;hooks&quot;:[{&quot;type&quot;:&quot;command&quot;,&quot;command&quot;:&quot;bash ~/.claude/hooks/search-first.sh stop&quot;,&quot;timeout&quot;:10},{&quot;type&quot;:&quot;command&quot;,&quot;command&quot;:&quot;bash ~/.claude/hooks/capture-decisions.sh&quot;,&quot;timeout&quot;:10}]}]&#39; &quot;$f&quot; &gt; &quot;$f.new&quot; &amp;&amp; jq empty &quot;$f.new&quot; &amp;&amp; jq -e &#39;has(&quot;hooks&quot;)&#39; &quot;$f.new&quot; &gt;/dev/null; then mv &quot;$f.new&quot; &quot;$f&quot; &amp;&amp; echo &quot;wired; backup: $b&quot;
+else echo &quot;not wired: settings.json left untouched (look at $f.new)&quot;; fi
+jq -r &#39;.hooks | keys[]&#39; ~/.claude/settings.json    # PostToolUse, Stop and UserPromptSubmit among them
+</code></pre>
+<p>What lands in <code>~/.claude/settings.json</code>, in the reference&#39;s shape (event, then matcher groups, then handlers; <code>Stop</code> and <code>UserPromptSubmit</code> take no matcher):</p>
+<pre><code class="language-json">{
+  &quot;hooks&quot;: {
+    &quot;UserPromptSubmit&quot;: [
+      { &quot;hooks&quot;: [ { &quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;bash ~/.claude/hooks/search-first.sh prompt&quot;, &quot;timeout&quot;: 10 } ] }
+    ],
+    &quot;PostToolUse&quot;: [
+      { &quot;matcher&quot;: &quot;Bash|mcp__.*&quot;, &quot;hooks&quot;: [ { &quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;bash ~/.claude/hooks/search-first.sh tool&quot;, &quot;timeout&quot;: 10 } ] }
+    ],
+    &quot;Stop&quot;: [
+      { &quot;hooks&quot;: [
+        { &quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;bash ~/.claude/hooks/search-first.sh stop&quot;, &quot;timeout&quot;: 10 },
+        { &quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;bash ~/.claude/hooks/capture-decisions.sh&quot;, &quot;timeout&quot;: 10 }
+      ] }
+    ]
+  }
+}
+</code></pre>
+<p>Prove they fire (Law 8), without waiting for a real slip:</p>
+<pre><code class="language-bash">echo &#39;{&quot;session_id&quot;:&quot;test&quot;,&quot;stop_hook_active&quot;:false,&quot;last_assistant_message&quot;:&quot;Do you remember which repo we used?&quot;}&#39; | bash ~/.claude/hooks/search-first.sh stop
+# prints {&quot;decision&quot;:&quot;block&quot;,...}: no search ran in session &quot;test&quot;
+t=&quot;$(mktemp -d)&quot; &amp;&amp; mkdir -p &quot;$t/.claude&quot;    # a scratch home, so the test line stays out of your real decisions note
+echo &#39;{&quot;last_assistant_message&quot;:&quot;Decision: backups go to the private repo only&quot;}&#39; | HOME=&quot;$t&quot; bash ~/.claude/hooks/capture-decisions.sh &amp;&amp; cat &quot;$t/.claude/DECISIONS.md&quot;
+</code></pre>
+<p><strong>Other agents.</strong> Gemini CLI, Codex CLI, Grok CLI and the rest may have no equivalent of these hooks. Where they don&#39;t, the law stays in the constitution and your AI keeps it by habit.</p>
 <hr>
 <h2>21.4 Extensibility: hooks are part of the seam</h2>
 <p>Hooks aren&#39;t a bolt-on; they&#39;re one of the core extension points the creators designed in, alongside the statusline and custom slash commands, <em>&quot;everything from your status line to adding your own slash commands through to hooks, which let you insert a bit of determinism at pretty much any step.&quot;</em></p>
@@ -154,5 +228,5 @@ test -f ~/.claude/hooks/remember-trigger.sh &amp;&amp; echo &#39;{&quot;prompt&q
   <p class="al-foot">Grounded in how.nixfred.com, 500 characters max. <a href="ask-larry.html">Let your AI install this with you →</a></p>
 </aside>
 </div>
-<script src="assets/app.js?v=9qyzjr" defer></script>
+<script src="assets/app.js?v=1nzjirf" defer></script>
 </body></html>

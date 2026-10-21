@@ -106,7 +106,9 @@ type Step = { id: string; n: number | null; sub?: number; chapter: string; title
 const SPLIT_AT = 4;
 // kept for the audit spec parser below
 const commandsOf = (md: string): Cmd[] => parseBlocks(md).cmds;
-const SKIP_HEAD = /(your next step|takeaways|larry's read|here's your next step)/i;
+// "Optional: ..." sections (BATCH B, 2026-10-21: the snapshot timer in Ch7, the law-enforcing hooks in Ch21) are extras after the
+// build, not steps of it: they stay on the page and in Ask Larry's index, and the guided-install route never makes them a step
+const SKIP_HEAD = /(your next step|takeaways|larry's read|here's your next step|^optional:)/i;
 const FIX_HEAD = /(troubleshoot|stuck|breaks|fails|wrong|gotcha|if it|when something)/i;
 const firstPara = (b: string) => (b.replace(/```[\s\S]*?```/g, "").split(/\n\s*\n/).map(x => x.replace(/\s+/g, " ").trim()).find(x => x.length > 60 && !/^\*\*[^*]{1,40}\*\*:?$/.test(x) && !/^[-|>#]/.test(x)) ?? "").replace(/[*`]/g, "").slice(0, 400);
 const ownDone = (b: string) => b.match(/^\s*\*\*Done when(?::\*\*|\*\*:)\s*(.+)/m)?.[1]?.replace(/[*`]/g, "").trim() || null;

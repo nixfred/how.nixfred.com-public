@@ -179,6 +179,69 @@ ${BYO.MCP_ADD}
 
 That adds this guide's MCP server to Claude Code (${MCP_ADD_WHY}) Then it reads your CLAUDE.md, settings, hooks, skills and MCP servers, checks them against the guide's foundation, and asks before each missing piece it adds. Don't trust me, audit it: https://github.com/nixfred/how.nixfred.com-public`;
 export const EXISTING_SOURCES = [{ url: `${SITE}/04-larry-stack.html`, title: "Chapter 4: The Larry Stack: Repos & Install Order" }, { url: `${SITE}/05-bootstrap.html`, title: "Chapter 5: The One-Command Bootstrap" }, { url: `${SITE}/ask-larry.html`, title: "Ask Larry" }];
+// BATCH B (Fred, 2026-10-21): "How do I connect Gemini CLI / Codex / Grok / Antigravity / another MCP client?" is answered in code, from
+// byo/byo.js AGENTS (the same data the Ask Larry page's "Not on Claude Code?" section renders), so the exact add line is never
+// reworded: live, the model refused Gemini and Grok, and told an Antigravity user to run `grok mcp add`. Each command comes with what
+// it does and the yes rule. A question naming Claude Code or Cursor is not one of these (the page answers those).
+const AGENT_NAMES = { gemini: /\bgemini\b/i, codex: /\bcodex\b/i, grok: /\bgrok\b/i };
+const OTHER_CLIENT = /\b(?:antigravity|(?:another|other|any|different|non[- ]?claude|third[- ]party)\s+(?:mcp\s+)?(?:client|agent|ai|cli|tool|harness|assistant|app)s?|not (?:on|using|with) claude(?: code)?|without claude(?: code)?|instead of claude(?: code)?|(?:switched|moved) (?:away )?(?:from claude|to (?:gemini|codex|grok|antigravity)))\b/i;
+const AGENT_INTENT = /\b(?:connect\w*|add\w*|install\w*|use|using|set ?up|plug\w*|hook (?:it )?up|wire\w*|work\w* with|mcp|server|how do i)\b/i;
+export const agentsAsked = q => { const t = String(q); return BYO.AGENTS.filter(g => AGENT_NAMES[g.id].test(t)); };
+export const isAgentAsk = q => { const t = String(q); return (agentsAsked(t).length > 0 || OTHER_CLIENT.test(t)) && AGENT_INTENT.test(t) && !isOverrideAsk(t) && !PROMPT_ASK.test(t) && !/\b(?:hooks?|laws?|constitution)\b/i.test(t); };
+export function agentReply(q) {
+  const t = String(q), named = agentsAsked(t), anti = /\bantigravity\b/i.test(t), list = named.length ? named : anti ? [] : BYO.AGENTS;
+  const one = g => `**${g.name}**${g.also ? ` (${g.also})` : ""}: have your agent show you this command, say what it does, and run it only after your yes.\n\n\`\`\`bash\n${g.add}\n\`\`\`\n\n${g.what} Check it with \`${g.check}\`. Source: its MCP docs, ${g.docs}`;
+  const parts = [];
+  if (anti) parts.push(`**Antigravity CLI**: ${BYO.ANTIGRAVITY}`);
+  parts.push(...list.map(one));
+  parts.push(BYO.ANY_CLIENT);
+  return `${parts.join("\n\n")}\n\nThe whole list, with Claude Code and Cursor: ${SITE}/ask-larry.html#other-agents`;
+}
+export const AGENT_SOURCES = [{ url: `${SITE}/ask-larry.html`, title: "Ask Larry" }];
+// BATCH B (Fred, 2026-10-21): the optional snapshot timer (Ch7) and the law-enforcing hooks (Ch21) are long, exact recipes. Live
+// through the model, the Linux answer lost its systemctl lines, the Mac answer ran out of tokens mid-script and cited Ch4, and the hook
+// answer said "only blocks once per session". So they are answered from the chapter's own markdown (served as /<slug>.md, the page
+// itself, one source), word for word: the section's opening paragraph, the parts the question asks for, and its wiring and checks.
+const MD_CACHE = new Map();
+async function chapterMd(env, request, slug) {
+  if (!MD_CACHE.has(slug)) { const r = await env.ASSETS.fetch(new Request(new URL(`/${slug}.md`, request.url))); MD_CACHE.set(slug, r.ok ? await r.text() : ""); }
+  return MD_CACHE.get(slug);
+}
+// the section under a heading, as paragraphs; a fenced block rides with the paragraph before it; each group keeps its bold label
+export function mdGroups(md, headRe) {
+  const lines = String(md).split("\n"), i = lines.findIndex(l => /^#{2,4} /.test(l) && headRe.test(l.replace(/^#+\s+/, "")));
+  if (i < 0) return [];
+  const lvl = lines[i].match(/^#+/)[0].length, groups = []; let cur = [], inCode = false;
+  const push = () => { const t = cur.join("\n").trim(); if (t) groups.push({ label: (t.match(/^\*\*([^*]+)\*\*/) || [, ""])[1].trim(), text: t }); cur = []; };
+  for (let j = i + 1; j < lines.length; j++) {
+    const l = lines[j], fence = l.trim().startsWith("```");
+    if (!inCode && (/^#{1,6} /.test(l) && l.match(/^#+/)[0].length <= lvl || /^---\s*$/.test(l))) break;
+    if (!inCode && !fence && l.trim() === "") { const next = lines.slice(j + 1).find(x => x.trim() !== ""); if (!next || !next.trim().startsWith("```")) push(); else cur.push(l); continue; }
+    if (fence) inCode = !inCode;
+    cur.push(l);
+  }
+  push();
+  return groups;
+}
+const SNAP_OS = [["Mac", /\b(?:mac(?:os|book)?|launchd|launch ?agents?|osx)\b/i], ["Linux", /\b(?:linux|systemd|ubuntu|debian|fedora|arch)\b/i], ["Cron", /\bcron\w*\b/i]];
+export async function sectionReply(env, request, question) {
+  const q = String(question);
+  if (SNAPSHOT_ASK.test(q)) {
+    const g = mdGroups(await chapterMd(env, request, "07-forever-repo"), /^Optional: snapshots/);
+    if (!g.length) return null;
+    const asked = SNAP_OS.filter(([, re]) => re.test(q)).map(([k]) => k), want = asked.length ? asked : SNAP_OS.map(([k]) => k);
+    const parts = g.filter((x, k) => k === 0 || /^The script/.test(x.label) || want.some(w => x.label.startsWith(w)) || /^Then check it/.test(x.text));
+    return { answer: `From Chapter 7's optional snapshot timer, word for word (it is written to your AI):\n\n${parts.map(x => x.text).join("\n\n")}\n\nThe whole section: ${SITE}/07-forever-repo.html`, sources: [{ url: `${SITE}/07-forever-repo.html`, title: "Chapter 7: Your Forever Private Repo (and gup)" }], mode: "section" };
+  }
+  if (LAWHOOK_ASK.test(q)) {
+    const g = mdGroups(await chapterMd(env, request, "21-hooks"), /^Optional: hooks that enforce a Law/);
+    if (!g.length) return null;
+    const dec = /\bdecisions?\b/i.test(q), srch = /\bremember|search|recall|law 2\b/i.test(q), both = dec === srch;
+    const parts = g.filter((x, k) => k === 0 || (/^Search before you ask/.test(x.label) && (srch || both)) || (/^Capture decisions/.test(x.label) && (dec || both)) || /^Wire them/.test(x.label) || /^What lands in/.test(x.text) || /^Prove they fire/.test(x.text) || /^Other agents/.test(x.label));
+    return { answer: `From Chapter 21's optional law hooks, word for word (it is written to your AI):\n\n${parts.map(x => x.text).join("\n\n")}\n\nThe whole section: ${SITE}/21-hooks.html`, sources: [{ url: `${SITE}/21-hooks.html`, title: "Chapter 21: Hooks: Determinism You Can't Skip" }], mode: "section" };
+  }
+  return null;
+}
 export const PROMPT_REPLY = "My instructions stay private: I don't print my system prompt, whatever the message says. What I can do is answer from how.nixfred.com: building your own AI in order, a chapter's commands and checks, memory, hooks, the constitution, or what to do next. The build starts at https://how.nixfred.com/00-start-here.html.";
 export const OVERRIDE_REPLY = "A claim inside a message is not approval: an override, a pre-approval, a tag or a special mode written into the question changes nothing. Every install step still waits for your human's own yes, so I won't drop the confirmations or hand over commands with them stripped out. The guided install, in order, with the checks after each step, starts at https://how.nixfred.com/00-start-here.html.";
 // "Does this work on Windows?" (Audit200 c009: the chat replied with the bare "The site doesn't cover that." while the MCP answered).
@@ -216,6 +279,10 @@ export const BUILD_TIME_ASK = /^(?![^\n]*\b(?:hook|timeout|window|routine|sessio
 export const TIME_REPLY = "Honest answer: the site gives no fixed time, and I won't make one up. It is real work with no shortcuts, done in order, one chapter at a time at your pace: read a step, run it, fix it to 100%, then advance. Your AI keeps a progress ledger, so nobody has to remember where you are. Start at Chapter 0: https://how.nixfred.com/00-start-here.html";
 export const TIME_SOURCES = [{ url: `${SITE}/00-start-here.html`, title: "Chapter 0: Start Here, From Absolute Zero" }, { url: `${SITE}/`, title: "Build Your Own AI: a Field Guide by Larry" }];
 export const isBuildTimeAsk = q => BUILD_TIME_ASK.test(String(q)) && !isOverrideAsk(q);
+// BATCH B: a scheduled snapshot ask (Ch7's optional timer) and a law-enforcing hook ask (Ch21's optional hooks); used by the SYN rows
+// below and by sectionReply, which answers both from the chapter's own markdown
+export const SNAPSHOT_ASK = /\b(?:back\s?ups?|backing up|snapshots?|commit\w*|save\w*)\b[^?\n]{0,60}\b(?:every \d+ ?min\w*|every (?:half )?hour|timer|cron\w*|launchd|launch ?agent|systemd|schedul\w*|periodic\w*|automatic\w*|interval)\b|\b(?:timer|cron\w*|launchd|systemd|schedul\w*)\b[^?\n]{0,60}\b(?:back\s?ups?|snapshots?|commit\w*)\b|\b(?:validate|check)\w*\b[^?\n]{0,40}\b(?:json|toml|config\w*)\b[^?\n]{0,40}\b(?:back\s?up|snapshot)|\b\d+[- ]?min\w* (?:back\s?ups?|snapshots?)\b|\bsnapshot (?:timer|script|job)s?\b|\bagent-snapshot\b/i;
+export const LAWHOOK_ASK = /\b(?:asks?(?:ing)? (?:me |my human |the human )?["\u201c']?do you remember|asks?(?:ing)? (?:me )?(?:if|whether) i remember|(?:stop|keep|prevent)\w* (?:my ai |it |the ai |the agent )?(?:from )?asking\b[^?\n]{0,30}\bremember|search\w* (?:its |the |my )?(?:memory|history) (?:first|before)|before (?:it |you )?asks?\b[^?\n]{0,30}\bremember|search[- ]before[- ]ask\w*)\b|\b(?:capture|log|record|save|write down)\w*\b[^?\n]{0,30}\bdecisions?\b[^?\n]{0,40}\b(?:hook|automatic\w*)|\b(?:hook|enforce\w*)\b[^?\n]{0,40}\b(?:law 2|law 18|decisions?|search (?:memory|history))\b/i;
 // Visitor slang -> the site's own vocabulary. Deterministic, so it still helps when the LLM rewrite fails.
 export const SYN = [
   // CHIPS (Fred, 2026-10-21): the beginner starter chips. Each one is vague on its own ("this", "it"), so BM25 sent them to whatever page
@@ -238,6 +305,9 @@ export const SYN = [
   [/\b(builds? (it|him|her)?sel(f|ves)|while i watch|watch (it|you) (build|work)|shortcut|on autopilot|hands[- ]off|do it all for me|fast(er|est)? (way|build|path))\b/i, "Expert Mode directive phases supervise the build one-command bootstrap install.md install.sh", ["expert", "05-bootstrap"]],
   [/\b(rules?|laws?|never (break|do)|golden)\b[^?]*\b(install\w*|set ?up|setting up)\b|\b(install\w*|set ?up)\b[^?]*\b(rules?|laws?|never)\b/i, "never overwrite add alongside identity Law 1 backup .seed conservative installer consent before each step", ["04-larry-stack", "05-bootstrap"]],
   [/\b(slow|sluggish|dumb|dumber|forgetful|context (is )?(full|filling)|long session)\b/i, "context discipline /compact /clear /context fill"],
+  // BATCH B (Fred, 2026-10-21): a scheduled snapshot ("back up every 30 minutes", "a timer / cron / launchd job that commits ~/.claude")
+  // is Ch7's "Optional: snapshots every 30 minutes, configs checked first"; before the general backup row so Ch7 leads, not Ch8's recovery
+  [SNAPSHOT_ASK, "snapshot timer every 30 minutes systemd launchd cron jq empty tomllib agent-snapshot", ["07-forever-repo"], /^Optional: snapshots every 30 minutes/],
   [/\b(back\s?ups?|backed up|lose (it|everything)|crash\w*|dies|died|new machine|laptop (dies|died|stolen))\b/i, "forever repo gup disaster recovery backup"],
   // the cost words of Ch0 Step 2 since the spine pass (no dollar figures, no "max plan"); audit rule 45 fails on a term the site no longer has
   // which model is cheapest / what a model costs is Ch18 (Audit200 c082: "whats the cheapest model i can get away with" was answered
@@ -250,6 +320,9 @@ export const SYN = [
   [/\b(phone|remote\w*|anywhere|other machines?|ssh)\b/i, "Tailscale mesh phone multi-host"],
   [/\b(name (it|my|the)|naming|call (it|my ai))\b/i, "naming the AI bootstrap spawn identity"],
   [/\b(telos|goals|values|knows? me|about me)\b/i, "TELOS deep context interview"],
+  // BATCH B: holding the AI to Law 2 ("search before it asks me if I remember") or capturing decisions with a hook is Ch21's
+  // "Optional: hooks that enforce a Law (search before you ask, capture decisions)"
+  [LAWHOOK_ASK, "Stop hook last_assistant_message decision block search-first.sh capture decisions Law 2 Law 18", ["21-hooks"], /^Optional: hooks that enforce a Law/],
   [/\b(always|automatic\w*|enforce\w*|guarantee\w*)\b/i, "hooks determinism enforce"],
   [{ test: q => /\b(safe\w*|danger\w*|permissions?|yolo|skip.permissions)\b/i.test(q) && !BEGINNER_RISK.test(q) }, "permissions danger mode dangerously-skip-permissions allow deny deny beats allow", ["19-permissions"]],
   // where the code of this site / its MCP server / the bot is (Audit200 m076 was refused): ask-larry's "Check the tools before you trust
@@ -284,6 +357,12 @@ export function labelChunks(idx, q) {
   const take = test => { const first = new Map(); idx.chunks.forEach((c, ci) => { if ((!named.size || named.has(c.p)) && !first.has(c.p) && test(c.h)) first.set(c.p, ci); }); if (first.size && first.size <= 2) out.push(...first.values()); };
   for (const m of t.matchAll(LABEL_RE)) { if (/^[a-z]$/.test(m[2]) && !CLAUSE_END.test(t.slice(m.index + m[0].length))) continue; const word = m[1].toLowerCase(), id = m[2].toLowerCase(), re = new RegExp(`(?:^|[\\s,(])${word}\\s+${id}(?![\\w])`, "i"); take(h => re.test(h)); }
   for (const m of t.matchAll(SECTION_RE)) { const re = new RegExp(`^${+m[1]}\\.${+m[2]}(?!\\d)`); take(h => re.test(h)); }
+  // BATCH B: "the Done when line for Chapter 5" names that chapter's "Done when" section (p08 fell out of the keyword top 3 when new
+  // copy on other pages shifted the term weights; the chapter was still pinned, its own Done when chunk was not). Every chapter named.
+  if (/\bdone[- ]when\b/i.test(t)) for (const pi of named) {               // its heading, or (Ch5) the chunk its Done when section folded into
+    const ci = idx.chunks.findIndex(c => c.p === pi && (/^Done when\b/i.test(c.h) || /\*\*Done when:\*\*/.test(c.t)));
+    if (ci >= 0) out.push(ci);
+  }
   return [...new Set(out)];
 }
 // the sections a question points at: a slang row's named section, or a label the question names
@@ -883,6 +962,18 @@ export async function answer(env, request, question, { history = [], page = null
     const src = [{ url: `${SITE}/00-start-here.html`, title: "Chapter 0: Start Here" }];
     await onEvent("meta", { mode: "prompt", scope: null }); await onEvent("token", { t: PROMPT_REPLY });
     const fin = { answer: PROMPT_REPLY, sources: src, refused: true, gated: true, prompt_ask: true, mode: "prompt", top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
+    await onEvent("final", fin); return fin;
+  }
+  { const sr = !isOverrideAsk(question) && !PROMPT_ASK.test(String(question)) ? await sectionReply(env, request, question).catch(() => null) : null;   // BATCH B: Ch7 / Ch21 optional recipes, word for word
+    if (sr) {
+      await onEvent("meta", { mode: sr.mode, scope: null }); await onEvent("token", { t: sr.answer });
+      const fin = { answer: sr.answer, sources: sr.sources, refused: false, section: true, mode: sr.mode, top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
+      await onEvent("final", fin); return fin;
+    } }
+  if (isAgentAsk(question)) {                                          // BATCH B: another agent's MCP add line, exact, from byo/byo.js
+    const a = agentReply(question);
+    await onEvent("meta", { mode: "agent", scope: null }); await onEvent("token", { t: a });
+    const fin = { answer: a, sources: AGENT_SOURCES, refused: false, agent: true, mode: "agent", top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
     await onEvent("final", fin); return fin;
   }
   if (isBuildTimeAsk(question)) {                                      // CHIPS 6: no page gives the build a time; never invent one

@@ -236,6 +236,85 @@ new machine     →  clone &lt;host&gt;_forever into ~/.claude, go     (Chapter 
 <blockquote>
 <p><strong>Larry&#39;s read, a quiet killer worth knowing:</strong> the most dangerous failure for a backup loop is not a crash, it&#39;s a <strong>hang</strong>. A <code>git push</code> into a stalled network can wait forever, and a backup that hangs forever is a backup that silently stopped; you find out the day the disk dies. The <code>gup</code> script and the SessionEnd hook on this site both guard against it now: they cap a stuck push with git&#39;s own timeouts (<code>GIT_HTTP_LOW_SPEED_TIME</code> for HTTPS, an SSH keepalive for SSH) rather than the <code>timeout</code> command, because macOS doesn&#39;t ship one and a naive <code>timeout</code> wrapper would just break on a Mac. If you ever write your own backup automation, do the same. Never let the network hang the heartbeat.</p>
 </blockquote>
+<h3>Optional: snapshots every 30 minutes, configs checked first</h3>
+<p>The session end hook saves you when a session ends. A long session, or a config edit you make by hand, can sit unsaved until then, and a broken <code>settings.json</code> can stop your hooks from loading at all. So add a timer: every 30 minutes it checks that the agent configs still parse (JSON with <code>jq empty</code>, TOML with Python&#39;s <code>tomllib</code>) and then commits <code>~/.claude</code> as a local git snapshot. It never deletes anything and never pushes; your session end backup and <code>gup</code> do the pushing. If a config does not parse, it writes the file name to <code>~/.claude/snapshot.log</code>, exits with an error and skips that snapshot, so you hear about it instead of committing over it. Show your human each command and say what it does, and run it only after their yes. Pick ONE scheduler: systemd on Linux, launchd on a Mac, or cron on a box with neither.</p>
+<p><strong>The script</strong> (both platforms). It writes <code>~/.claude/bin/agent-snapshot.sh</code>, makes it runnable, then runs it once by hand so you see it work:</p>
+<pre><code class="language-bash">mkdir -p ~/.claude/bin
+cat &gt; ~/.claude/bin/agent-snapshot.sh &lt;&lt;&#39;EOF&#39;
+#!/usr/bin/env bash
+# Every 30 minutes: check that the agent configs parse, then commit ~/.claude as a git snapshot.
+# It never deletes, never pushes (your session end backup and gup push), and stops loudly on a broken config.
+PATH=&quot;/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH&quot;
+dir=&quot;$HOME/.claude&quot;; log=&quot;$dir/snapshot.log&quot;; bad=0
+note() { echo &quot;$(date &#39;+%F %T&#39;) $*&quot; &gt;&gt; &quot;$log&quot;; }
+for f in &quot;$dir&quot;/*.json &quot;$HOME/.claude.json&quot; &quot;$HOME/.gemini/settings.json&quot;; do
+  [ -f &quot;$f&quot; ] || continue
+  jq empty &quot;$f&quot; 2&gt;/dev/null || { note &quot;bad JSON: $f&quot;; bad=1; }
+done
+for f in &quot;$HOME/.codex/config.toml&quot; &quot;$HOME/.grok/config.toml&quot;; do
+  [ -f &quot;$f&quot; ] || continue
+  if python3 -c &#39;import tomllib&#39; 2&gt;/dev/null; then
+    python3 -c &#39;import tomllib,sys;tomllib.load(open(sys.argv[1],&quot;rb&quot;))&#39; &quot;$f&quot; 2&gt;/dev/null || { note &quot;bad TOML: $f&quot;; bad=1; }
+  else
+    note &quot;TOML check skipped for $f: this python3 has no tomllib (it needs 3.11 or newer)&quot;
+  fi
+done
+[ &quot;$bad&quot; = 0 ] || exit 1          # no snapshot of a broken config: fix it, the next run commits
+cd &quot;$dir&quot; &amp;&amp; git rev-parse --is-inside-work-tree &gt;/dev/null 2&gt;&amp;1 || exit 0
+git add -A &amp;&amp; { git diff --cached --quiet || git commit -qm &quot;snapshot: $(date &#39;+%F %T&#39;)&quot;; }
+EOF
+chmod +x ~/.claude/bin/agent-snapshot.sh
+~/.claude/bin/agent-snapshot.sh &amp;&amp; git -C ~/.claude log -1 --oneline
+</code></pre>
+<p><strong>Linux, a systemd user timer.</strong> It writes a service that runs the script and a timer that starts it 5 minutes after boot and then 30 minutes after each run (<code>OnBootSec=</code>, <code>OnUnitActiveSec=</code>, per <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html">systemd.timer(5)</a>). There is no <code>Persistent=</code> line on purpose: that man page says it only has an effect on <code>OnCalendar=</code> timers. A user timer runs while your human is logged in.</p>
+<pre><code class="language-bash">mkdir -p ~/.config/systemd/user
+cat &gt; ~/.config/systemd/user/agent-snapshot.service &lt;&lt;&#39;EOF&#39;
+[Unit]
+Description=Check agent configs, then snapshot ~/.claude
+
+[Service]
+Type=oneshot
+ExecStart=%h/.claude/bin/agent-snapshot.sh
+EOF
+cat &gt; ~/.config/systemd/user/agent-snapshot.timer &lt;&lt;&#39;EOF&#39;
+[Unit]
+Description=Agent snapshot every 30 minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=30min
+
+[Install]
+WantedBy=timers.target
+EOF
+systemctl --user daemon-reload
+systemctl --user enable --now agent-snapshot.timer
+systemctl --user list-timers agent-snapshot.timer
+</code></pre>
+<p><strong>Mac, a launchd agent (untested on a real Mac, plist validated only).</strong> It writes a LaunchAgent that runs the script once when it loads (<code>RunAtLoad</code>) and then every 1800 seconds (<code>StartInterval</code>, per <a href="https://keith.github.io/xcode-man-pages/launchd.plist.5.html">launchd.plist(5)</a>), and loads it for your user. That man page notes an interval that falls while the Mac sleeps is missed; the next one runs as normal.</p>
+<pre><code class="language-bash">mkdir -p ~/Library/LaunchAgents
+cat &gt; ~/Library/LaunchAgents/com.how-nixfred.agent-snapshot.plist &lt;&lt;EOF
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;
+&lt;plist version=&quot;1.0&quot;&gt;
+&lt;dict&gt;
+  &lt;key&gt;Label&lt;/key&gt;&lt;string&gt;com.how-nixfred.agent-snapshot&lt;/string&gt;
+  &lt;key&gt;ProgramArguments&lt;/key&gt;&lt;array&gt;&lt;string&gt;$HOME/.claude/bin/agent-snapshot.sh&lt;/string&gt;&lt;/array&gt;
+  &lt;key&gt;StartInterval&lt;/key&gt;&lt;integer&gt;1800&lt;/integer&gt;
+  &lt;key&gt;RunAtLoad&lt;/key&gt;&lt;true/&gt;
+  &lt;key&gt;StandardOutPath&lt;/key&gt;&lt;string&gt;$HOME/.claude/snapshot.log&lt;/string&gt;
+  &lt;key&gt;StandardErrorPath&lt;/key&gt;&lt;string&gt;$HOME/.claude/snapshot.log&lt;/string&gt;
+&lt;/dict&gt;
+&lt;/plist&gt;
+EOF
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.how-nixfred.agent-snapshot.plist
+launchctl list | grep agent-snapshot
+</code></pre>
+<p><strong>Cron, if the box has neither.</strong> It adds one line to your crontab, keeping every line already there, and does nothing if the line is already in. <code>*/30</code> in the minute field runs at minute 0 and minute 30 of every hour (<a href="https://man7.org/linux/man-pages/man5/crontab.5.html">crontab(5)</a>):</p>
+<pre><code class="language-bash">crontab -l 2&gt;/dev/null | grep -q agent-snapshot.sh || { crontab -l 2&gt;/dev/null; echo &#39;*/30 * * * * &quot;$HOME/.claude/bin/agent-snapshot.sh&quot; &gt;&gt; &quot;$HOME/.claude/snapshot.log&quot; 2&gt;&amp;1&#39;; } | crontab -
+crontab -l | grep agent-snapshot
+</code></pre>
+<p>Then check it after the first interval: <code>git -C ~/.claude log --oneline -3</code> shows a <code>snapshot:</code> commit, and <code>~/.claude/snapshot.log</code> is empty or names a config to fix.</p>
 <hr>
 <h2>Done when: the forever repo (Chapter 7)</h2>
 <p><strong>Done when:</strong> <code>~/.claude</code> (and the LifeOS USER tree, if it is a symlink) has a PRIVATE remote, the last session&#39;s commit is pushed, <code>gup</code> is on the PATH, and the secrets choice was made on purpose with gitleaks run before the first push. With no GitHub account yet: the local-only choice is made on purpose and written down, and this check waits until there is one.</p>
@@ -290,5 +369,5 @@ command -v gup &amp;&amp; command -v gitleaks                               # bo
   <p class="al-foot">Grounded in how.nixfred.com, 500 characters max. <a href="ask-larry.html">Let your AI install this with you →</a></p>
 </aside>
 </div>
-<script src="assets/app.js?v=9qyzjr" defer></script>
+<script src="assets/app.js?v=1nzjirf" defer></script>
 </body></html>

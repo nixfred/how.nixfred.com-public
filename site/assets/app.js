@@ -298,6 +298,23 @@ var BYO = (function(){
   var TOOLS_SHA256 = '19b8df64540656d76efab4921207c4f1d25376d717717162fd053203d2295552';
   var CLAUDE_INSTALL = 'curl -fsSL https://claude.ai/install.sh | bash'; // Anthropic's native installer for macOS, Linux and WSL (code.claude.com/docs/en/setup)
   var RECIPE_BOX = 'https://github.com/nixfred/path-recipe-box';
+  // BATCH B (Fred, 2026-10-21): the same server from agents other than Claude Code. Written once here: the Ask Larry page renders
+  // its "Not on Claude Code?" section from it and the chat/MCP answer for these agents is built from it (ask/core.js). Each line is
+  // from that tool's own MCP docs, checked 2026-10-21 (docs: the URL beside it). Antigravity CLI has no documented MCP add command.
+  var MCP_URL = 'https://how.nixfred.com/mcp';
+  var AGENTS = [
+    { id: 'gemini', name: 'Gemini CLI', docs: 'https://geminicli.com/docs/tools/mcp-server/',
+      add: 'gemini mcp add --scope user --transport http how-nixfred ' + MCP_URL, check: 'gemini mcp list',
+      what: 'Adds the server over HTTP to your user settings, `~/.gemini/settings.json`, so it works in every project. Without `--scope user` it lands in the current project only.' },
+    { id: 'codex', name: 'Codex CLI', docs: 'https://developers.openai.com/codex/mcp/',
+      add: 'codex mcp add how-nixfred --url ' + MCP_URL, check: 'codex mcp list',
+      what: 'Adds a streamable HTTP server to `~/.codex/config.toml`, as a `[mcp_servers.how-nixfred]` table with `url = "' + MCP_URL + '"`.' },
+    { id: 'grok', name: 'Grok CLI', also: 'Grok Build', docs: 'https://docs.x.ai/build/features/mcp-servers',
+      add: 'grok mcp add --transport http how-nixfred ' + MCP_URL, check: 'grok mcp doctor how-nixfred',
+      what: 'Adds the server over HTTP to your user config, `~/.grok/config.toml` (pass `--scope project` only if you want it in one project). Grok also loads MCP servers from `~/.claude.json`, so if Claude Code already has it, run `grok mcp list` first instead of adding it twice.' }
+  ];
+  var ANTIGRAVITY = 'Gemini CLI\'s docs say it was replaced by Antigravity CLI for unpaid tier and Google One users on June 18th, 2026. I could not find a documented MCP add command for Antigravity CLI, so I won\'t guess one: use the any-MCP-client route, in your tool\'s own MCP settings.';
+  var ANY_CLIENT = 'Any other MCP client that supports streamable HTTP: add a server with the URL `' + MCP_URL + '`. No key, no login, no auth header.';
   // owner: GitHub's own rule (1 to 39 letters, digits or single inner hyphens); repo: letters, digits, . _ -
   var RE = /^https:\/\/github\.com\/([A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38})\/([A-Za-z0-9._-]{1,100})\/?$/;
 
@@ -439,7 +456,7 @@ var BYO = (function(){
   function aiPrompt(){ return build('ai'); }
   function recipePrompt(){ return build('recipe'); }
 
-  return { parse:parse, build:build, prompt:prompt, aiPrompt:aiPrompt, recipePrompt:recipePrompt, MCP_ADD:MCP_ADD, PUBLIC_REPO:PUBLIC_REPO, RECIPE_BOX:RECIPE_BOX, CLAUDE_INSTALL:CLAUDE_INSTALL, TOOLS_SHA256:TOOLS_SHA256 };
+  return { MCP_URL:MCP_URL, AGENTS:AGENTS, ANTIGRAVITY:ANTIGRAVITY, ANY_CLIENT:ANY_CLIENT, parse:parse, build:build, prompt:prompt, aiPrompt:aiPrompt, recipePrompt:recipePrompt, MCP_ADD:MCP_ADD, PUBLIC_REPO:PUBLIC_REPO, RECIPE_BOX:RECIPE_BOX, CLAUDE_INSTALL:CLAUDE_INSTALL, TOOLS_SHA256:TOOLS_SHA256 };
 })();
 
 // the /byo page: form in, prompt out (textContent only, so nothing the visitor types is ever parsed as HTML)

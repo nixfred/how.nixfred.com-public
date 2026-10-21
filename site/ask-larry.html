@@ -61,6 +61,21 @@
   }
 }</code></pre>
 <p>Then tell your AI something like: <em>"Use the how-nixfred MCP to plan my install on my Mac, and take me through it one step at a time. Ask me before you run anything."</em></p>
+<h3 id="other-agents">Not on Claude Code? Gemini CLI, Codex CLI, Grok CLI, or any MCP client</h3>
+<p>The guide is written around Claude Code, but its MCP server works with any agent that speaks MCP over streamable HTTP. Each command below adds the same read-only server under the name <code>how-nixfred</code>. Have your agent show you the command, say in plain words what it does, and run it only after your yes. The lines come from each tool's own MCP docs, checked in October 2026; if your version answers differently, its docs win.</p>
+<p><b>Gemini CLI</b> (<a href="https://geminicli.com/docs/tools/mcp-server/">its MCP docs</a>):</p>
+<pre><code>gemini mcp add --scope user --transport http how-nixfred https://how.nixfred.com/mcp</code></pre>
+<p>Adds the server over HTTP to your user settings, <code>~/.gemini/settings.json</code>, so it works in every project. Without <code>--scope user</code> it lands in the current project only. Check it with <code>gemini mcp list</code>.</p>
+<p><b>Antigravity CLI.</b> Gemini CLI's docs say it was replaced by Antigravity CLI for unpaid tier and Google One users on June 18th, 2026. I could not find a documented MCP add command for Antigravity CLI, so I won't guess one: use the any-MCP-client route, in your tool's own MCP settings.</p>
+<p><b>Codex CLI</b> (<a href="https://developers.openai.com/codex/mcp/">its MCP docs</a>):</p>
+<pre><code>codex mcp add how-nixfred --url https://how.nixfred.com/mcp</code></pre>
+<p>Adds a streamable HTTP server to <code>~/.codex/config.toml</code>, as a <code>[mcp_servers.how-nixfred]</code> table with <code>url = "https://how.nixfred.com/mcp"</code>. Check it with <code>codex mcp list</code>.</p>
+<p><b>Grok CLI</b>, Grok Build (<a href="https://docs.x.ai/build/features/mcp-servers">its MCP docs</a>):</p>
+<pre><code>grok mcp add --transport http how-nixfred https://how.nixfred.com/mcp</code></pre>
+<p>Adds the server over HTTP to your user config, <code>~/.grok/config.toml</code> (pass <code>--scope project</code> only if you want it in one project). Grok also loads MCP servers from <code>~/.claude.json</code>, so if Claude Code already has it, run <code>grok mcp list</code> first instead of adding it twice. Check it with <code>grok mcp doctor how-nixfred</code>.</p>
+<p><b>Any other MCP client</b> that supports streamable HTTP: add a server with the URL <code>https://how.nixfred.com/mcp</code>. No key, no login, no auth header.</p>
+<p><b>Laws travel; hooks may not.</b> The constitution is a file, so any agent can load it. Claude Code's hooks (<a href="21-hooks.html">Chapter 21</a>) belong to Claude Code, and another agent may have no equivalent, so there the law stays in the constitution and your AI keeps it by habit.</p>
+
 <p>What your AI gets (all read-only, all grounded in this site):</p>
 <ul>
 <li><code>get_install_plan(os, starting_point)</code>: the whole route in build order, Chapter 0's install steps first, each with its page link and its "done when" line. Pass <code>starting_point: "built"</code> and it returns the 12-check audit of an AI that is already built instead.</li>
@@ -98,5 +113,5 @@
   <p class="al-foot">Grounded in how.nixfred.com, 500 characters max. <a href="ask-larry.html">Let your AI install this with you →</a></p>
 </aside>
 </div>
-<script src="assets/app.js?v=9qyzjr" defer></script>
+<script src="assets/app.js?v=1nzjirf" defer></script>
 </body></html>
