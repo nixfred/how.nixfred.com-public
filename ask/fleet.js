@@ -554,7 +554,7 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   if (premise) body = falsePremise(q, isFleetRefusal(body) ? "" : body, ctx); else body = unPremise(q, body);   // CHIPS: no "No, the site does not say that." for a question that claims nothing
   body = withVariants(noMeta(body), sp);                                  // m008: the zsh form the question asked for
   if (!premise && !fu && !isFleetRefusal(body)) body = safetyLead(q, costLead(q, body, ctx), ctx);
-  { const safe0 = safeSource(body, ctx); if (safe0 && !cited.includes(safe0)) cited.unshift(safe0); }   // the site chat's path and model-id guards (PR #29, eval c05) apply here too
+  { const safe0 = safeSource(body, ctx); if (safe0 && !cited.some(p => normUrl(p.url) === normUrl(safe0.url))) cited.unshift(safe0); }   // the site chat's path and model-id guards (PR #29, eval c05) apply here too
   body = guard(body.replace(/\n*\s*The sites? (?:don'?t|doesn'?t) cover that\.\s*$/i, "")).replace(/^(\s*>?\s*)\**\s*(snark|snarky line|wry line)\s*\**\s*:\s*\**\s*/gim, "$1");   // a voice label is not part of the answer
   const asModelSaid = body;
   body = stripEcho(body, history).trim();   // whatever the model still repeated from an earlier answer

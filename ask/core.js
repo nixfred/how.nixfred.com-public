@@ -695,17 +695,24 @@ export const COST_LINE = "It's free plus your Claude subscription: the guide, th
 export const isCostAsk = q => COST_ASK.test(q) && !COST_OF_OTHER.test(q) && COST_OF_THIS.test(q) && !COST_NOT.test(q);
 // CHIPS (Fred, 2026-10-21): "Is it dangerous?" must get the honest answer first: the agent asks before every command, you audit it, and
 // nothing runs without your yes. Live, the model answered from Ch19 ("danger mode is safe when..."). Each clause of SAFE_LINE is a line
-// of the home page, /byo or /recipe-box; it opens the answer when the passages carry those lines and the model left them out.
+// of the home page, /byo or /recipe-box; it opens the answer when the model left it out. It does not wait for those passages to be packed:
+// with real Vectorize, Ch19's danger-mode chunks and the rewrite's page picks crowd them out of the pack (2026-10-21 run), and the line is the
+// site's own either way; the home page is cited when no packed passage carries it.
 export const SAFE_LINE = "Honest answer: you stay in charge. Your agent asks before it runs anything, shows you each command and says in plain words what it does, and nothing gets installed, run or pushed without your yes. Don't trust me, audit it: the code is public at https://github.com/nixfred/how.nixfred.com-public.";
 export function safetyLead(question, body, ctx) {
-  if (!BEGINNER_RISK.test(question) || !ctx.some(p => /asking (?:you )?before it runs anything|without your yes/i.test(p.text))) return body;
+  if (!BEGINNER_RISK.test(question)) return body;
   return /without your yes/i.test(body) && /audit it/i.test(body) ? body : `${SAFE_LINE}\n\n${body}`.trim();
 }
 // the passage SAFE_LINE was taken from is cited when the line opens the answer
-export const safeSource = (body, ctx) => String(body).startsWith(SAFE_LINE) ? ctx.find(p => /asking (?:you )?before it runs anything|without your yes/i.test(p.text)) || null : null;
+export const SAFE_SOURCE = { url: `${SITE}/`, title: "Build Your Own AI: a Field Guide by Larry" };
+export const safeSource = (body, ctx) => String(body).startsWith(SAFE_LINE) ? ctx.find(p => /asking (?:you )?before it runs anything|without your yes/i.test(p.text)) || SAFE_SOURCE : null;
 export function costLead(question, body, ctx) {
   if (!isCostAsk(question) || !ctx.some(p => /free plus your subscription/i.test(p.text))) return body;
-  return /\bfree\b[^.]{0,40}\bsubscription\b/i.test(body) ? body : `${COST_LINE} ${body}`.trim();
+  // CHIPS 5: the line says whose subscription (Fred, 2026-10-21: "free plus your Claude subscription"); the fleet answered "free plus your
+  // subscription". An unquoted mention gains "Claude"; a quoted one is the page's words and stays, with COST_LINE in front.
+  if (/\bfree\b[^.]{0,40}\bClaude subscription\b/i.test(body)) return body;
+  const named = body.replace(/(^|[^"\u201c'\w])(free plus your) subscription\b/i, "$1$2 Claude subscription");
+  return named !== body ? named : `${COST_LINE} ${body}`.trim();
 }
 // Audit200 RC9 rule 20, made sure: "the passage", "as stated in the passage", "passage [2]" become "the site" (outside code; m010,
 // c053, c064, m068, m070, m090, m091 leaked them). Lettered options ("choice (b)") cannot be repaired here; rule 20 asks for lists.
@@ -986,7 +993,7 @@ export async function answer(env, request, question, { history = [], page = null
       body = noMeta(body);
       body = withVariants(body, sp);                                       // m008: the zsh form the question asked for
       if (!lead && !isRefusal(body)) body = safetyLead(question, costLead(question, body, ctx), ctx);
-      const safe0 = safeSource(body, ctx); if (safe0 && !cited.includes(safe0)) cited.unshift(safe0);
+      const safe0 = safeSource(body, ctx); if (safe0 && !cited.some(p => normUrl(p.url) === normUrl(safe0.url))) cited.unshift(safe0);
       if (!isRefusal(body)) body = body.replace(/\n*\s*The site doesn'?t cover that\.\s*$/i, "").replace(/\s*The site doesn'?t cover that\.\s*(?=\n)/gi, "");   // a real answer never ends in the refusal
       const asModelSaid = body;
       body = stripEcho(body, history).trim();                           // whatever the model still repeated from an earlier answer
