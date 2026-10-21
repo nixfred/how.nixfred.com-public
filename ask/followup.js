@@ -34,6 +34,22 @@ const BARE_NEXT = /^(?:(?:and|ok|okay|so|well|alright|cool|great|thanks|thank yo
 // the phrase has to END the question: "what is next js" and "what is the next release of X" are ordinary questions
 const NEXT_ASK = /(?:^|\s)(?:what(?:'?s| is| comes| should i do| do i do| am i supposed to do| to do)?(?: the)? next|the next step|next step|what(?:'?s| is) after (?:that|this|those|these)|then what|what then|what now|now what|and then what|where (?:do i|should i) go (?:from here|next)|what do i do after(?: that| this)?)(?: from here| now| then)?$/;
 export const isNextAsk = q => { const s = squash(q); return s.length > 0 && s.length <= 120 && (BARE_NEXT.test(s) || NEXT_ASK.test(s)); };
+// "what comes after telos?", "what's next after memory", "which chapter is after chapter 11": the visitor names where they are
+// (Audit200, live 2026-10-20: "what comes after telos?" cited telos-questions and the fleet chat refused it). The topic is a chapter
+// number or a word of a chapter's slug or title; the answer is the chapter after it.
+const AFTER_ASK = /^(?:(?:so|ok|okay|and|then)\s+)*(?:what(?:'?s| is)?|which chapter(?: is| comes)?|where do i go|what do i do|what should i do)\s+(?:comes\s+|goes\s+|is\s+)?(?:next\s+|right\s+)?after\s+(?:the\s+|my\s+|a\s+)?(.{2,60}?)(?:\s+chapter)?$/;
+export function afterTopic(q, chapters) {
+  const m = squash(q).match(AFTER_ASK); if (!m) return null;
+  const t = m[1].trim(), n = t.match(/^(?:ch(?:apter)?\s*)?(\d{1,2})$/);
+  if (n) return chapters.some(c => c.n === +n[1]) ? +n[1] : null;
+  if (/^(?:that|this|those|these|it)$/.test(t)) return null;          // "what's after that": the history decides (NEXT_ASK)
+  const words = t.split(" ").filter(w => w.length >= 4 && !GENERIC.has(w));
+  for (const c of [...chapters].sort((a, b) => a.n - b.n)) {
+    const own = new Set([...c.slug.replace(/^\d+-/, "").split("-"), ...String(c.title || "").toLowerCase().split(/[^a-z0-9.]+/)].filter(w => w.length >= 4 && !GENERIC.has(w)));
+    if (words.some(w => own.has(w) || own.has(w.replace(/s$/, "")))) return c.n;
+  }
+  return null;
+}
 // "if I have telos and memory ...": the visitor says what they have done, which can be ahead of what Larry last cited
 const HAVE = /\b(?:i have|i've|ive|i already have|already have|i got|we have|i finished|i did|i set up|i'?m done with|done with)\b/;
 const GENERIC = new Set(["the", "and", "your", "files", "build", "plan", "beyond", "chat", "stack", "start", "here", "ask", "first", "session", "with", "from", "that", "this"]);
@@ -48,14 +64,15 @@ function chaptersNamed(q, chapters) {
 // else {from, n, slug, url, title, query, lead, note}: the chapter after `from`, the standalone query for it, the line that opens the
 // answer, and the instruction line for the model. A conversation already at the last chapter returns {end: true, from}.
 export function nextStep(chapters, q, history, scopeSlug = null) {
-  if (!isNextAsk(q)) return null;
   const list = [...chapters].filter(c => Number.isInteger(c.n)).sort((a, b) => a.n - b.n);
   if (!list.length) return null;
+  const after = afterTopic(q, list);
+  if (!isNextAsk(q) && after === null) return null;
   const scoped = scopeSlug ? list.find(c => c.slug === scopeSlug)?.n : undefined;
   const last = lastChapter(history);
   const base = last ?? scoped ?? null;
   const named = chaptersNamed(q, list);
-  const pos = Math.max(...[base, ...named].filter(n => n !== null && n !== undefined), -1);
+  const pos = after ?? Math.max(...[base, ...named].filter(n => n !== null && n !== undefined), -1);   // "after telos" says where they are
   if (pos < 0 && base === null && !named.length) return null;
   const nxt = list.find(c => c.n > pos);
   if (!nxt) return { end: true, from: pos };

@@ -13,7 +13,7 @@
 import { normUrl } from "./text.js";
 import SITE_DIRECTORY from "./site-directory.json";
 import { nextStep, convoNote, echoView, stripEcho, chapterOfUrl } from "./followup.js";
-import { MODELS, LIMITS, synExpand, embedQueries, isInjection, siteVote, loadIndex, stepPassage, CHECK_ASK, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
+import { MODELS, LIMITS, synExpand, embedQueries, isInjection, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
 
 // the three ways to start, exactly as the start cards on nixfredos.com link them (spine amendment 2026-10-20 6:15 PM:
 // nixfredos.com carries no steps, they all live on how.nixfred.com). Point 1 is the recipe box page, https://how.nixfred.com/recipe-box: the one start path (not nixfredos.com/build).
@@ -483,9 +483,14 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   const dirFor = about.length ? about : ABOUT_FRED.test(q) ? [DIR_BY_ID.nixfred] : [];
   // a Done when / Verify / "how do I check it" question about a guide chapter gets that step's own lines first, from how.nixfred.com's
   // step data (Audit200 RC3); the chapter is the one named, else a how chapter among the top 3 hits. No how index: no passage.
-  const sp = !fu && CHECK_ASK.test(q) ? await loadIndex(env, request).then(hi => stepPassage(hi, q, hits.slice(0, 3).map(h => hi.byNorm.get(normUrl(view.pages[view.chunks[h].p].url))).filter(i => i !== undefined)), () => null) : null;
+  const hi = !fu && !route ? await loadIndex(env, request).catch(() => null) : null;
+  const sp = hi && CHECK_ASK.test(q) ? stepPassage(hi, q, hits.slice(0, 3).map(h => hi.byNorm.get(normUrl(view.pages[view.chunks[h].p].url))).filter(i => i !== undefined)) : null;
+  // the guide page a slang rule or "Chapter N" pins (memory -> Ch11; Audit200: live "how do I set up recall?" cited /spawn) is in the
+  // passages even when the vectors missed it: its best keyword chunk for the question, from how.nixfred.com's index
+  const pinPg = hi ? [...synPages(hi, q), ...chapterPins(hi, q)].map(i => hi.pages[i]).find(Boolean) : null;
+  const pinCtx = pinPg && !sp && !view.pages.some(p => normUrl(p.url) === normUrl(pinPg.url)) ? (() => { const ci = bm25(hi, `${q} ${ret.syn || ""}`, { page: hi.bySlug.get(pinPg.slug), pool: 1 })[0]; return ci === undefined ? null : { url: pinPg.url, title: pinPg.title, slug: pinPg.slug, heading_path: hi.chunks[ci].hp, text: hi.chunks[ci].t.slice(0, 2400) }; })() : null;
   const ctx = [...dirFor.map(d => ({ url: d.url, title: `${d.name} (site directory)`, slug: d.url, heading_path: "", text: `${d.name} is at ${d.url}. What it is: ${d.role}` })),
-    ...(sp ? [sp] : []), ...pack(view, hits, ret.syn ? [...rw.queries, ret.syn] : rw.queries, sp ? { budget: LIMITS.budget - sp.text.length - 140 } : {})];
+    ...(sp ? [sp] : []), ...(pinCtx ? [pinCtx] : []), ...pack(view, hits, ret.syn ? [...rw.queries, ret.syn] : rw.queries, sp || pinCtx ? { budget: LIMITS.budget - (sp || pinCtx).text.length - 140 } : {})];
   const messages = fleetMessages(site, q, ctx, idx, history, fu);
   const lead = fu ? scrub(`Next up: [Chapter ${fu.n}: ${fu.title}](${fu.url}).`) + "\n\n" : "";   // a next-step answer always opens by naming its chapter
   let raw = "", model = MODELS.chat;
@@ -505,9 +510,10 @@ export async function fleetAnswer(env, request, site, q, history = []) {
     // a start question is never "not covered": the recipe box is the one start path
     if (!fu && START_PATH.test(q)) return { answer: `Start here, the recipe box: ${RECIPE_URL}`, sources: [{ title: byNorm.get(normUrl(RECIPE_URL))?.title || "The Recipe Box", url: RECIPE_URL }], site, refused: false, why: "start path", mode: ret.mode, model };
     if (route || dirFor.length) return { answer: route ? nothingOn(route) : directoryAnswer(dirFor), sources: dirSources(route ? [route] : dirFor), site, refused: false, why: "directory (model had nothing)" };
-    return { answer: say(REFUSE_TEXT, site), sources: [], site, refused: true, why: "not covered (model)" };
+    if (!fu) return { answer: say(REFUSE_TEXT, site), sources: [], site, refused: true, why: "not covered (model)" };
   }
-  let { body, cited } = citations(vis, ctx);
+  // a next-step ask is never refused (Audit200: live "what comes after telos?" was): the model's refusal becomes its chapter's own words
+  let { body, cited } = citations(fu && isFleetRefusal(vis) ? (ctx.find(c => normUrl(c.url) === normUrl(fu.url))?.text.slice(0, 420).trim() || "") : vis, ctx);
   const g = groundCommands(body, ctx, cited); body = g.body;
   for (const p of g.support) if (!cited.includes(p)) cited.push(p);
   body = groundModelIds(groundPaths(body, ctx, cited).body, ctx).body;   // the site chat's path and model-id guards (PR #29, eval c05) apply here too
@@ -519,7 +525,7 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   if (fu || !START_ASK.test(q)) { const plain = l => l.replace(/[*_`]|\[|\]\([^)]*\)/g, "").replace(/^\s*(\d+[.)]|[-*])\s*/, "").trim(); const kept = body.split("\n").filter(l => !START.some(t => plain(l).startsWith(t.split(":")[0]) && plain(l).includes(t.slice(t.lastIndexOf("https://")).replace(/[\s)].*$/, "")))); if (kept.join("").trim().length >= 40) body = kept.join("\n").replace(/\n{3,}/g, "\n\n").trim(); }
   const hireOk = HIRE_ASK.test(q);
   if (!hireOk) { body = body.split("\n").filter(l => !HIRE_LINE.test(l)).join("\n").replace(/\n{3,}/g, "\n\n").trim(); cited = cited.filter(p => !/get-in-touch/.test(p.url)); }
-  if (isFleetRefusal(body) || !body) return { answer: say(REFUSE_TEXT, site), sources: [], site, refused: true, why: "not covered (model)" };
+  if (!fu && (isFleetRefusal(body) || !body)) return { answer: say(REFUSE_TEXT, site), sources: [], site, refused: true, why: "not covered (model)" };
   // a bare fleet address with a path ("nixfred.com/portfolio/") becomes a real link first
   body = body.replace(/(?<![\w\/.:@-])((?:[a-z0-9-]+\.)?(?:nixfred\.com|nixfredos\.com)\/[^\s)\]>"'<`*]*)/gi, "https://$1");
   // a link to an indexed page is written exactly as the page's canonical URL (no stray trailing slash or .html)
@@ -543,6 +549,8 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   const bl = body.toLowerCase().replace(/[`*_]/g, "");   // "(and `gup`)" still names "(and gup)"
   for (const c of ctx) { const pg = byNorm.get(normUrl(c.url)); const t = pg ? String(pg.short).toLowerCase() : ""; if (t.split(" ").length >= 2 && t.length >= 8 && bl.includes(t) && !sources.some(x => normUrl(x.url) === normUrl(c.url))) sources.push({ title: c.title, url: c.url }); }
   if (!sources.length && ctx.length) sources.push({ title: ctx[0].title.replace(/ \(site directory\)$/, ""), url: ctx[0].url });
+  // the pinned guide page leads the sources when the answer used it (the site chat does the same)
+  if (pinPg && !fu) { const k = sources.findIndex(x => normUrl(x.url) === normUrl(pinPg.url)); if (k > 0) sources.unshift(...sources.splice(k, 1)); }
   // a next-step answer names its chapter first, cites it first, and never cites a later chapter than it (that is how the chat knows where it is)
   if (fu) {
     const pg = byNorm.get(normUrl(fu.url));

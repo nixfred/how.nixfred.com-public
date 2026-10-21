@@ -110,7 +110,8 @@ export function siteVote(idx, q) {
 
 // Visitor slang -> the site's own vocabulary. Deterministic, so it still helps when the LLM rewrite fails.
 export const SYN = [
-  [/\b(remember\w*|recall|memor\w*|forget\w*|last week|yesterday)\b/i, "memory LMF mem search CLAUDE.md context.md recall archive"],
+  // pins Ch11, the memory chapter (Audit200: live "how do I set up recall?" cited Ch4 first, the fleet chat cited /spawn)
+  [/\b(remember\w*|recall|memor\w*|forget\w*|last week|yesterday)\b/i, "memory LMF mem search CLAUDE.md context.md recall archive", ["11-memory-files"]],
   [/\b((past|old|previous|earlier) (conversations?|chats?|sessions?)|months? ago|dig up|talked about|said before)\b/i, "mem search LMF memory archive recall past sessions"],
   [/\b(week to week|changes? (often|a lot|weekly)|current (state|status|work)|what i'?m working on)\b/i, "context.md current state working memory CLAUDE.md", ["11-memory-files"]],
   [/\b(saves? everything|one[- ]word|commit and push|save (it|my work|everything))\b/i, "gup one-word commit push forever repo", ["07-forever-repo"]],
@@ -259,7 +260,7 @@ export async function retrieve(env, idx, question, { k = LIMITS.topK, page = nul
     const p = idx.chunks[i].p; if ((perPage.get(p) || 0) >= MAX_PER_PAGE) continue;
     perPage.set(p, (perPage.get(p) || 0) + 1); out.push(i);
   }
-  return { hits: out, queries, pickedPages: rw.pages, pinned: [...new Set([...rw.pages, ...sp])], syn, onTopic: rw.onTopic, rewriteOk: rw.ok, mode, retrieveMs: Date.now() - t0 };
+  return { hits: out, queries, pickedPages: rw.pages, pinned: [...new Set([...rw.pages, ...sp])], synPinned: sp, syn, onTopic: rw.onTopic, rewriteOk: rw.ok, mode, retrieveMs: Date.now() - t0 };
 }
 
 // ---------------------------------------------------------------- per-page context packing (port of select.pack)
@@ -577,7 +578,7 @@ export async function answer(env, request, question, { history = [], page = null
     const vis = scrub(visible(raw)).trim();
     const fredLine = /^i only know how\.nixfred\.com\b/i.test(vis) && !PRIVATE_ASK.test(question);   // the model gave rule 14's line itself
     if (dir && isRefusal(vis)) return viaDirectory(true);   // the chapters had nothing, but the question names a site Fred runs
-    if (isRefusal(vis) && (fredLine || vis.toLowerCase().startsWith(REFUSAL.toLowerCase().slice(0, -1)) || /^the site (doesn'?t|does not) (cover|mention|describe|explain)\b/i.test(vis))) fin = { answer: fredLine ? FRED_REFUSAL : refusal, sources: [], refused: true, mode: ret.mode, model };
+    if (!lead && isRefusal(vis) && (fredLine || vis.toLowerCase().startsWith(REFUSAL.toLowerCase().slice(0, -1)) || /^the site (doesn'?t|does not) (cover|mention|describe|explain)\b/i.test(vis))) fin = { answer: fredLine ? FRED_REFUSAL : refusal, sources: [], refused: true, mode: ret.mode, model };
     else {
       let { body, cited } = citations(vis, ctx);
       const g = groundCommands(body, ctx, cited); body = g.body; ungrounded = g.flagged;
@@ -588,11 +589,15 @@ export async function answer(env, request, question, { history = [], page = null
       const asModelSaid = body;
       body = stripEcho(body, history).trim();                           // whatever the model still repeated from an earlier answer
       if (!body && asModelSaid.trim()) body = fu && !fu.end ? (ctx.find(p => p.slug === fu.slug)?.text.slice(0, 420).trim() || "") : "That is what I covered just above, so I won't repeat it. Ask about one part of it and I'll go deeper.";
+      if (lead && isRefusal(body)) body = ctx.find(p => p.slug === fu.slug)?.text.slice(0, 420).trim() || "";   // a next-step ask is never refused: its chapter's own words
       if (lead) {                                                       // next-step answer: it names its chapter, cites it first, and never cites a later chapter than it
         const nx = ctx.find(p => p.slug === fu.slug) || { url: fu.url, title: fu.title, slug: fu.slug };
         cited = [nx, ...cited.filter(p => p !== nx && !(chapterOfUrl(p.url) > fu.n) && chapterOfUrl(p.url) !== null)];
         body = lead + body;
       }
+      // the page a slang rule or "Chapter N" pinned (memory -> Ch11) leads the sources when the answer used it
+      const lead0 = lead ? null : cited.find(p => ret.synPinned.some(pi => idx.pages[pi].slug === p.slug));
+      if (lead0) cited = [lead0, ...cited.filter(p => p !== lead0)];
       if (!cited.length && ctx.length) cited = [ctx[0]];
       fin = { answer: body.trim(), sources: cited.map(p => ({ url: p.url, title: p.title })), refused: isRefusal(body), mode: ret.mode, model, ...(ungrounded ? { ungrounded_commands: ungrounded } : {}), ...(gp.flagged ? { ungrounded_paths: gp.flagged } : {}) };
     }
