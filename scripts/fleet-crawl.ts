@@ -76,6 +76,7 @@ export function robotsRules(txt: string): (path: string) => boolean {
     return best ? best[0] : true; };
 }
 const ROOT = `${import.meta.dir}/..`;
+const EXTRA: { extra?: { host: string; name: string; role: string; about?: string }[]; keys?: Record<string, string[]> } = existsSync(`${ROOT}/fleet/extra-sites.json`) ? JSON.parse(readFileSync(`${ROOT}/fleet/extra-sites.json`, "utf8")) : {};
 
 export function redact(t: string): string {
   t = t.replace(/\b[A-Za-z0-9]+\b/g, w => w.length <= 8 && HOST_HASHES.has(`${w.length}:${fnv1a(w.toLowerCase()).toString(36)}`) ? "one of my machines" : w);
@@ -144,7 +145,13 @@ async function knowledgeSites(): Promise<{ list: any[]; out: { host: string; why
     const host = String(x.host || ""); if (WIDGET_HOSTS.has(host)) continue;
     if (!KNOWLEDGE_HOST.test(host)) { out.push({ host, why: DENY_HOSTS.has(host) ? "family / personal denylist" : "not on *.nixfred.com (out of scope)" }); continue; }
     if (DENY_HOSTS.has(host) || (x.aliases || []).some((a: string) => DENY_HOSTS.has(a))) { out.push({ host, why: "family / personal denylist" }); continue; }
-    list.push({ id: host, origin: `https://${host}`, url: x.url || `https://${host}/`, kind: "knowledge", title: x.title || host, about: x.desc?.line || x.title || "" });
+    list.push({ id: host, origin: `https://${host}`, url: x.url || `https://${host}/`, kind: "knowledge", title: x.title || host, about: x.desc?.line || x.title || "", card: x.desc?.card || x.desc?.long || "" });
+  }
+  // live *.nixfred.com sites the registry does not list yet (fleet/extra-sites.json, each one checked with curl)
+  for (const x of EXTRA.extra || []) {
+    if (list.some(k => k.id === x.host)) continue;
+    if (DENY_HOSTS.has(x.host) || !KNOWLEDGE_HOST.test(x.host)) { out.push({ host: x.host, why: DENY_HOSTS.has(x.host) ? "family / personal denylist" : "not on *.nixfred.com (out of scope)" }); continue; }
+    list.push({ id: x.host, origin: `https://${x.host}`, url: `https://${x.host}/`, kind: "knowledge", title: x.name, about: x.role, card: x.about || x.role });
   }
   return { list, out };
 }
@@ -174,7 +181,12 @@ if (import.meta.main) {
   const sites: any[] = []; const skipped: { url: string; why: string }[] = [];
   const prev = existsSync(`${ROOT}/fleet/crawl.json`) ? JSON.parse(readFileSync(`${ROOT}/fleet/crawl.json`, "utf8")) : null;
   const { list, out } = await knowledgeSites();
+  // --only=host,host crawls just those sites and keeps every other site's last snapshot (a small, reviewable diff)
+  const only = (process.argv.find(a => a.startsWith("--only=")) || "").slice(7).split(",").map(x => x.trim()).filter(Boolean);
+  if (only.length) for (const k of prev?.skipped || []) if (!only.includes(k.url.replace(/^https?:\/\//, "").split("/")[0])) skipped.push(k);
   for (const s of [...CRAWL_SITES.map(x => ({ ...x, kind: "widget" })), ...list]) {
+    const kept = only.length && !only.includes((s as any).id) ? prev?.sites?.find((x: any) => x.id === (s as any).id) : null;
+    if (only.length && !only.includes((s as any).id)) { if (kept) sites.push(kept); continue; }
     const { docs, source, why } = await crawlSite(s, skipped);
     // a site that is down right now keeps its last snapshot instead of vanishing from the index
     const old = prev?.sites?.find((x: any) => x.id === s.id);
@@ -184,8 +196,9 @@ if (import.meta.main) {
   }
   // ONE site directory (ask/site-directory.json), used at runtime for "which site is X" answers and auto-linking
   const directory = [...MAIN_DIRECTORY.map(d => ({ ...d, kind: "widget" })),
-    ...list.map(k => ({ id: k.id, host: k.id, url: k.url.endsWith("/") ? k.url : k.url + "/", name: k.title, role: redact(k.about), kind: "knowledge",
-      keys: [k.id, `${k.id.split(".")[0]} site`, `${k.id.split(".")[0]} website`, k.title.toLowerCase()].filter((x, i, a) => x && a.indexOf(x) === i) }))];
+    ...list.map(k => { const label = k.id.split(".")[0];
+      return { id: k.id, host: k.id, url: k.url.endsWith("/") ? k.url : k.url + "/", name: k.title, role: redact(k.about), about: redact(String(k.card || "")).slice(0, 260), kind: "knowledge",
+        keys: [k.id, ...["site", "website", "page", "thing", "app"].map(w => `${label} ${w}`), k.title.toLowerCase(), ...(EXTRA.keys?.[k.id] || [])].filter((x, i, a) => x && a.indexOf(x) === i) }; })];
   writeFileSync(`${ROOT}/ask/site-directory.json`, JSON.stringify({ note: "ONE site directory for the fleet chat (scripts/fleet-crawl.ts writes it from https://nixfred.com/sites.json; the five widget roles are Fred's words). Used by ask/fleet.js for which-site answers and auto-linking.", registry: REGISTRY, sites: directory }, null, 1) + "\n");
   mkdirSync(`${ROOT}/fleet`, { recursive: true });
   writeFileSync(`${ROOT}/fleet/crawl.json`, JSON.stringify({ crawled: new Date().toISOString(), registry: REGISTRY, sites, not_crawled: out, skipped }, null, 1) + "\n");

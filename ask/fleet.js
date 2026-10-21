@@ -128,6 +128,53 @@ export function sitesNamed(text) {
   hits.sort((a, b) => b[1].length - a[1].length);
   return hits.filter(([, k], i) => !hits.slice(0, i).some(([, k2]) => k2.includes(k))).map(([d]) => d);
 }
+// ---- fuzzy: a site named loosely ("the god thing", a typo) or only described ("the site where you paper trade")
+// Runs only when the question is looking for a site (SITE_Q, or a word like site/page/thing/app in it) and no directory key
+// matched. Scores each entry on its host label, name and keys (strong) and on its one-line description and card text
+// (IDF-weighted), tolerates a one or two letter typo in longer words, and answers with every entry that scores close to
+// the best one. Short everyday labels (go, art, now, sun, mac...) only count when a site word sits right next to them.
+const SEEK = /\b(sites?|web ?sites?|web ?pages?|pages?|things?|apps?|links?|urls?|addresses|place|which one|one that|one where|one about|one for)\b/i;
+const SEEK_W = new Set(["site", "sites", "website", "websites", "webpage", "page", "pages", "thing", "things", "app", "apps", "one", "link", "url", "place"]);
+const STOP = new Set("a an the and or of to in on at for with from by is are was be been it its this that these those there theres what whats which who where how do does did can could would should will i me my we you your he his she her they their about site sites website websites webpage page pages thing things app apps one ones link links url address find finding looking look want need know tell show give please any some is are has have get got like just really also".split(" "));
+const stem = t => t.length > 4 ? t.replace(/(ies)$/, "y").replace(/(ing|ed|es|s|ly)$/, "") : t;
+const words = s => norm(s).toLowerCase().replace(/'s\b/g, "").split(/[^a-z0-9]+/).filter(Boolean);
+function within(a, b, n) {   // Levenshtein distance <= n
+  if (Math.abs(a.length - b.length) > n) return false;
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) { const cur = [i]; for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; }
+  return prev[b.length] <= n;
+}
+const tolerance = w => (w.length >= 9 ? 2 : w.length >= 6 ? 1 : 0);
+const loose = (a, b) => a === b || (tolerance(b) > 0 && within(a, b, tolerance(b))) || (a.length >= 7 && b.length >= 7 && a.slice(0, 7) === b.slice(0, 7));
+const labelOf = d => d.host.split(".")[0];
+const FZ = DIR.map(d => {
+  const label = labelOf(d), nameW = new Set([...words(d.name), ...(d.keys || []).flatMap(words)].filter(w => !STOP.has(w) && w !== label).map(stem));
+  const descW = new Set([...words(d.role || ""), ...words(d.about || "")].filter(w => !STOP.has(w) && w.length > 2).map(stem));
+  return { d, label, nameW, descW };
+});
+const DF = new Map(); for (const f of FZ) for (const w of new Set([...f.nameW, ...f.descW])) DF.set(w, (DF.get(w) || 0) + 1);
+const idf = w => Math.log(1 + FZ.length / (DF.get(w) || 1));
+export function fuzzySites(text, { max = 3 } = {}) {
+  const seeking = SEEK.test(text);                  // an explicit site word: descriptions may match
+  if (!(seeking || SITE_Q.test(text))) return [];   // a bare "where do I ..." may only match a site's name
+  const raw = words(text);
+  const toks = raw.map((w, i) => ({ w, i, s: stem(w) })).filter(t => !STOP.has(t.w) && t.w.length > 2);
+  const nearSeek = i => [-2, -1, 1, 2].some(k => raw[i + k] && SEEK_W.has(raw[i + k]));
+  const scored = [];
+  for (const f of FZ) {
+    // the host label: a long one by itself (typos allowed), a short everyday one (go, art, now, sun) only beside a site word
+    const labelHit = raw.some((w, i) => f.label.length >= 7 ? loose(w, f.label) : w === f.label && nearSeek(i));
+    let score = labelHit ? 8 : 0, hits = labelHit ? 1 : 0;
+    for (const t of toks) {
+      if (loose(t.w, f.label)) continue;
+      if ([...f.nameW].some(n => loose(t.s, n))) { score += 3 * idf(t.s); hits++; }
+      else if (seeking && (f.descW.has(t.s) || (t.s.length >= 6 && [...f.descW].some(n => loose(t.s, n))))) { score += 1.5 * idf(t.s); hits++; }
+    }
+    if (labelHit || (score >= 6 && hits >= 2)) scored.push([f.d, score]);
+  }
+  scored.sort((a, b) => b[1] - a[1]);
+  return scored.filter(([, sc]) => sc >= scored[0][1] * 0.75).slice(0, max).map(([d]) => d);
+}
 const REFERS_BACK = /\b(it|its|it's|that( site| one| page)?|this( site| one| page)?|there)\b/i;
 // "it" / "there": the site the conversation was about (the visitor's own turns first, newest first, then Larry's)
 function fromHistory(history) {
@@ -136,7 +183,10 @@ function fromHistory(history) {
   return [];
 }
 // a "where is it / which site / what's his X site / link to" question
-export const SITE_Q = /\bwhere\b|\b(url|link|address)\b|\bwhich (site|website|page)\b|\bwhat('?s| is| are)\b[^?.!]{0,40}\b(site|website|homepage|home page)s?\b/i;
+export const SITE_Q = /\bwhere'?s?\b|\b(url|link|address)\b|\bwhich (one|site|website|page)\b|\bwhat('?s| is| are)\b[^?.!]{0,40}\b(site|website|homepage|home page|page|thing|app)s?\b/i;
+// "the god thing", "that ladder one": a nickname for a site, asked without a where/which (not "tell me about ...", "how ...")
+export const NICK_Q = /\b(the|that|this)\s+[\w.'-]+(\s+[\w.'-]+){0,2}\s+(thing|one)\b/i;
+const CONTENT_Q = /\b(tell me about|explain|describe|summari[sz]e|how (do|does|did|can|to)|why|what does|say about)\b/i;
 const ABOUT_FRED = /\bfred\b/i;
 // what the sites are about, named: the rewrite's off-topic call never refuses these
 const ON_TOPIC = /\b(lifeos|pai|personal ai infrastructure|openclaw|omarchy|fabric|claude code|nixfred\w*|larry|fred|telos|ladder)\b/i;
@@ -346,9 +396,11 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   if (LIFEOS_WHO.test(q)) return { answer: say(LIFEOS_CREDIT, site), sources: [{ title: "LifeOS", url: LIFEOS_HOME }, { title: "The Larry Stack: Repos & Install Order", url: LIFEOS_PAGE }], site, refused: false, why: "lifeos credit" };
   // which sites the question is about: named in it, or "it" / "there" resolved from the conversation
   const named = sitesNamed(q);
-  const about = named.length ? named : REFERS_BACK.test(q) ? fromHistory(history) : [];
+  // nothing named exactly: a loose name ("the ladder thing", a typo) or a description ("the site where you paper trade")
+  const fuzzy = named.length ? [] : fuzzySites(q);
+  const about = named.length ? named : fuzzy.length ? fuzzy : REFERS_BACK.test(q) ? fromHistory(history) : [];
   const dirSources = ds => ds.map(d => ({ title: d.name, url: d.url }));
-  if (about.length && SITE_Q.test(q)) return { answer: directoryAnswer(about), sources: dirSources(about), site, refused: false, why: "directory" };
+  if (about.length && (SITE_Q.test(q) || fuzzy.length || (named.length && (SEEK.test(q) || NICK_Q.test(q)) && !CONTENT_Q.test(q)))) return { answer: directoryAnswer(about), sources: dirSources(about), site, refused: false, why: "directory" };
   // a card-site question is answered from THAT site's own pages; with nothing on it, say so and link it
   const route = about.find(d => d.kind === "knowledge") || null;
   if (route && !(idx.counts?.[route.id]?.chunks > 0)) return { answer: nothingOn(route), sources: dirSources([route]), site, refused: false, why: "directory (no pages)" };

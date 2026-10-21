@@ -7,8 +7,16 @@
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
+// The subtitle may only claim "all of nixfred.com" when the site directory AND the ingest cover every public *.nixfred.com
+// site (family denylist excluded). test/fleet-contract.ts derives that from ask/site-directory.json and
+// site/ask/fleet-meta.json and fails if COVERS_ALL claims more (or less) than the numbers show.
+export const SUB_ALL = "answers from all of nixfred.com, with links";
+export const subtitles = all => all ? { main: SUB_ALL, fleet: SUB_ALL } : { main: "answers only from this site, with links", fleet: "answers from Fred's sites, with links" };
+export const COVERS_ALL = false;
+const SUB = subtitles(COVERS_ALL);
+
 export function panelHtml(o = {}) {
-  const sub = o.sub ?? "answers only from this site, with links";
+  const sub = o.sub ?? SUB.main;
   const ph = o.placeholder ?? "Ask Larry about building your own AI…";
   const foot = o.footHtml ?? `Grounded in how.nixfred.com, 500 characters max. <a href="ask-larry.html">Let your AI install this with you →</a>`;
   return `<button type="button" class="al-pill" id="al-pill" aria-controls="al-panel" aria-expanded="true" title="Open Ask Larry"><span class="al-dot"></span>💬 Ask Larry</button>
@@ -66,14 +74,16 @@ export function panelCss(style) {
 
 export function embedJs(root, read) {
   const css = panelCss(read(`${root}/site/assets/style.css`));
-  const html = panelHtml({ sub: "answers from Fred's sites, with links", placeholder: "Ask Larry anything…", footHtml: `Answers only from published pages, 500 characters max. <a href="https://how.nixfred.com/ask-larry" target="_blank" rel="noopener">Don't trust me, audit it →</a>` });
+  // the two personas whose subtitle says "the sites" follow the coverage switch too (the others keep their own wording)
+  const embedSrc = SUB.fleet === SUB_ALL ? read(`${root}/ask/embed.js`).replaceAll("sub: 'answers from the sites, with links'", `sub: ${JSON.stringify(SUB_ALL)}`) : read(`${root}/ask/embed.js`);
+  const html = panelHtml({ sub: SUB.fleet, placeholder: "Ask Larry anything…", footHtml: `Answers only from published pages, 500 characters max. <a href="https://how.nixfred.com/ask-larry" target="_blank" rel="noopener">Don't trust me, audit it →</a>` });
   return `// Ask Larry for every fleet site. Built by build.ts from ask/panel-build.js + ask/panel.js + ask/embed.js: the same
 // panel, CSS and behaviour as how.nixfred.com's own chat. Do not edit site/embed.js by hand.
 (function(){
 var AL_CSS=${JSON.stringify(css)};
 var AL_HTML=${JSON.stringify(html)};
 ${read(`${root}/ask/panel.js`)}
-${read(`${root}/ask/embed.js`)}
+${embedSrc}
 })();
 `;
 }

@@ -89,12 +89,19 @@
    "url": "https://god.nixfred.com/",
    "name": "The Universe As I See It",
    "role": "What I believe about everything. From the first instant to the last, and why I think it was never many things to begin with.",
+   "about": "What I believe about everything. From the first instant to the last, and why I think it was never many things to begin with.",
    "kind": "knowledge",
    "keys": [
     "god.nixfred.com",
     "god site",
     "god website",
-    "the universe as i see it"
+    "god page",
+    "god thing",
+    "god app",
+    "the universe as i see it",
+    "the god one",
+    "what fred believes",
+    "the universe site"
    ]
   },
   {
@@ -103,12 +110,20 @@
    "url": "https://mac.nixfred.com/",
    "name": "macOS 27",
    "role": "A pixel faithful Liquid Glass macOS simulation running entirely in your browser.",
+   "about": "A pixel faithful Liquid Glass macOS simulation running entirely in your browser. No install, no VM, just the whole desktop.",
    "kind": "knowledge",
    "keys": [
     "mac.nixfred.com",
     "mac site",
     "mac website",
-    "macos 27"
+    "mac page",
+    "mac thing",
+    "mac app",
+    "macos 27",
+    "macos site",
+    "macos simulation",
+    "mac simulator",
+    "liquid glass"
    ]
   },
   {
@@ -117,12 +132,18 @@
    "url": "https://youtube.nixfred.com/",
    "name": "YouTube Library",
    "role": "A growing library of YouTube videos turned into deep, readable pages.",
+   "about": "A growing library of YouTube videos turned into deep, readable pages. Browse by creator, by topic, or by when it landed.",
    "kind": "knowledge",
    "keys": [
     "youtube.nixfred.com",
     "youtube site",
     "youtube website",
-    "youtube library"
+    "youtube page",
+    "youtube thing",
+    "youtube app",
+    "youtube library",
+    "the video library",
+    "youtube videos site"
    ]
   },
   {
@@ -131,12 +152,19 @@
    "url": "https://townhop.nixfred.com/",
    "name": "TOWNHOP",
    "role": "Drop two pins and travel the whole way there through the best YouTube footage of every town in between.",
+   "about": "Drop two pins and travel the whole way there through the best YouTube footage of every town in between. A tactical route display, town by town.",
    "kind": "knowledge",
    "keys": [
     "townhop.nixfred.com",
     "townhop site",
     "townhop website",
-    "townhop"
+    "townhop page",
+    "townhop thing",
+    "townhop app",
+    "townhop",
+    "town hop",
+    "route map site",
+    "drop two pins"
    ]
   },
   {
@@ -145,12 +173,19 @@
    "url": "https://galaxy.nixfred.com/",
    "name": "NIXFRED GALAXY",
    "role": "Every project, one connected system. An interactive star map of everything on this page and how it all wires together.",
+   "about": "Every project, one connected system. An interactive star map of everything on this page and how it all wires together.",
    "kind": "knowledge",
    "keys": [
     "galaxy.nixfred.com",
     "galaxy site",
     "galaxy website",
-    "nixfred galaxy"
+    "galaxy page",
+    "galaxy thing",
+    "galaxy app",
+    "nixfred galaxy",
+    "star map",
+    "project map",
+    "the galaxy"
    ]
   },
   {
@@ -159,12 +194,18 @@
    "url": "https://tools.nixfred.com/",
    "name": "AI Systems Workbench",
    "role": "Fourteen practical instruments for reliable AI systems.",
+   "about": "Fourteen practical instruments for reliable AI systems. Each takes real input and returns a result you can inspect, edit, and export. Runs in your browser, no account, no API key.",
    "kind": "knowledge",
    "keys": [
     "tools.nixfred.com",
     "tools site",
     "tools website",
-    "ai systems workbench"
+    "tools page",
+    "tools thing",
+    "tools app",
+    "ai systems workbench",
+    "the workbench",
+    "ai tools site"
    ]
   },
   {
@@ -173,12 +214,19 @@
    "url": "https://go.nixfred.com/",
    "name": "What Should I Do Today?",
    "role": "An Atlanta event aggregation engine. Real, current, structured event data pulled from live sources, provenance tracked on every entry, never maintained by hand.",
+   "about": "An Atlanta event aggregation engine. Real, current, structured event data pulled from live sources, provenance tracked on every entry, never maintained by hand.",
    "kind": "knowledge",
    "keys": [
     "go.nixfred.com",
     "go site",
     "go website",
-    "what should i do today?"
+    "go page",
+    "go thing",
+    "go app",
+    "what should i do today?",
+    "events site",
+    "atlanta events",
+    "what should i do today"
    ]
   },
   {
@@ -187,12 +235,19 @@
    "url": "https://omarchy.nixfred.com/",
    "name": "Omarchy Plugins",
    "role": "Plugins and a theme for the Omarchy desktop. Bar widgets, a Mac bridge, workspace control, and a suite of living system instruments.",
+   "about": "Plugins and a theme for the Omarchy desktop. Bar widgets, a Mac bridge, workspace control, and a suite of living system instruments. Public source, built in the open by Fred Nix.",
    "kind": "knowledge",
    "keys": [
     "omarchy.nixfred.com",
     "omarchy site",
     "omarchy website",
-    "omarchy plugins"
+    "omarchy page",
+    "omarchy thing",
+    "omarchy app",
+    "omarchy plugins",
+    "plugin site",
+    "omarchy plugin site",
+    "omarchy theme"
    ]
   },
   {
@@ -201,12 +256,18 @@
    "url": "https://filter.nixfred.com/",
    "name": "The Great Filter",
    "role": "Build a galaxy, seed it with civilizations, and watch almost all of them disappear.",
+   "about": "Build a galaxy, seed it with civilizations, and watch almost all of them disappear. An interactive walk through the Fermi paradox.",
    "kind": "knowledge",
    "keys": [
     "filter.nixfred.com",
     "filter site",
     "filter website",
-    "the great filter"
+    "filter page",
+    "filter thing",
+    "filter app",
+    "the great filter",
+    "great filter",
+    "the great filter site"
    ]
   },
   {
@@ -215,12 +276,18 @@
    "url": "https://physics.nixfred.com/",
    "name": "Where Physics Starts Sweating",
    "role": "A cinematic guide to the strangest frontiers in real physics, from neutron star interiors and time dilation to black hole horizons.",
+   "about": "A cinematic guide to the strangest frontiers in real physics, from neutron star interiors and time dilation to black hole horizons.",
    "kind": "knowledge",
    "keys": [
     "physics.nixfred.com",
     "physics site",
     "physics website",
-    "where physics starts sweating"
+    "physics page",
+    "physics thing",
+    "physics app",
+    "where physics starts sweating",
+    "physics edge",
+    "edge of known physics"
    ]
   },
   {
@@ -229,12 +296,18 @@
    "url": "https://art.nixfred.com/",
    "name": "News Weather",
    "role": "Abstract generative art driven by a portrait of world signals.",
+   "about": "Abstract generative art driven by a portrait of world signals. Turbulence, density, energy, cooling, and fracture drive the field. Click any signal to weight it and the whole thing recomposes.",
    "kind": "knowledge",
    "keys": [
     "art.nixfred.com",
     "art site",
     "art website",
-    "news weather"
+    "art page",
+    "art thing",
+    "art app",
+    "news weather",
+    "generative art",
+    "abstract art"
    ]
   },
   {
@@ -243,12 +316,19 @@
    "url": "https://polymarket.nixfred.com/",
    "name": "Polymarket War Room",
    "role": "Open a fake money account, browse real live Polymarket markets, and paper trade against them.",
+   "about": "Open a fake money account, browse real live Polymarket markets, and paper trade against them. Larry has opinions and is happy to share them.",
    "kind": "knowledge",
    "keys": [
     "polymarket.nixfred.com",
     "polymarket site",
     "polymarket website",
-    "polymarket war room"
+    "polymarket page",
+    "polymarket thing",
+    "polymarket app",
+    "polymarket war room",
+    "war room",
+    "paper trading",
+    "paper trade"
    ]
   },
   {
@@ -257,12 +337,18 @@
    "url": "https://sun.nixfred.com/",
    "name": "Solar Save Foundation",
    "role": "The Sun has roughly 4.8 billion years left and cannot save itself.",
+   "about": "The Sun has roughly 4.8 billion years left and cannot save itself. A fully staffed foundation stands ready to lead the global response.",
    "kind": "knowledge",
    "keys": [
     "sun.nixfred.com",
     "sun site",
     "sun website",
-    "solar save foundation"
+    "sun page",
+    "sun thing",
+    "sun app",
+    "solar save foundation",
+    "the sun cannot save itself",
+    "sun satire"
    ]
   },
   {
@@ -271,12 +357,17 @@
    "url": "https://qumulo.nixfred.com/",
    "name": "Qumulo Field Guide",
    "role": "An independent field guide to Qumulo. The architecture, the economics, and how to defend the design in front of people who will push back.",
+   "about": "An independent field guide to Qumulo. The architecture, the economics, and how to defend the design in front of people who will push back.",
    "kind": "knowledge",
    "keys": [
     "qumulo.nixfred.com",
     "qumulo site",
     "qumulo website",
-    "qumulo field guide"
+    "qumulo page",
+    "qumulo thing",
+    "qumulo app",
+    "qumulo field guide",
+    "qumulo guide"
    ]
   },
   {
@@ -285,12 +376,17 @@
    "url": "https://ninjaone.nixfred.com/",
    "name": "N1 Field Guide",
    "role": "A source validated, interactive field guide to the complete NinjaOne portfolio, written for enterprise solution engineering.",
+   "about": "A source validated, interactive field guide to the complete NinjaOne portfolio, written for enterprise solution engineering.",
    "kind": "knowledge",
    "keys": [
     "ninjaone.nixfred.com",
     "ninjaone site",
     "ninjaone website",
-    "n1 field guide"
+    "ninjaone page",
+    "ninjaone thing",
+    "ninjaone app",
+    "n1 field guide",
+    "ninja one"
    ]
   },
   {
@@ -299,12 +395,17 @@
    "url": "https://tailscale.nixfred.com/",
    "name": "Tailscale Field Guide",
    "role": "An unofficial, mechanism first field guide to Tailscale.",
+   "about": "An unofficial, mechanism first field guide to Tailscale. How the mesh actually works, worked troubleshooting cases, and recipes for the things a tailnet makes possible.",
    "kind": "knowledge",
    "keys": [
     "tailscale.nixfred.com",
     "tailscale site",
     "tailscale website",
-    "tailscale field guide"
+    "tailscale page",
+    "tailscale thing",
+    "tailscale app",
+    "tailscale field guide",
+    "tailscale guide"
    ]
   },
   {
@@ -313,12 +414,17 @@
    "url": "https://calc.nixfred.com/",
    "name": "Field Calculators",
    "role": "Field calculators for IT infrastructure conversations.",
+   "about": "Field calculators for IT infrastructure conversations. Rough math, honest assumptions, and a next action you can say out loud in the room.",
    "kind": "knowledge",
    "keys": [
     "calc.nixfred.com",
     "calc site",
     "calc website",
-    "field calculators"
+    "calc page",
+    "calc thing",
+    "calc app",
+    "field calculators",
+    "calculators"
    ]
   },
   {
@@ -327,12 +433,18 @@
    "url": "https://bandwidth.nixfred.com/",
    "name": "The Funnel and the Flood",
    "role": "A field guide to the bandwidth of human communication, from the wink to fiber to AI.",
+   "about": "A field guide to the bandwidth of human communication, from the wink to fiber to AI. Every channel got faster. The human did not.",
    "kind": "knowledge",
    "keys": [
     "bandwidth.nixfred.com",
     "bandwidth site",
     "bandwidth website",
-    "the funnel and the flood"
+    "bandwidth page",
+    "bandwidth thing",
+    "bandwidth app",
+    "the funnel and the flood",
+    "funnel and the flood",
+    "bandwidth of human communication"
    ]
   },
   {
@@ -341,12 +453,98 @@
    "url": "https://aiwatch.nixfred.com/",
    "name": "AI Signal",
    "role": "Daily expert synthesis, signal scoring, and strategic drift detection.",
+   "about": "Daily expert synthesis, signal scoring, and strategic drift detection. What actually moved in AI today, separated from what merely got posted about.",
    "kind": "knowledge",
    "keys": [
     "aiwatch.nixfred.com",
     "aiwatch site",
     "aiwatch website",
-    "ai signal"
+    "aiwatch page",
+    "aiwatch thing",
+    "aiwatch app",
+    "ai signal",
+    "ai watch"
+   ]
+  },
+  {
+   "id": "music.nixfred.com",
+   "host": "music.nixfred.com",
+   "url": "https://music.nixfred.com/",
+   "name": "Omarchy Music",
+   "role": "An independent listening room and source-linked archive for Omarchy music contest entries.",
+   "about": "An independent listening room and source-linked archive for Omarchy music contest entries. Archive coverage is incomplete.",
+   "kind": "knowledge",
+   "keys": [
+    "music.nixfred.com",
+    "music site",
+    "music website",
+    "music page",
+    "music thing",
+    "music app",
+    "omarchy music",
+    "music contest",
+    "music archive",
+    "listening room"
+   ]
+  },
+  {
+   "id": "ddn.nixfred.com",
+   "host": "ddn.nixfred.com",
+   "url": "https://ddn.nixfred.com/",
+   "name": "DDN Field Guide",
+   "role": "A source-governed field guide for understanding, designing, and proving the AI data path with DDN.",
+   "about": "A source-governed field guide for understanding, designing, and proving the AI data path with DDN.",
+   "kind": "knowledge",
+   "keys": [
+    "ddn.nixfred.com",
+    "ddn site",
+    "ddn website",
+    "ddn page",
+    "ddn thing",
+    "ddn app",
+    "ddn field guide",
+    "ddn guide"
+   ]
+  },
+  {
+   "id": "spaces.nixfred.com",
+   "host": "spaces.nixfred.com",
+   "url": "https://spaces.nixfred.com/",
+   "name": "Omarchy Spaces",
+   "role": "The running history of the Omarchy! Omarchy! Omarchy! X Space, every Sunday on X, with summaries and full transcripts.",
+   "about": "The running history of the Omarchy! Omarchy! Omarchy! X Space. Every Sunday, 3pm EST, live on X. Summaries and full transcripts of every episode.",
+   "kind": "knowledge",
+   "keys": [
+    "spaces.nixfred.com",
+    "spaces site",
+    "spaces website",
+    "spaces page",
+    "spaces thing",
+    "spaces app",
+    "omarchy spaces",
+    "x space",
+    "omarchy x space",
+    "space transcripts"
+   ]
+  },
+  {
+   "id": "now.nixfred.com",
+   "host": "now.nixfred.com",
+   "url": "https://now.nixfred.com/",
+   "name": "Nothing Is Happening Now",
+   "role": "An interactive field note about light delay, simultaneity, and why physics refuses to give the universe a single present moment.",
+   "about": "An interactive field note about light delay, simultaneity, and why physics refuses to give the universe a single present moment. Everything you see is old.",
+   "kind": "knowledge",
+   "keys": [
+    "now.nixfred.com",
+    "now site",
+    "now website",
+    "now page",
+    "now thing",
+    "now app",
+    "nothing is happening now",
+    "light delay",
+    "simultaneity"
    ]
   }
  ]
