@@ -679,9 +679,10 @@ export async function capTake(env) {
 const secsToUtcMidnight = () => { const n = new Date(); return Math.max(60, Math.ceil((Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() + 1) - n.getTime()) / 1000)); };
 
 // ---------------------------------------------------------------- HTTP: CORS allowlist + the contract
-// Exactly the five production sites, https only. No preview origin, no *.pages.dev, no localhost, no wildcard
+// Explicit production sites, including the Mac beginner front door at buildlarry.com.
+// HTTPS only. No preview origin, no *.pages.dev, no localhost, no wildcard.
 // (AI Strategy rule, 2026-10-20): a preview is tested against a local mock, never against the live endpoint.
-export const FLEET_ORIGIN_LIST = ["https://nixfred.com", "https://nixfredos.com", "https://how.nixfred.com", "https://ladder.nixfred.com", "https://larry.nixfred.com"];
+export const FLEET_ORIGIN_LIST = ["https://nixfred.com", "https://nixfredos.com", "https://how.nixfred.com", "https://ladder.nixfred.com", "https://larry.nixfred.com", "https://buildlarry.com", "https://www.buildlarry.com"];
 const FLEET_ORIGINS = new Set(FLEET_ORIGIN_LIST);
 // no Origin header = not a browser (curl, a server). Explicit list only (Fred, 2026-10-20 7:18 PM): no *.nixfred.com
 // wildcard, no same-origin exception, so any other *.pages.dev origin is refused too.
