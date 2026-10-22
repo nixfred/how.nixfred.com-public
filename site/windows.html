@@ -51,23 +51,23 @@
 <p class="calm">Nothing runs without your yes. You can stop anytime. Stuck? Ask Larry on the right.</p>
 <p>You need Windows 11, or Windows 10 version 2004 or newer. One action per step.</p>
 <ol class="steps wsl-steps">
-<li id="wsl-1"><b>Step 1. Open PowerShell as administrator.</b> PowerShell is the Windows window where you type commands. Right-click the Start button and choose <b>Terminal (Admin)</b>, or <b>Windows PowerShell (Admin)</b> on older Windows. Click <b>Yes</b> when Windows asks if the app may make changes.
-<p class="saw"><b>What you'll see when it worked:</b> a window with a blinking cursor after a line that ends in <code>&gt;</code>. Its title bar says Administrator.</p></li>
-<li id="wsl-2"><b>Step 2. Install WSL.</b> Type this line and press Enter. It turns on WSL and installs Ubuntu, the Linux this guide uses on Windows.
+<li id="wsl-1"><b>Open PowerShell as administrator.</b> PowerShell is the Windows window where you type commands. Right-click the Start button and choose <b>Terminal (Admin)</b>, or <b>Windows PowerShell (Admin)</b> on older Windows. Click <b>Yes</b> when Windows asks if the app may make changes.
+<p class="saw">a window with a blinking cursor after a line that ends in <code>&gt;</code>. Its title bar says Administrator.</p></li>
+<li id="wsl-2"><b>Install WSL.</b> Type this line and press Enter. It turns on WSL and installs Ubuntu, the Linux this guide uses on Windows.
 <pre><code>wsl --install</code></pre>
-<p class="saw"><b>What you'll see when it worked:</b> lines about downloading and installing, then a note that you need to restart your computer.</p></li>
-<li id="wsl-3"><b>Step 3. Restart when asked.</b> Save your work, then restart Windows the normal way: Start, Power, Restart.
-<p class="saw"><b>What you'll see when it worked:</b> Windows starts up again as usual. If an Ubuntu window opens on its own, let it finish and go to Step 5.</p></li>
-<li id="wsl-4"><b>Step 4. Open Ubuntu from the Start menu.</b> Click Start, type <code>Ubuntu</code>, and press Enter. The first time, it finishes installing itself.
-<p class="saw"><b>What you'll see when it worked:</b> a window that says it is installing, then asks you for a new UNIX username (UNIX here just means Linux).</p></li>
-<li id="wsl-5"><b>Step 5. Create your Linux username and password.</b> Type a short username (lowercase letters, no spaces) and press Enter. Then type a password, press Enter, and type it again. <b>The password does not show as you type, not even dots. That is normal.</b> Remember it: Linux asks for it when you install things. It is separate from your Windows password.
-<p class="saw"><b>What you'll see when it worked:</b> a line ending in <code>$</code>, like <code>yourname@yourpc:~$</code>. That is Linux, ready for commands.</p></li>
+<p class="saw">lines about downloading and installing, then a note that you need to restart your computer.</p></li>
+<li id="wsl-3"><b>Restart when asked.</b> Save your work, then restart Windows the normal way: Start, Power, Restart.
+<p class="saw">Windows starts up again as usual. If an Ubuntu window opens on its own, let it finish and jump to the username step.</p></li>
+<li id="wsl-4"><b>Open Ubuntu from the Start menu.</b> Click Start, type <code>Ubuntu</code>, and press Enter. The first time, it finishes installing itself.
+<p class="saw">a window that says it is installing, then asks you for a new UNIX username (UNIX here just means Linux).</p></li>
+<li id="wsl-5"><b>Create your Linux username and password.</b> Type a short username (lowercase letters, no spaces) and press Enter. Then type a password, press Enter, and type it again. <b>The password does not show as you type, not even dots. That is normal.</b> Remember it: Linux asks for it when you install things. It is separate from your Windows password.
+<p class="saw">a line ending in <code>$</code>, like <code>yourname@yourpc:~$</code>. That is Linux, ready for commands.</p></li>
 </ol>
 <h2 id="stuck">Stuck?</h2>
 <ul>
 <li><b>Error 0x80370102, or a message about virtualization.</b> Virtualization (the setting that lets your PC run Linux in a window) is switched off. Restart and open your PC's BIOS or UEFI settings (the key shows on the first screen, often F2, F10, Del or Esc). Turn on <b>Virtualization</b>; it may be called SVM, AMD-V, Intel VT-x or Intel Virtualization Technology. Save and restart. Then, in Windows, click Start, type <b>Turn Windows features on or off</b>, tick <b>Virtual Machine Platform</b>, click OK, and restart. Run <code>wsl --install</code> again.</li>
-<li><b>Ubuntu did not open after the restart.</b> Open it from the Start menu (Step 4). If it is not there, open PowerShell as administrator again (Step 1) and run <code>wsl --install</code> again.</li>
-<li><b>wsl --install only printed a help text.</b> WSL is already on. Add Ubuntu with <code>wsl --install -d Ubuntu</code>, then go to Step 4.</li>
+<li><b>Ubuntu did not open after the restart.</b> Open it from the Start menu. If it is not there, open PowerShell as administrator again and run <code>wsl --install</code> again.</li>
+<li><b>wsl --install only printed a help text.</b> WSL is already on. Add Ubuntu with <code>wsl --install -d Ubuntu</code>, then open Ubuntu from Start.</li>
 <li><b>Anything else.</b> Paste the exact error into Ask Larry on the right. Microsoft's own page: <a href="https://learn.microsoft.com/windows/wsl/install">learn.microsoft.com/windows/wsl/install</a>.</li>
 </ul>
 <p class="wsl-back"><a class="os-go big" href="index.html#linux">You're in Linux now. Continue →</a></p>

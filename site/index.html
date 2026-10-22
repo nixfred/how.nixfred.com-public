@@ -57,55 +57,52 @@
     <div class="os-step" id="mac" data-os-step="mac">
       <p class="os-h" role="heading" aria-level="2">On a Mac</p>
       <ol class="steps">
-        <li><b>Step 1. Open Terminal.</b> Terminal is the Mac app where you type commands. Press Command and Space together, type <code>Terminal</code>, and press Return.
-          <p class="saw"><b>What you'll see when it worked:</b> a small window with a blinking cursor, waiting for you to type.</p></li>
-        <li><b>Step 2. Install Claude Code.</b> Claude Code is the app your AI lives in. Copy this line, paste it into Terminal, and press Return. It is Anthropic's own installer (<a href="https://code.claude.com/docs/en/setup">their setup page</a>).
+        <li><b>Open Terminal.</b> It's the Mac app where you type commands. Press Command and Space, type <code>Terminal</code>, and press Return.
+          <p class="saw">A small window opens with a blinking cursor. That's it.</p></li>
+        <li><b>Install Claude Code.</b> That's the app your AI lives in. Copy this line, paste it into Terminal, and press Return. It's Anthropic's own installer (<a href="https://code.claude.com/docs/en/setup">their setup page</a>).
           <pre><code>curl -fsSL https://claude.ai/install.sh | bash</code></pre>
-          <p class="saw"><b>What you'll see when it worked:</b> type <code>claude --version</code> and press Return. It prints a version number.</p>
-          <p class="if">If the installer says <code>~/.local/bin</code> is not in your PATH (the list of folders your Mac looks in for apps), paste this line too, press Return, and check again:</p>
+          <p class="saw">Type <code>claude --version</code> and press Return. You'll see a version number. Done.</p>
+          <p class="if">Does it say <code>~/.local/bin</code> is not in your PATH? That just means your Mac doesn't know where to look yet. Paste this line, press Return, and try again.</p>
           <pre><code>echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc</code></pre></li>
       </ol>
       <p class="os-switch" hidden>Not on a Mac? <a href="#windows" data-pick="windows">Windows</a> · <a href="#linux" data-pick="linux">Linux</a></p>
     </div>
     <div class="os-step" id="windows" data-os-step="windows">
       <p class="os-h" role="heading" aria-level="2">On Windows</p>
-      <p class="win-hi"><b>Hi! Looks like you're on Windows.</b> Good news: you can do this. This guide runs on Linux, and Windows has Linux built in (it is called WSL, short for Windows Subsystem for Linux). <b>Next:</b> turn it on with the 5 short steps below (one restart), then tap <b>Continue</b> and you're on the same path as everyone else.</p>
+      <p class="win-hi"><b>Hi! Looks like you're on Windows.</b> Good news. You can do this. This guide runs on Linux, and Windows has Linux built in (it's called WSL, short for Windows Subsystem for Linux). <b>Next</b>, turn it on with the 5 short steps below. It takes one restart. Then tap <b>Continue</b> and you're on the same path as everyone else.</p>
       <ol class="steps wsl-steps">
-        <li id="wsl-1"><b>Step 1. Open PowerShell as administrator.</b> PowerShell is the Windows window where you type commands. Click Start, type <code>PowerShell</code>, right-click <b>Windows PowerShell</b>, and choose <b>Run as administrator</b>. Click <b>Yes</b> when Windows asks if the app may make changes.
-          <p class="saw"><b>What you'll see when it worked:</b> a blue or black window with a blinking cursor. Its title bar says Administrator.</p></li>
-        <li id="wsl-2"><b>Step 2. Install WSL.</b> Type this line and press Enter. It turns on WSL and installs Ubuntu, the Linux this guide uses on Windows.
+        <li id="wsl-1"><b>Open PowerShell as administrator.</b> PowerShell is where you type commands on Windows. Click Start, type <code>PowerShell</code>, right-click <b>Windows PowerShell</b>, and choose <b>Run as administrator</b>. Click <b>Yes</b> when Windows asks.
+          <p class="saw">A blue or black window opens. The title bar says Administrator. Good.</p></li>
+        <li id="wsl-2"><b>Install WSL.</b> Type this and press Enter. It turns on Linux and installs Ubuntu.
           <pre><code>wsl --install</code></pre>
-          <p class="saw"><b>What you'll see when it worked:</b> lines about downloading and installing, then a note that you need to restart your computer.</p></li>
-        <li id="wsl-3"><b>Step 3. Restart when asked.</b> Save your work, then restart Windows: Start, Power, Restart.
-          <p class="saw"><b>What you'll see when it worked:</b> Windows starts up again as usual. If an Ubuntu window opens on its own, go to Step 5.</p></li>
-        <li id="wsl-4"><b>Step 4. Open Ubuntu from Start.</b> Click Start, type <code>Ubuntu</code>, and press Enter. The first time, it finishes setting itself up.
-          <p class="saw"><b>What you'll see when it worked:</b> a window that asks you for a new username.</p></li>
-        <li id="wsl-5"><b>Step 5. Pick a username and password.</b> You pick them. Type a short username (lowercase, no spaces) and press Enter. Then type a password, press Enter, and type it again. <b>The password does not show as you type, not even dots. That is normal.</b> Remember it: Linux asks for it when you install things.
-          <p class="saw"><b>What you'll see when it worked:</b> a line ending in <code>$</code>, like <code>yourname@yourpc:~$</code>. That is Linux, ready for you.</p></li>
+          <p class="saw">Lines scroll by while it downloads. At the end it asks you to restart.</p></li>
+        <li id="wsl-3"><b>Restart.</b> Save your work, then click Start, Power, Restart.
+          <p class="saw">Windows comes back like normal. If an Ubuntu window pops up by itself, jump to the username step.</p></li>
+        <li id="wsl-4"><b>Open Ubuntu.</b> Click Start, type <code>Ubuntu</code>, and press Enter. The first time, it sets itself up.
+          <p class="saw">It asks you for a new username.</p></li>
+        <li id="wsl-5"><b>Pick a username and password.</b> You pick them. Type a short username (lowercase, no spaces) and press Enter. Then type a password, press Enter, and type it again. <b>The password won't show as you type. Not even dots. That's normal.</b> Remember it. Linux asks for it when you install things.
+          <p class="saw">You see a line ending in <code>$</code>, like <code>yourname@yourpc:~$</code>. You're in Linux.</p></li>
       </ol>
-      <p class="if"><b>Stuck?</b> If you see an error about virtualization (often 0x80370102), it is switched off in your PC's BIOS/UEFI settings (the setup screen before Windows starts, usually F2, F10, Del or Esc): turn on Virtualization, save, restart, and run <code>wsl --install</code> again. If Ubuntu is not there yet, you probably still need the restart from Step 3. More help: <a href="https://learn.microsoft.com/windows/wsl/install">Microsoft's WSL page</a> or <a href="windows.html#stuck">our Stuck? list</a>.</p>
+      <p class="if"><b>Stuck?</b> An error about virtualization (often 0x80370102) means it's switched off in your PC's BIOS/UEFI settings. That's the setup screen before Windows starts, usually F2, F10, Del or Esc. Turn on Virtualization, save, restart, and run <code>wsl --install</code> again. No Ubuntu yet? You probably still need the restart. More help is on <a href="https://learn.microsoft.com/windows/wsl/install">Microsoft's WSL page</a> and <a href="windows.html#stuck">our Stuck? list</a>.</p>
       <p class="wsl-back"><a class="os-go big" href="#linux" data-pick="linux">You're in Linux now. Continue →</a></p>
       <p class="os-switch" hidden>Not on Windows? <a href="#mac" data-pick="mac">Mac</a> · <a href="#linux" data-pick="linux">Linux</a></p>
     </div>
     <div class="os-step" id="linux" data-os-step="linux">
       <p class="os-h" role="heading" aria-level="2">On Linux</p>
       <ol class="steps">
-        <li><b>Step 1. Open a terminal.</b> A terminal is the window where you type commands. On most Linux desktops, press Ctrl, Alt and T together, or open your apps menu and search for Terminal. Coming from Windows? Your Ubuntu window is already the terminal.
-          <p class="saw"><b>What you'll see when it worked:</b> a window with a blinking cursor, waiting for you to type.</p></li>
-        <li><b>Step 2. Install Claude Code.</b> Claude Code is the app your AI lives in. Copy this line, paste it into the terminal, and press Enter. It is Anthropic's own installer (<a href="https://code.claude.com/docs/en/setup">their setup page</a>).
+        <li><b>Open a terminal.</b> It's the window where you type commands. On most Linux desktops, press Ctrl, Alt and T together, or search your apps for Terminal. Coming from Windows? Your Ubuntu window already is one.
+          <p class="saw">A window opens with a blinking cursor. That's it.</p></li>
+        <li><b>Install Claude Code.</b> That's the app your AI lives in. Copy this line, paste it into the terminal, and press Enter. It's Anthropic's own installer (<a href="https://code.claude.com/docs/en/setup">their setup page</a>).
           <pre><code>curl -fsSL https://claude.ai/install.sh | bash</code></pre>
-          <p class="saw"><b>What you'll see when it worked:</b> type <code>claude --version</code> and press Enter. It prints a version number.</p>
-          <p class="if">If the installer says <code>~/.local/bin</code> is not in your PATH (the list of folders Linux looks in for apps), paste this line too, press Enter, and check again:</p>
+          <p class="saw">Type <code>claude --version</code> and press Enter. You'll see a version number. Done.</p>
+          <p class="if">Does it say <code>~/.local/bin</code> is not in your PATH? That just means Linux doesn't know where to look yet. Paste this line, press Enter, and try again.</p>
           <pre><code>echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc</code></pre></li>
       </ol>
       <p class="os-switch" hidden>Not on Linux? <a href="#mac" data-pick="mac">Mac</a> · <a href="#windows" data-pick="windows">Windows</a></p>
     </div>
-    <h2 class="then">Then, on any computer</h2>
     <ol class="steps" start="3">
-      <li><b>Step 3. Sign in.</b> In the terminal, type <code>claude</code> and press Enter. Your web browser opens: sign in with your Claude account there, then come back to the terminal.
-        <p class="saw"><b>What you'll see when it worked:</b> Claude Code greets you and waits for you to type.</p></li>
-      <li><b>Step 4. Paste this one prompt into Claude Code.</b>
-        <p>The prompt connects this guide, checks what you already have, and builds your AI with you one step at a time. It asks before it runs anything.</p>
+      <li><b>Sign in.</b> Type <code>claude</code> and press Enter. Your browser opens. Sign in, then come back to the terminal. Claude says hi and waits for you. That's it.</li>
+      <li><b>Paste this one prompt into Claude Code.</b> It connects this guide and builds your AI with you, one step at a time.
         <div class="byo-out onepaste-out">
 <div class="byo-out-head"><b>The one prompt.</b> Read it, then paste it into Claude Code.<button type="button" class="spine-copy" data-copy-from="spine-prompt-text">copy the prompt</button></div>
 <code class="byo-prompt" id="spine-prompt-text" data-fill-from="spine-prompt-text-src"></code>
@@ -135,7 +132,7 @@ When the build is done, call get_install_plan with starting_point "built" again,
 If you get stuck, use search_site or ask_larry from the guide, and tell me straight when you do not know.</script>
 <noscript><p class="byo-error">This box needs JavaScript. The same prompt as plain text: <a href="one-paste-prompt.txt">one-paste-prompt.txt</a></p></noscript>
 </div>
-        <p class="saw"><b>What you'll see when it worked:</b> your AI asks you a first question: are you a novice, a mid or a super user? Answer in plain words. From there it shows you each command and waits for your yes.</p></li>
+        <p class="saw">Your AI asks if you're new, in the middle, or a power user. Just answer in plain words. From then on it shows you each command and waits for your yes.</p></li>
     </ol>
   </section>
   <script>(function(){
