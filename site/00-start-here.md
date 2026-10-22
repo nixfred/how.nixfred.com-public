@@ -1,14 +1,14 @@
 ---
 chapter: 0
 part: "Part I: Foundations"
-title: "Start Here: Get Claude Code Running (Mac or Linux)"
+title: "Start Here: Get Claude Code Running (Mac, Windows or Linux)"
 sources: [larry]
 slug: "00-start-here"
 ---
 
 # Chapter 0: Start Here, From Absolute Zero
 
-**This one is for you, the human, the whole way through.** You don't have an AI yet, so you run these steps yourself. Each step is one thing to do, a line to copy, and what you'll see when it worked. It works on a **Mac or Linux**. On Windows? [Get Linux first (WSL)](windows.html), then come back. The [home page](index.html#start) has the same first steps in short form; this page has them in full.
+**This one is for you, the human, the whole way through.** You don't have an AI yet, so you run these steps yourself. Each step is one thing to do, a line to copy, and what you'll see when it worked. It works on a **Mac** first, on **Windows** too, and on **Linux**. On a Mac, start below. On Windows? You turn on Linux first (it is built into Windows, called WSL): the [Windows steps on the home page](index.html#windows) take five short steps and one restart, then you carry on below with the Linux lines. The [home page](index.html#start) has the same first steps in short form; this page has them in full.
 
 **Free.** Nothing runs without your yes. You can stop anytime. Stuck? Ask Larry on the right.
 
