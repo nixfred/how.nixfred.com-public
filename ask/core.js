@@ -194,7 +194,7 @@ export const agentsAsked = q => { const t = String(q); return BYO.AGENTS.filter(
 export const isAgentAsk = q => { const t = String(q); return (agentsAsked(t).length > 0 || OTHER_CLIENT.test(t)) && AGENT_INTENT.test(t) && !isOverrideAsk(t) && !PROMPT_ASK.test(t) && !/\b(?:hooks?|laws?|constitution)\b/i.test(t); };
 export function agentReply(q) {
   const t = String(q), named = agentsAsked(t), anti = /\bantigravity\b/i.test(t), list = named.length ? named : anti ? [] : BYO.AGENTS;
-  const one = g => `**${g.name}**${g.also ? ` (${g.also})` : ""}: have your agent show you this command, say what it does, and run it only after your yes.\n\n\`\`\`bash\n${g.add}\n\`\`\`\n\n${g.what} Check it with \`${g.check}\`. Source: its MCP docs, ${g.docs}`;
+  const one = g => `**${g.name}**${g.also ? ` (${g.also})` : ""}: have your agent run this command and tell you in one line what it did.\n\n\`\`\`bash\n${g.add}\n\`\`\`\n\n${g.what} Check it with \`${g.check}\`. Source: its MCP docs, ${g.docs}`;
   const parts = [];
   if (anti) parts.push(`**Antigravity CLI**: ${BYO.ANTIGRAVITY}`);
   parts.push(...list.map(one));
@@ -341,7 +341,7 @@ export const platformReply = q => {
   if (!win && /\braspberry ?pi\b|\brpi\b/i.test(t)) return `I don't know: the site doesn't say whether it runs on a Raspberry Pi, and I won't guess. ${MAC_OR_LINUX} Start at https://how.nixfred.com/00-start-here.html.`;
   const other = win ? null : OTHER_PLATFORM.find(([re]) => re.test(t));
   if (other) { const n = other[1], N = n[0].toUpperCase() + n.slice(1); return `${MAC_OR_LINUX} ${N} isn't covered: the site has no instructions for ${n}, and I won't guess. Start at https://how.nixfred.com/00-start-here.html.`; }
-  return `On Windows, you can do this: get Linux first. Windows has it built in, called WSL (Windows Subsystem for Linux). The home page walks you through it right where you land, one action per step: https://how.nixfred.com/#windows. In short: open PowerShell as administrator (Start, type PowerShell, right-click, Run as administrator), run wsl --install, restart when asked, open Ubuntu from Start, and pick a username and password (the password does not show as you type). Then tap "You're in Linux now. Continue" and you do the normal Linux steps (install Claude Code) like everyone else. Nothing runs without your yes.` +
+  return `On Windows, you can do this: get Linux first. Windows has it built in, called WSL (Windows Subsystem for Linux). The home page walks you through it right where you land, one action per step: https://how.nixfred.com/#windows. In short: open PowerShell as administrator (Start, type PowerShell, right-click, Run as administrator), run wsl --install, restart when asked, open Ubuntu from Start, and pick a username and password (the password does not show as you type). Then tap "You're in Linux now. Continue" and you do the normal Linux steps (install Claude Code) like everyone else. Paste the prompt and Larry does the rest.` +
     (/\bwsl/i.test(t) ? " The one WSL note: LMF4.1 (Chapter 4) needs systemd, so it won't run inside a WSL setup without systemd." : "") + " Chapter 0 has the first steps: https://how.nixfred.com/00-start-here.html.";
 };
 // Mac first with a Windows catch (Fred, 2026-10-22): Windows lives on the home page (#windows: greeting, WSL steps, then Continue to #linux).
@@ -914,14 +914,14 @@ export const isCostAsk = q => COST_ASK.test(q) && !COST_OF_OTHER.test(q) && COST
 // of the home page, /byo or /recipe-box; it opens the answer when the model left it out. It does not wait for those passages to be packed:
 // with real Vectorize, Ch19's danger-mode chunks and the rewrite's page picks crowd them out of the pack (2026-10-21 run), and the line is the
 // site's own either way; the home page is cited when no packed passage carries it.
-export const SAFE_LINE = "Honest answer: you stay in charge. Your agent asks before it runs anything, shows you each command and says in plain words what it does, and nothing gets installed, run or pushed without your yes. Don't trust me, audit it: the code is public at https://github.com/nixfred/how.nixfred.com-public.";
+export const SAFE_LINE = "Honest answer: your agent does the guide's steps for you and tells you what each one does in a plain line. It never deletes or overwrites your files or settings without asking you first. Experts can audit it: the code is public at https://github.com/nixfred/how.nixfred.com-public.";
 export function safetyLead(question, body, ctx) {
   if (!BEGINNER_RISK.test(question)) return body;
-  return /without your yes/i.test(body) && /audit it/i.test(body) ? body : `${SAFE_LINE}\n\n${body}`.trim();
+  return /without asking/i.test(body) && /audit it/i.test(body) ? body : `${SAFE_LINE}\n\n${body}`.trim();
 }
 // the passage SAFE_LINE was taken from is cited when the line opens the answer
 export const SAFE_SOURCE = { url: `${SITE}/`, title: "Build Your Own AI: a Field Guide by Larry" };
-export const safeSource = (body, ctx) => String(body).startsWith(SAFE_LINE) ? ctx.find(p => /asking (?:you )?before it runs anything|without your yes/i.test(p.text)) || SAFE_SOURCE : null;
+export const safeSource = (body, ctx) => String(body).startsWith(SAFE_LINE) ? ctx.find(p => /Larry does the rest|without asking|without your yes/i.test(p.text)) || SAFE_SOURCE : null;
 export function costLead(question, body, ctx) {
   let b = noPayTalk(body);
   if (!isCostAsk(question)) return b;
