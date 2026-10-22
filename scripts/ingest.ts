@@ -81,7 +81,15 @@ const ids = (ver: string, n: number) => Array.from({ length: n }, (_, i) => `${v
 
 if (process.argv.includes("--prune")) {
   const st = existsSync(STATE) ? JSON.parse(readFileSync(STATE, "utf8")) : null;
-  if (!st?.old || st.old.version === idx.version) { console.log("nothing to prune"); process.exit(0); }
+  if (!st?.old || st.old.version === idx.version || st.old.version === st.new?.version) { console.log("nothing to prune (ingest skipped or version unchanged)"); process.exit(0); }
+  // never prune the live index: only delete the old version once the live site serves a different one (edge lag: retry ~30s)
+  let live = "";
+  for (let i = 0; i < 6; i++) {
+    try { const r = await fetch(`${LIVE}/${FILE.replace(/^site\//, "")}?v=${Date.now()}`, { signal: AbortSignal.timeout(10000) }); if (r.ok) live = (await r.json() as any).version; } catch {}
+    if (live && live !== st.old.version) break;
+    await new Promise(s => setTimeout(s, 5000));
+  }
+  if (!live || live === st.old.version) { console.log(`::warning::live still serves ${st.old.version || "nothing readable"}: not pruning it`); process.exit(0); }
   const old = ids(st.old.version, st.old.n);
   for (let i = 0; i < old.length; i += 100)
     await cf(`/vectorize/v2/indexes/${INDEX}/delete_by_ids`, { method: "POST", body: JSON.stringify({ ids: old.slice(i, i + 100) }) });
@@ -97,15 +105,29 @@ if (FLEET && !(await cf(`/vectorize/v2/indexes/${INDEX}`, {}, true))) {
 }
 
 // what is live right now (so --prune can remove it after the new deploy is up)
-let old: { version: string; n: number } | null = null;
-try { const r = await fetch(`${LIVE}/${FILE.replace(/^site\//, "")}?v=${Date.now()}`); if (r.ok) { const j: any = await r.json(); old = { version: j.version, n: FLEET ? j.N : j.chunks.length }; } } catch {}
+let old: { version: string; n: number } | null = null, liveEmbed: any = null;
+try { const r = await fetch(`${LIVE}/${FILE.replace(/^site\//, "")}?v=${Date.now()}`, { signal: AbortSignal.timeout(15000) }); if (r.ok) { const j: any = await r.json(); old = { version: j.version, n: FLEET ? j.N : j.chunks.length }; liveEmbed = j.embed; } } catch {}
+
+// the version is the content hash of the whole chunk set: when the live site already serves this exact version with
+// its vectors embedded into this index, they are in Vectorize already, so reuse them (no embedding, nothing to prune
+// afterwards: old == new). --force re-embeds anyway (the scheduled full re-ingest).
+if (!process.argv.includes("--force") && old?.version === idx.version && liveEmbed?.model && liveEmbed.index === INDEX) {
+  idx.embed = liveEmbed;
+  if (FLEET) { const { chunks, ...meta } = idx; writeFileSync(FILE, JSON.stringify(meta)); } else writeFileSync(FILE, JSON.stringify(idx));
+  writeFileSync(STATE, JSON.stringify({ old, new: { version: idx.version, n: idx.chunks.length } }));
+  console.log(`= chunk set unchanged (version ${idx.version} is live in ${INDEX}, ${liveEmbed.model}): skipped embedding`);
+  process.exit(0);
+}
 
 let model = "", vecs: number[][] = [];
 const texts = idx.chunks.map((c: any) => embedText(idx, c));
 for (const m of MODELS) {
   try {
-    vecs = [];
-    for (let i = 0; i < texts.length; i += 32) vecs.push(...await embed(m, texts.slice(i, i + 32)));
+    // batches of 32, EMBED_CONCURRENCY (default 6) in flight at once: same vectors, ~6x less wall time
+    const starts = Array.from({ length: Math.ceil(texts.length / 32) }, (_, b) => b * 32), out: number[][][] = [];
+    let next = 0; const lanes = Math.max(1, Number(process.env.EMBED_CONCURRENCY) || 6);
+    await Promise.all(Array.from({ length: lanes }, async () => { while (next < starts.length) { const b = next++; out[b] = await embed(m, texts.slice(starts[b], starts[b] + 32)); } }));
+    vecs = out.flat();
     model = m; break;
   } catch (e) { console.warn(`embedding with ${m} failed: ${e}`); if (/auth\/permission/.test(String(e))) throw e; }
 }

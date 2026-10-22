@@ -50,6 +50,10 @@
     <p class="get">You end up with your own AI teammate: it has a name you pick, it remembers your work, and it lives on your computer.</p>
     <p class="free">Free.</p>
     <p class="calm">Nothing runs without your yes. You can stop anytime. Stuck? Ask Larry on the right.</p>
+    <div class="os-pick" data-os-pick>
+      <p class="os-q">Which computer are you on?</p>
+      <a class="os-btn" href="#mac" data-pick="mac">🍎 Mac</a> <a class="os-btn" href="#linux" data-pick="linux">🐧 Linux</a> <a class="os-btn" href="#windows" data-pick="windows">🪟 Windows</a>
+    </div>
     <div class="os-step" id="mac" data-os-step="mac">
       <p class="os-h" role="heading" aria-level="2">On a Mac</p>
       <ol class="steps">
@@ -61,6 +65,7 @@
           <p class="if">If the installer says <code>~/.local/bin</code> is not in your PATH (the list of folders your Mac looks in for apps), paste this line too, press Return, and check again:</p>
           <pre><code>echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc</code></pre></li>
       </ol>
+      <p class="os-switch" hidden>Not on a Mac? <a href="#linux" data-pick="linux">Linux</a> · <a href="#windows" data-pick="windows">Windows</a></p>
     </div>
     <div class="os-step" id="linux" data-os-step="linux">
       <p class="os-h" role="heading" aria-level="2">On Linux</p>
@@ -73,8 +78,14 @@
           <p class="if">If the installer says <code>~/.local/bin</code> is not in your PATH (the list of folders Linux looks in for apps), paste this line too, press Enter, and check again:</p>
           <pre><code>echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc</code></pre></li>
       </ol>
+      <p class="os-switch" hidden>Not on Linux? <a href="#mac" data-pick="mac">Mac</a> · <a href="#windows" data-pick="windows">Windows</a></p>
     </div>
-    <p class="os-switch">On Windows? The guide runs on Linux, and Windows can run Linux with WSL: <a href="https://learn.microsoft.com/windows/wsl/install">Microsoft's own page</a> walks you through it. Then follow the Linux steps above.</p>
+    <div class="os-step" id="windows" data-os-step="windows">
+      <p class="os-h" role="heading" aria-level="2">On Windows</p>
+      <p><b>First, get Linux. It is built into Windows.</b> The guide runs on Linux, and Windows can run Linux in a window of its own (that part of Windows is called WSL). Microsoft's own page walks you through it. Then you come right back here for the Linux steps.</p>
+      <p><a class="os-go" href="https://learn.microsoft.com/windows/wsl/install">🪟 Set up Linux on Windows →</a></p>
+      <p class="os-switch" hidden>Not on Windows? <a href="#mac" data-pick="mac">Mac</a> · <a href="#linux" data-pick="linux">Linux</a></p>
+    </div>
     <h2 class="then">Then, on any computer</h2>
     <ol class="steps" start="3">
       <li><b>Step 3. Sign in.</b> In the terminal, type <code>claude</code> and press Enter. Your web browser opens: sign in with your Claude account there, then come back to the terminal.
@@ -113,6 +124,36 @@ If you get stuck, use search_site or ask_larry from the guide, and tell me strai
         <p class="saw"><b>What you'll see when it worked:</b> your AI asks you a first question: are you a novice, a mid or a super user? Answer in plain words. From there it shows you each command and waits for your yes.</p></li>
     </ol>
   </section>
+  <script>(function(){
+  var root=document.getElementById('start'); if(!root) return; var KEY='hnf-os';
+  function detect(){
+    var d=navigator.userAgentData, p=(d&&d.platform)||'', ua=navigator.userAgent||'';
+    if(d&&d.mobile) return '';
+    if(/android|ios|chrome ?os|chromium ?os/i.test(p)) return '';
+    if(/mac/i.test(p)) return 'mac'; if(/win/i.test(p)) return 'windows'; if(/linux/i.test(p)) return 'linux';
+    if(/iphone|ipad|ipod|android|cros|mobile/i.test(ua)) return '';
+    if(/macintosh|mac os x/i.test(ua)) return navigator.maxTouchPoints>1 ? '' : 'mac';
+    if(/windows/i.test(ua)) return 'windows';
+    if(/linux|x11/i.test(ua)) return 'linux';
+    return '';
+  }
+  function saved(){ try{ return localStorage.getItem(KEY)||''; }catch(e){ return ''; } }
+  function save(os){ try{ localStorage.setItem(KEY,os); }catch(e){} }
+  function show(os){
+    root.setAttribute('data-os',os||'any');
+    root.querySelector('[data-os-pick]').hidden=!!os;
+    [].forEach.call(root.querySelectorAll('[data-os-step]'),function(el){ el.hidden=el.getAttribute('data-os-step')!==os; });
+    [].forEach.call(root.querySelectorAll('.os-switch'),function(el){ el.hidden=false; });
+  }
+  var h=(location.hash||'').slice(1), os=/^(mac|linux|windows)$/.test(h) ? h : '';
+  if(os) save(os); else os=saved()||detect();
+  show(os);
+  root.addEventListener('click',function(e){
+    var a=e.target.closest('[data-pick]'); if(!a) return; var o=a.getAttribute('data-pick'); save(o);
+    show(o);
+  });
+  window.addEventListener('hashchange',function(){ var x=location.hash.slice(1); if(/^(mac|linux|windows)$/.test(x)){ save(x); show(x); } });
+})();</script>
     <p class="spine-sub"><b>What is MCP?</b> MCP stands for Model Context Protocol, the standard plug that lets an AI use outside tools. The prompt plugs your Claude Code into this guide (the <a href="ask-larry.html">how-nixfred MCP server</a>), so it works from the real pages and checks each step instead of guessing. Want the same first steps in more detail, plus the shell and the network? <a href="00-start-here.html">Chapter 0</a>. Prefer to type every command yourself? <a href="#for-builders">For builders</a>, lower on this page.</p>
     <p class="kicker">how.nixfred.com · a feature presentation · by <a href="https://larry.nixfred.com">Larry, the OG</a>, live from Fred's desk · see the rest of me at <a href="https://larry.nixfred.com">larry.nixfred.com</a></p>
     <h2 class="hi">Hi. I'm <span style="color:var(--accent)">Larry</span>. I live in Fred's terminal.</h2>
