@@ -13,7 +13,7 @@
 import { normUrl } from "./text.js";
 import SITE_DIRECTORY from "./site-directory.json";
 import { nextStep, convoNote, echoView, stripEcho, chapterOfUrl } from "./followup.js";
-import { isWindowsAsk, WINDOWS_SOURCES } from "./core.js";
+import { isWindowsAsk, WINDOWS_SOURCES, aiOpts } from "./core.js";
 import { MODELS, LIMITS, DONT_KNOW_LINE, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, isPromptAsk, sectionReply, isAgentAsk, agentReply, AGENT_SOURCES, isBuildTimeAsk, TIME_REPLY, TIME_SOURCES, chapterTimeAnswer, groundNumbers, pointToClosest, DK_SAYS, isUncoveredPlatformAsk, onlyCommandNotes, isOsVersionAsk, osVersionReply, isUninstallAsk, UNINSTALL_REPLY, readerVoice, ungroundedYesNo, noPayTalk, isExistingAsk, EXISTING_REPLY, EXISTING_SOURCES, isPrivateDetail, PRIVATE_REPLY, isPlatformAsk, platformReply, unPremise, withVariants, synHeadChunks, sectionChunks, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, COST_LINE, costLead, safetyLead, safeSource, fixHookCredit, CH21_SOURCE, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
 
 // the three ways to start, exactly as the start cards on nixfredos.com link them (spine amendment 2026-10-20 6:15 PM:
@@ -319,13 +319,13 @@ export async function fleetRewrite(env, idx, q) {
   const key = q.toLowerCase().trim(); if (RW.has(key)) return RW.get(key);
   let out = { queries: [q], onTopic: true, priv: false, ok: false };
   try {
-    const r = await withTimeout(env.AI.run(MODELS.chat, { messages: [{ role: "system", content: REWRITE_SYS(idx.glossary) }, { role: "user", content: q + " /no_think" }], max_tokens: 200, temperature: 0 }), 6000);
+    const r = await withTimeout(env.AI.run(MODELS.chat, { messages: [{ role: "system", content: REWRITE_SYS(idx.glossary) }, { role: "user", content: q + " /no_think" }], max_tokens: 200, temperature: 0 }, aiOpts(env, "fleet", "rewrite", true)), 6000);
     let j = aiText(r);
     if (typeof j !== "object") { const t = visible(j); j = JSON.parse(t.slice(t.indexOf("{"), t.lastIndexOf("}") + 1)); }
     const qs = [j.rewrite, ...(Array.isArray(j.alternates) ? j.alternates.slice(0, 3) : [])].filter(x => typeof x === "string" && x.trim()).map(x => x.trim().slice(0, 300));
     const queries = [q]; for (const x of qs) if (!queries.some(y => y.toLowerCase() === x.toLowerCase())) queries.push(x);
     out = { queries, onTopic: j.on_topic !== false, priv: j.private === true, ok: true };
-  } catch { /* the raw question + the slang table still retrieve */ }
+  } catch (e) { console.error("fleet: query rewrite failed", e && e.message); /* the raw question + the slang table still retrieve */ }
   RW.set(key, out); if (RW.size > 500) RW.delete(RW.keys().next().value);
   return out;
 }
@@ -557,10 +557,11 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   const lead = fu ? scrub(`Next up: [Chapter ${fu.n}: ${fu.title}](${fu.url}).`) + "\n\n" : "";   // a next-step answer always opens by naming its chapter
   let raw = "", model = MODELS.chat;
   try {
-    try { raw = aiText(await withTimeout(env.AI.run(model, { messages: messages.map((m, i) => i === messages.length - 1 ? { ...m, content: m.content + " /no_think" } : m), max_tokens: 500, temperature: 0.1 }), 20000)); }
-    catch { model = MODELS.chatFallback; raw = aiText(await withTimeout(env.AI.run(model, { messages, max_tokens: 500, temperature: 0.1 }), 20000)); }
+    try { raw = aiText(await withTimeout(env.AI.run(model, { messages: messages.map((m, i) => i === messages.length - 1 ? { ...m, content: m.content + " /no_think" } : m), max_tokens: 500, temperature: 0.1 }, aiOpts(env, "fleet", "answer", false, site)), 20000)); }
+    catch (e) { console.error("fleet: primary model failed, using fallback", e && e.message); model = MODELS.chatFallback; raw = aiText(await withTimeout(env.AI.run(model, { messages, max_tokens: 500, temperature: 0.1 }, aiOpts(env, "fleet", "answer", false, site)), 20000)); }
     if (typeof raw !== "string" || !visible(raw).trim()) throw new Error("empty");
-  } catch {
+  } catch (e) {
+    console.error("fleet: model failed, answering with passages", e && e.message);
     if (!ctx.length) return { answer: offTopic(site), sources: [], site, refused: true, why: "model down, nothing retrieved" };
     const a = "My language model is busy right now, so here are the most relevant passages, straight from the pages:\n\n" +
       ctx.slice(0, 3).map(p => `**${p.title}**\n${p.text.replace(/```[\s\S]*?```/g, "").slice(0, 380).trim()}...\n${p.url}`).join("\n\n");
@@ -676,7 +677,7 @@ export async function capTake(env) {
     if (!r.ok) return { ok: false, why: `cap counter HTTP ${r.status}` };
     const j = await r.json();
     return j && j.ok === true && typeof j.count === "number" ? { ok: true, count: j.count, limit: c.limit } : { ok: false, why: j?.error || "cap reached" };
-  } catch { return { ok: false, why: "cap counter unreachable" }; }
+  } catch (e) { console.error("fleet: cap counter unreachable", e && e.message); return { ok: false, why: "cap counter unreachable" }; }
 }
 const secsToUtcMidnight = () => { const n = new Date(); return Math.max(60, Math.ceil((Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() + 1) - n.getTime()) / 1000)); };
 
@@ -725,7 +726,8 @@ export async function handleFleetAsk(request, env) {
   try {
     const r = await fleetAnswer(env, request, site, q, history);
     return out({ answer: noAuthor(r.answer), sources: r.sources.map(x => ({ title: noAuthor(x.title), url: x.url })).filter(x => !AUTHOR.test(x.url)), refused: r.refused });
-  } catch {
+  } catch (e) {
+    console.error("fleet answer failed", site, e && e.message);
     return out({ error: "brain_down" }, 503);
   }
 }

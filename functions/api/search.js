@@ -11,7 +11,7 @@ export async function search(env, request, q, { k = 5, page = null } = {}) {
       const filter = page === null ? { v } : { v, page: idx.pages[page].slug };
       const r = await env.VECTORIZE.query(vec, { topK: 20, filter, returnMetadata: "none" });
       add(r.matches.map(m => +String(m.id).slice(v.length + 1)).filter(i => Number.isInteger(i) && i < idx.chunks.length), 1); mode = "hybrid";
-    } catch {}
+    } catch (e) { console.error("search: semantic leg failed", e && e.message); }
   }
   return { mode, results: [...fused.entries()].sort((a, b) => b[1] - a[1]).slice(0, k).map(([i]) => {
     const c = idx.chunks[i], p = idx.pages[c.p];

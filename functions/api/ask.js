@@ -24,6 +24,7 @@ export async function onRequestPost({ request, env }) {
         else await send(type === "final" && !body.debug ? { answer: data.answer, sources: data.sources, refused: data.refused, mode: data.mode } : data, type);
       });
     } catch (e) {
+      console.error("ask failed", e && e.message);
       try { await send({ message: "Something broke on my side. Try the search box, or ask again in a moment." }, "error"); } catch {}
     } finally { try { await w.close(); } catch {} }
   })();

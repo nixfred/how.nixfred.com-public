@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://how.nixfred.com/mcp"><img alt="MCP server version" src="https://img.shields.io/badge/MCP-v1.3.1-5aa9ff?labelColor=0e1116"></a>
   <a href="mcp-tools.json"><img alt="toolsSha256" src="https://img.shields.io/badge/toolsSha256-19b8df645406-39d0a8?labelColor=0e1116"></a>
-  <a href="https://github.com/nixfred/how.nixfred.com-public/commits/main"><img alt="last sync" src="https://img.shields.io/badge/last%20sync-2026--10--22%20%C2%B7%2061c0cd4-8893a3?labelColor=0e1116"></a>
+  <a href="https://github.com/nixfred/how.nixfred.com-public/commits/main"><img alt="last sync" src="https://img.shields.io/badge/last%20sync-2026--10--22%20%C2%B7%206866aa1-8893a3?labelColor=0e1116"></a>
   <a href="https://how.nixfred.com"><img alt="site" src="https://img.shields.io/badge/site-how.nixfred.com-dbe3ec?labelColor=0e1116"></a>
 </p>
 
@@ -66,6 +66,10 @@ jq -S -c .result.tools /tmp/tl.json | tr -d '\n' | sha256sum
 
 All three should print the same hash. The private repo's CI fails the build when `mcp-tools.json` does not match the server code, so a mismatch here means something changed that was not published.
 
+## What we measure
+
+For `/mcp` and `/api/*` only, each request writes one data point to Cloudflare Workers Analytics Engine: the route, the HTTP method, the status code and how long the response took. That is all. No IP address, no question text, no tool arguments, no identifiers. Static pages are not counted. The queries we run are in `docs/analytics.sql`, and the code that writes the data point is `functions/_middleware.js`, mirrored here.
+
 ## What is here
 
 | Path | What it is |
@@ -83,4 +87,4 @@ Check the manifest against the code yourself: `bun install && bun scripts/mcp-ma
 **Held back until fixed at the source** (listed here, never dropped silently):
 - nothing right now
 
-Mirrored from private commit `61c0cd4` on 2026-10-22.
+Mirrored from private commit `6866aa1` on 2026-10-22.

@@ -11,6 +11,10 @@ import { nextStep, convoNote, echoView, stripEcho, chapterOfUrl } from "./follow
 import { MCP_ADD_WHY } from "./manifest.js";
 import BYO from "../byo/byo.js";   // the one prompt generator (audit rule 40): the existing-setup answer below is its build("existing")
 
+// 5.x every Workers AI call goes through the "how-nixfred" AI Gateway (logs off, so no question text is stored there).
+// Metadata is the surface (ask, fleet or mcp), the call and, for fleet, the site name; never the question or the caller.
+// Only the query rewrite is cached (same question, same rewrite); answers and embeddings never are. AI_GATEWAY="off" bypasses it.
+export const aiOpts = (env, route, call, cache = false, site = null) => env && env.AI_GATEWAY === "off" ? {} : { gateway: { id: (env && env.AI_GATEWAY) || "how-nixfred", ...(cache ? { cacheTtl: 86400 } : { skipCache: true }), metadata: { surface: (env && env.AI_SURFACE) || route, call, ...(site ? { site } : {}) } } };
 export const MODELS = {
   // picked from the live Workers AI catalog + pricing (Oct 2026): Qwen3 30B-A3B MoE (3B active) at
   // $0.051/M in, $0.335/M out, same family as the local qwen3:8b bot, thinking switched off.
@@ -558,14 +562,14 @@ export async function rewrite(env, idx, question) {
   if (RW_CACHE.has(key)) return RW_CACHE.get(key);
   let out = { queries: [question], pages: [], onTopic: true, ok: false };
   try {
-    const r = await withTimeout(env.AI.run(MODELS.chat, { messages: [{ role: "system", content: REWRITE_SYS(idx.glossary) }, { role: "user", content: question + " /no_think" }], max_tokens: 220, temperature: 0 }), 6000);
+    const r = await withTimeout(env.AI.run(MODELS.chat, { messages: [{ role: "system", content: REWRITE_SYS(idx.glossary) }, { role: "user", content: question + " /no_think" }], max_tokens: 220, temperature: 0 }, aiOpts(env, "ask", "rewrite", true)), 6000);
     let j = aiText(r);
     if (typeof j !== "object") { const t = visible(j); j = JSON.parse(t.slice(t.indexOf("{"), t.lastIndexOf("}") + 1)); }
     const qs = [j.rewrite, ...(Array.isArray(j.alternates) ? j.alternates.slice(0, 3) : [])].filter(x => typeof x === "string" && x.trim()).map(x => x.trim().slice(0, 300));
     const queries = [question]; for (const q of qs) if (!queries.some(x => x.toLowerCase() === q.toLowerCase())) queries.push(q);
     const pages = []; for (const t of (Array.isArray(j.pages) ? j.pages : []).slice(0, 3)) { const i = idx.byShort.get(String(t).split(":")[0].trim().toLowerCase()); if (i !== undefined && !pages.includes(i)) pages.push(i); }
     out = { queries, pages, onTopic: j.on_topic !== false, ok: true };
-  } catch { /* fall back to the raw question + the slang table */ }
+  } catch (e) { console.error("ask: query rewrite failed", e && e.message); /* fall back to the raw question + the slang table */ }
   RW_CACHE.set(key, out); if (RW_CACHE.size > 500) RW_CACHE.delete(RW_CACHE.keys().next().value);
   return out;
 }
@@ -573,7 +577,7 @@ export async function rewrite(env, idx, question) {
 // ---------------------------------------------------------------- hybrid retrieval with RRF
 export async function embedQueries(env, idx, texts) {
   const model = idx.embed?.model || MODELS.embedDefault;
-  const r = await withTimeout(env.AI.run(model, { text: texts }), 5000);
+  const r = await withTimeout(env.AI.run(model, { text: texts }, aiOpts(env, "ask", "embed")), 5000);
   return r.data;
 }
 export async function retrieve(env, idx, question, { k = LIMITS.topK, page = null, useRewrite = true } = {}) {
@@ -599,7 +603,7 @@ export async function retrieve(env, idx, question, { k = LIMITS.topK, page = nul
       if (picked.length) vecs.slice(0, 2).forEach(vec => jobs.push(env.VECTORIZE.query(vec, { topK: POOL, filter: { v, page: { $in: picked } }, returnMetadata: "none" }).then(r => add(r.matches.map(m => ofId(m.id)).filter(i => i >= 0), PAGE_W))));
       if (page !== null) jobs.push(env.VECTORIZE.query(vecs[0], { topK: POOL, filter: { v, page: idx.pages[page].slug }, returnMetadata: "none" }).then(r => add(r.matches.map(m => ofId(m.id)).filter(i => i >= 0), 1)));
       await Promise.all(jobs);
-    } catch { mode = "keyword"; }
+    } catch (e) { console.error("ask: vector search failed, keyword only", e && e.message); mode = "keyword"; }
   } else mode = "keyword";
   // pages the rewrite picked also get a small keyword-side boost (works even without vectors)
   if (rw.pages.length && mode === "keyword") rw.pages.forEach(pi => add(bm25(idx, queries.join(" "), { page: pi }), PAGE_W));
@@ -1334,8 +1338,8 @@ export async function answer(env, request, question, { history = [], page = null
   };
   try {
     let stream;
-    try { stream = await env.AI.run(MODELS.chat, { messages: messages.map((m, i) => i === messages.length - 1 ? { ...m, content: m.content + " /no_think" } : m), stream: true, max_tokens: LIMITS.maxTokens, temperature: 0.1 }); }
-    catch { model = MODELS.chatFallback; stream = await env.AI.run(model, { messages, stream: true, max_tokens: LIMITS.maxTokens, temperature: 0.1 }); }
+    try { stream = await env.AI.run(MODELS.chat, { messages: messages.map((m, i) => i === messages.length - 1 ? { ...m, content: m.content + " /no_think" } : m), stream: true, max_tokens: LIMITS.maxTokens, temperature: 0.1 }, aiOpts(env, "ask", "answer")); }
+    catch (e) { console.error("ask: primary model failed, using fallback", e && e.message); model = MODELS.chatFallback; stream = await env.AI.run(model, { messages, stream: true, max_tokens: LIMITS.maxTokens, temperature: 0.1 }, aiOpts(env, "ask", "answer")); }
     const reader = stream.getReader(); const dec = new TextDecoder(); let buf = "";
     for (;;) {
       const { done, value } = await reader.read(); if (done) break;
@@ -1351,7 +1355,8 @@ export async function answer(env, request, question, { history = [], page = null
       }
     }
     if (!visible(raw).trim()) throw new Error("empty");
-  } catch {
+  } catch (e) {
+    console.error("ask: model stream failed", e && e.message);
     failed = true;
   }
   let fin;
@@ -1428,7 +1433,7 @@ const LIMIT_FALLBACK = { ASK: 8, SEARCH: 40, MCP: 60, FLEET: 8 };
 export async function rateLimit(env, request, bucket) {
   const key = clientIp(request);
   if (env.RL) {
-    try { const r = await env.RL.fetch("https://rl.internal/", { method: "POST", body: JSON.stringify({ bucket, key }) }); if (r.ok) { const j = await r.json(); if (!j.error) return j.ok; } } catch {}
+    try { const r = await env.RL.fetch("https://rl.internal/", { method: "POST", body: JSON.stringify({ bucket, key }) }); if (r.ok) { const j = await r.json(); if (!j.error) return j.ok; } } catch (e) { console.error("rate limit worker unreachable, per-isolate fallback", e && e.message); }
   }
   const now = Date.now(), k = bucket + ":" + key; const arr = (MEM.get(k) || []).filter(t => now - t < 60000);
   if (arr.length >= LIMIT_FALLBACK[bucket]) return false;

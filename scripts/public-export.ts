@@ -6,7 +6,7 @@ import { join, relative } from "node:path";
 const ROOT = `${import.meta.dir}/..`; const OUT = process.argv[2];
 
 // what goes out: served files, the server code, the scripts that build the index and the manifest
-const ALLOW = ["site", "functions", "ask", "scripts/ask-index.ts", "scripts/mcp-manifest.ts", "scripts/ingest.ts", "scripts/public-export.ts",
+const ALLOW = ["site", "functions", "ask", "scripts/ask-index.ts", "scripts/mcp-manifest.ts", "scripts/ingest.ts", "scripts/public-export.ts", "docs/analytics.sql",
   "scripts/fleet-index.ts", "scripts/fleet-crawl.ts",
   "mcp-tools.json", "package.json", "bun.lock"];
 // held back on purpose until fixed at the source (each is listed in the public README, never dropped silently).

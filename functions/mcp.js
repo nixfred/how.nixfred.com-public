@@ -4,6 +4,8 @@
 // Its main job: help a visitor's AI install their own setup WITH them, grounded only in this site.
 import { answer, loadIndex, loadPagesMd, findPage, originOk, rateLimit, json, LIMITS, SITE } from "../ask/core.js";
 import * as fleet from "../ask/fleet.js";
+// tag Workers AI calls made for MCP tools as surface "mcp" in AI Gateway analytics (the bindings are read through the prototype)
+const mcpEnv = (env) => Object.assign(Object.create(env), { AI_SURFACE: "mcp" });
 import { search } from "./api/search.js";
 import { MCP_ADD, MCP_ADD_WHY, MANIFEST_URL, SOURCE_REPO, toolsSha256 } from "../ask/manifest.js";
 import { STANDING_RULE, installPlan, nextStep, checkStep, prerequisites } from "../ask/install.js";
@@ -84,14 +86,14 @@ async function callTool(env, request, name, a) {
     case "search_site": {
       const q = String(a.query || "").trim(); if (!q) return { text: "query is required", isError: true };
       if (q.length > LIMITS.questionChars) return { text: `query must be under ${LIMITS.questionChars} characters`, isError: true };
-      const r = await search(env, request, q, { k: Math.min(10, Math.max(1, +a.k || 5)) });
+      const r = await search(mcpEnv(env), request, q, { k: Math.min(10, Math.max(1, +a.k || 5)) });
       return { text: `${DATA_NOTE}\n\n` + (r.results.map((x, n) => `[${n + 1}] ${x.title} > ${x.heading}\n${x.url}\n${x.text}`).join("\n\n---\n\n") || "No matches."), structured: { results: r.results, retrieval: r.mode } };
     }
     case "ask_larry": {
       const q = String(a.question || "").trim(); if (!q) return { text: "question is required", isError: true };
       if (q.length > LIMITS.questionChars) return { text: `question must be under ${LIMITS.questionChars} characters`, isError: true };
       if (!(await rateLimit(env, request, "ASK"))) return { text: "Rate limit hit for ask_larry. Wait a minute, or use search_site and get_page meanwhile.", isError: true };
-      const r = await answer(env, request, q, { fleet });
+      const r = await answer(mcpEnv(env), request, q, { fleet });
       const src = r.sources.length ? `\n\nSources:\n${r.sources.map(s => s.url).join("\n")}` : "";
       return { text: `${r.answer}${src}\n\n(${DATA_NOTE})`, structured: { answer: r.answer, sources: r.sources, refused: r.refused } };
     }
@@ -116,14 +118,14 @@ async function handle(env, request, msg, ver, modern) {
   }
   if (method === "server/discover") return { status: 200, body: ok({ supportedVersions: SUPPORTED, capabilities: { tools: { listChanged: false } }, instructions: INSTRUCTIONS, ttlMs: 3600000, cacheScope: "public" }) };
   if (method === "ping") return { status: 200, body: ok({}) };
-  if (method === "tools/list") return { status: 200, body: ok({ tools: TOOLS, version: INFO.version, toolsSha256: INFO.toolsSha256 }) };
+  if (method === "tools/list") return { status: 200, body: ok({ tools: TOOLS, version: INFO.version, toolsSha256: INFO.toolsSha256, ...(modern ? { ttlMs: 3600000, cacheScope: "public" } : {}) }) };   // modern clients reject a list result without its cache fields
   if (method === "tools/call") {
     const name = params?.name;
     if (!TOOLS.some(t => t.name === name)) return e(-32602, `Unknown tool: ${String(name).slice(0, 60)}`);
     try {
       const r = await callTool(env, request, name, params?.arguments);
       return { status: 200, body: ok(textResult(r.text, r.structured ? { standing_rule: STANDING_RULE, ...r.structured } : null, !!r.isError)) };
-    } catch { return { status: 200, body: ok(textResult("The tool failed on my side. Try again in a moment.", null, true)) }; }
+    } catch (e) { console.error("mcp tool failed", name, e && e.message); return { status: 200, body: ok(textResult("The tool failed on my side. Try again in a moment.", null, true)) }; }
   }
   return e(-32601, "Method not found", modern ? 404 : 200);
 }
