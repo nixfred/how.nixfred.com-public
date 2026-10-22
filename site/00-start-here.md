@@ -10,7 +10,7 @@ slug: "00-start-here"
 
 **This one is for you, the human, the whole way through.** You don't have an AI yet, so you run these steps yourself. Each step is one thing to do, a line to copy, and what you'll see when it worked. It works on a **Mac** first, on **Windows** too, and on **Linux**. On a Mac, start below. On Windows? You turn on Linux first (it is built into Windows, called WSL): the [Windows steps on the home page](index.html#windows) take five short steps and one restart, then you carry on below with the Linux lines. The [home page](index.html#start) has the same first steps in short form; this page has them in full.
 
-**Free.** Paste it and Larry does the rest. Stuck? Ask Larry on the right.
+**The guide is free. Claude Code usage requires paid access.** Paste it and Larry does the rest. Stuck? Ask Larry on the right.
 
 > A few words first. A **terminal** is the window where you type commands. A **command** is one line you paste there and run with Enter (Return on a Mac). **Claude Code** is the app your AI lives in. When you finish a step, come back here for the next.
 
@@ -56,11 +56,13 @@ claude --version
 
 ---
 
-## Step 2, The money talk (short version: free)
+## Step 2, The money talk
 
-**Free.** The guide, the seed kit, the tools and the whole build cost nothing. No catch, no upsell, nothing to buy from this site. Claude Code signs in with your own Claude account in Step 3, and that's the only account this build needs.
+**The guide and seed kit are free. Claude Code usage is separate.** You need an eligible paid Claude plan or paid API/provider access. A free Claude chat account does not include Claude Code usage. Nothing is sold by this site.
 
-**Done when:** you know what this build costs (nothing) and you have the Claude account you'll sign in with in Step 3.
+Check [Anthropic's current pricing](https://claude.com/pricing) and [Claude Code billing documentation](https://code.claude.com/docs/en/costs) before you sign in. Plan limits and provider charges apply. Other services you choose may have their own charges.
+
+**Done when:** you understand that the guide is free and Claude Code usage requires paid access, and you have an eligible account for Step 3.
 
 ---
 
@@ -290,7 +292,7 @@ Lost track of where you are? The [Map](map.html) shows you, and your AI's progre
 ### Chapter 0: Takeaways
 
 1. Install Claude Code with `curl -fsSL https://claude.ai/install.sh | bash` (Mac or Linux; on Windows, [get Linux first](windows.html)).
-2. **Free.** The guide, the tools and the build cost nothing.
+2. **The guide and seed kit are free.** Claude Code usage requires an eligible paid plan or paid API/provider access.
 3. Claude Code asks before risky actions by default. Fred runs `claude --dangerously-skip-permissions`, danger mode. Guardrail alternative: Chapter 19.
 4. Set up a shell and the small tools the build checks with (`jq`, `git`, `curl`, `unzip`): nixbash on Linux (any of Debian, Ubuntu, Fedora, Arch); on Mac install Homebrew, add iTerm2 (`brew install --cask iterm2`, the terminal Fred lives in), then switch from zsh to a modern bash permanently (`brew install bash` → add to `/etc/shells` → `chsh -s "$(brew --prefix)/bin/bash"`). `chsh` makes bash the default in both iTerm2 and Apple Terminal. Then relaunch with `claude --dangerously-skip-permissions --continue`.
 5. Log in with your Claude account (`/login` to redo it); that's the handshake that connects it to the terminal.

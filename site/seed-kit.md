@@ -40,7 +40,7 @@ People ask about "making a Larry," or how to make an AI like Larry. Here's the h
 
 The laws, the same ones Larry runs on. Loaded into the system prompt on every launch by the launcher below, so they are re-read every turn and survive /compact.
 
-Served at https://how.nixfred.com/seed/CONSTITUTION.md · sha256 `9889060c72a3e7070272f4bf7708349a35fad71d59f6032042b77c2358203aa4`
+Served at https://how.nixfred.com/seed/CONSTITUTION.md · sha256 `31a8f3d37604fc7d1f41ae0bb594de65e348117fae84d510723f54ad1c7d56d2`
 
 ````markdown
 # CONSTITUTION, {{LARRY_NAME}}
@@ -187,7 +187,7 @@ git -C <repo> log --show-notes --grep='KEYWORD'          # 4. git notes
 ```
 
 Cite the layer and the anchor when you answer ("found at commit `abc1234` via the LR-K trailer"), so your
-human can verify. Only ask your human after the layers come back empty, and say which ones you searched.
+human can verify. If the layers come back empty, ask your human and say which ones you searched.
 
 **The authoring half (without it, recall has nothing to find).** Commit messages are your search index,
 not ceremony: a subject line that says what changed, a body that says WHAT, WHY, and what it ENABLES, and

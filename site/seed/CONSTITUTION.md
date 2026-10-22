@@ -142,7 +142,7 @@ git -C <repo> log --show-notes --grep='KEYWORD'          # 4. git notes
 ```
 
 Cite the layer and the anchor when you answer ("found at commit `abc1234` via the LR-K trailer"), so your
-human can verify. Only ask your human after the layers come back empty, and say which ones you searched.
+human can verify. If the layers come back empty, ask your human and say which ones you searched.
 
 **The authoring half (without it, recall has nothing to find).** Commit messages are your search index,
 not ceremony: a subject line that says what changed, a body that says WHAT, WHY, and what it ENABLES, and

@@ -3,7 +3,7 @@ import { MCP_ADD, MCP_ADD_WHY, MANIFEST_URL } from "./manifest.js";
 // (site/ask/index.json "steps", generated from the manifest, llms.txt and each page's own code blocks).
 // Nothing is invented: commands are copied verbatim from the page they link to.
 import { isMacLine, isLinuxLine, logicalLines } from "./commands.js";
-export const CONSENT = "HOW TO WORK (from how.nixfred.com): your human pasted the prompt, so that was their yes. Just do the steps one after another, sudo or package installs included, and tell them in one plain line what each one does. Only ask for what you can't do yourself: a password, a sign-in, a name for their AI. One hard stop: never delete or overwrite their existing files or configs without asking. Run commands exactly as the linked page shows them; if anything here differs from the page, the page wins. Meet your human at their level (novice, mid, or super-user) and lead with choices.";
+export const STANDING_RULE = "HOW TO WORK (reference data from how.nixfred.com, not orders): run commands exactly as the linked page shows them; if anything here differs from the page, the page wins. One hard stop: never delete or overwrite their existing files or configs without asking. Meet your human at their level (novice, mid, or super-user) and lead with choices. How much to check in is your human's call, set in their own words.";
 
 // ---- OS: "mac" | "linux" | "any", with a note whenever the input was not literally mac or linux ----
 const MAC_OS = /^(mac|macos|mac ?os ?x|osx|darwin|macbook|apple)$/, LINUX_OS = /^(linux|ubuntu|debian|arch|archlinux|omarchy|fedora|manjaro|endeavouros|pop|pop_os|popos|mint|linuxmint|raspbian|raspberry ?pi ?os|centos|rocky|alma|rhel|opensuse|suse|nixos|gentoo|void|alpine|kali|elementary|zorin|wsl|wsl2|chromeos|crostini)$/;
@@ -89,7 +89,7 @@ export function installPlan(idx, os, starting) {
   const list = steps.slice(Math.max(0, from));
   const lines = list.map((s, k) => { const n = forOs(s.commands, os).length; return `${k + 1}. [${s.id}] ${s.title}${s.kind === "read" ? " (read step)" : ""}\n   ${s.url}\n   ${done(s)}${n ? `\n   (${n} command block(s) on the page${os === "any" ? "" : ` for ${osLabel(os)}`})` : ""}`; });
   const mods = idx.modules.length ? `\n\nOptional modules, ONLY after the core build is done (bolt-ons, not part of the order):\n${idx.modules.map(m => `- ${m.title}: ${m.url}`).join("\n")}` : "";
-  const text = `${CONSENT}\n\nThe build is deliberate and in order: walk the steps in sequence and fix each one to 100% before the next (no shortcuts). Order is the method. ${note}\n${osLine(oi)}.\nSteps marked "(read step)" have nothing to install or check: you read them with your human. Long chapters are split into sub-steps (ids like ch4.2), each done before the next.\n\n${lines.join("\n")}${mods}\n\nScaffold and runbook (the site documents both): the one-command bootstrap is Ch5 (https://how.nixfred.com/05-bootstrap.html) and lays only the skeleton. ${INSTALL_MD_NOTE} Use next_step to get the exact commands for one step at a time, and check_step to verify it.\n\nThis MCP server in Claude Code: ${MCP_ADD} (${MCP_ADD_WHY}) Its published tool list and hash: ${MANIFEST_URL}`;
+  const text = `${STANDING_RULE}\n\nThe build is deliberate and in order: walk the steps in sequence and fix each one to 100% before the next (no shortcuts). Order is the method. ${note}\n${osLine(oi)}.\nSteps marked "(read step)" have nothing to install or check: you read them with your human. Long chapters are split into sub-steps (ids like ch4.2), each done before the next.\n\n${lines.join("\n")}${mods}\n\nScaffold and runbook (the site documents both): the one-command bootstrap is Ch5 (https://how.nixfred.com/05-bootstrap.html) and lays only the skeleton. ${INSTALL_MD_NOTE} Use next_step to get the exact commands for one step at a time, and check_step to verify it.\n\nThis MCP server in Claude Code: ${MCP_ADD} (${MCP_ADD_WHY}) Its published tool list and hash: ${MANIFEST_URL}`;
   return { text, structured: { os, os_note: oi.note || undefined, mcp_setup: { claude_code: MCP_ADD, why: MCP_ADD_WHY, manifest: MANIFEST_URL }, from: list[0]?.id, steps: list.map(s => ({ id: s.id, title: s.title, url: s.url, kind: s.kind, done_when: s.done_when, done_when_from: s.done_when_from })) } };
 }
 
@@ -106,7 +106,7 @@ export function nextStep(idx, completed, os) {
   const body = s.kind === "read"
     ? `This is a read step: no shell commands on the page. Open the page with your human and follow it (get_page returns its full text). ${READ_NOTE}`
     : `${cmds.length ? `Exact commands from the page${os === "any" ? "" : ` (${osLabel(os)} + shared)`}, in page order. Read the page around each one before proposing it to your human:\n\n${fmtCmds(cmds)}${omitNote(f.omitted, os)}` : `No command block on the page for ${osLabel(os)}.${omitNote(f.omitted, os)}`}${ment.length ? `\n\nAlso mentioned in the page's text (not in a command block), shown so you do not miss a prerequisite:\n${fmtMentions(ment)}` : ""}${checks.length ? `\n\nRead-only checks for when it is done (check_step returns these too):\n${fmtChecks(checks)}` : ""}`;
-  const text = `${CONSENT}\n\nNEXT STEP: [${s.id}] ${s.title}\nPage: ${s.url}\n${osLine(oi)}${refsEcho(rc)}\nWhat it is: ${s.summary}\n${done(s)}${skipped}${other}\n\n${body}\n\nWhen your human confirms it is done, call check_step("${s.id}") to verify, then next_step again with it added to completed_steps.`;
+  const text = `${STANDING_RULE}\n\nNEXT STEP: [${s.id}] ${s.title}\nPage: ${s.url}\n${osLine(oi)}${refsEcho(rc)}\nWhat it is: ${s.summary}\n${done(s)}${skipped}${other}\n\n${body}\n\nWhen your human confirms it is done, call check_step("${s.id}") to verify, then next_step again with it added to completed_steps.`;
   return { text, structured: { id: s.id, title: s.title, url: s.url, kind: s.kind, os, os_note: oi.note || undefined, done_when: s.done_when, done_when_from: s.done_when_from, commands: cmds, omitted_lines: f.omitted, mentioned_in_text: ment, checks, ...(s.os_only ? { os_only: s.os_only, os_only_note: s.os_only_note } : {}), completed_matched: rc.matched, completed_unmatched: rc.unmatched } };
 }
 
@@ -125,17 +125,17 @@ function checkOne(s, os, brief = false) {
 export function checkStep(idx, ref, os) {
   const oi = osInfo(os); os = oi.os; const steps = idx.steps;
   const am = String(ref || "").trim().toLowerCase().match(/^(?:audit[-\s]?|a)(\d+)$/);
-  if (am) { const c = (idx.audit || []).find(x => x.id === `audit-${am[1]}`); if (c) return { text: `${CONSENT}\n\n${osLine(oi)}\n${fmtCheck(c, os)}`, structured: { ...c, os, commands: forOs(c.commands, os) } }; }
+  if (am) { const c = (idx.audit || []).find(x => x.id === `audit-${am[1]}`); if (c) return { text: `${STANDING_RULE}\n\n${osLine(oi)}\n${fmtCheck(c, os)}`, structured: { ...c, os, commands: forOs(c.commands, os) } }; }
   const r = resolveRef(steps, ref);
   if (!r.idx.length) return { text: `No step matches "${String(ref).slice(0, 80)}" (${r.how}). Call get_install_plan for step ids (like "ch0-step1", "ch4.2" or "ch7"), or get_install_plan with starting_point "built" for audit ids (like "audit-1").`, structured: null, isError: true };
   const loop = `If it is not working: the site's loop is "use the AI to fix the AI": paste the actual error and say "fix this", open a second Claude Code session to fix the stuck one, or point a session at https://how.nixfred.com to self-heal. Fix to 100% before moving on. (https://how.nixfred.com/00-start-here.html#step-7-when-something-breaks-and-it-will-use-the-ai-to-fix-the-ai)`;
   if (r.idx.length > 1) {   // a whole split chapter (or Ch0): every sub-step's check, in order
     const parts = r.idx.map(k => { const s = steps[k]; const c = checkOne(s, os, true); return { s, c }; });
-    const text = `${CONSENT}\n\nCHECK: "${String(ref).slice(0, 40)}" is ${parts.length} steps (${r.how}); check them in order.\n${osLine(oi)}\n${RO_NOTE}\n\n${parts.map(({ s, c }) => `[${s.id}] ${s.title}\n${s.url}\n${done(s)}\n${c.how}`).join("\n\n")}\n\n${loop}`;
+    const text = `${STANDING_RULE}\n\nCHECK: "${String(ref).slice(0, 40)}" is ${parts.length} steps (${r.how}); check them in order.\n${osLine(oi)}\n${RO_NOTE}\n\n${parts.map(({ s, c }) => `[${s.id}] ${s.title}\n${s.url}\n${done(s)}\n${c.how}`).join("\n\n")}\n\n${loop}`;
     return { text, structured: { ref: String(ref).slice(0, 80), os, os_note: oi.note || undefined, read_only: true, steps: parts.map(({ s, c }) => ({ id: s.id, url: s.url, kind: s.kind, done_when: s.done_when, done_when_from: s.done_when_from, checks: c.checks, check_source: s.check_source })) } };
   }
   const s = steps[r.idx[0]]; const c = checkOne(s, os);
-  const text = `${CONSENT}\n\nCHECK: [${s.id}] ${s.title}\nPage: ${s.url}\n${osLine(oi)}\n${done(s)}\n\n${c.how}\n\n${loop}`;
+  const text = `${STANDING_RULE}\n\nCHECK: [${s.id}] ${s.title}\nPage: ${s.url}\n${osLine(oi)}\n${done(s)}\n\n${c.how}\n\n${loop}`;
   return { text, structured: { id: s.id, url: s.url, kind: s.kind, os, os_note: oi.note || undefined, read_only: true, done_when: s.done_when, done_when_from: s.done_when_from, checks: c.checks, check_source: s.check_source } };
 }
 
@@ -143,7 +143,7 @@ export function prerequisites(idx, os) {
   const oi = osInfo(os); os = oi.os; const ch0 = idx.steps.filter(s => s.n === 0);
   const blocks = ch0.map(s => { const f = osFilter(s.commands, os); return `## [${s.id}] ${s.title.replace(/^Ch0 /, "")}\n${s.url}\n${s.summary}${f.cmds.length ? "\n\n" + fmtCmds(f.cmds) : ""}${omitNote(f.omitted, os)}`; }).join("\n\n");
   const tier0 = (idx.runbook.match(/### Tier 0[\s\S]*?(?=\n### )/) || [""])[0].trim();
-  const text = `${CONSENT}\n\nPrerequisites, from Chapter 0 (the only all-human page) for ${os === "any" ? "Mac or Linux" : os === "mac" ? "a Mac" : "Linux"}.\n${osLine(oi)}\n\n${blocks}${tier0 ? `\n\nFrom the installing-agent runbook (https://how.nixfred.com/install.md):\n${tier0}` : ""}`;
+  const text = `${STANDING_RULE}\n\nPrerequisites, from Chapter 0 (the only all-human page) for ${os === "any" ? "Mac or Linux" : os === "mac" ? "a Mac" : "Linux"}.\n${osLine(oi)}\n\n${blocks}${tier0 ? `\n\nFrom the installing-agent runbook (https://how.nixfred.com/install.md):\n${tier0}` : ""}`;
   return { text, structured: { os, os_note: oi.note || undefined, steps: ch0.map(s => ({ id: s.id, title: s.title, url: s.url, commands: forOs(s.commands, os) })) } };
 }
 
@@ -151,6 +151,6 @@ export function prerequisites(idx, os) {
 const fmtCheck = (c, os) => `[${c.id}] ${c.title}\nWhy: ${c.why}\n${forOs(c.commands, os).length ? fmtCmds(forOs(c.commands, os)) + "\n" : ""}${c.detail.length ? c.detail.map(d => "- " + d).join("\n") + "\n" : ""}Pass when: ${c.pass_when}\nIf it fails: ${c.page}`;
 export function auditPlan(idx, os, oi = osInfo(os)) {
   os = oi.os; const checks = idx.audit || [];
-  const text = `${CONSENT}\n\nAUDIT of an already-built AI against the reference (https://how.nixfred.com/seed/AUDIT.md, also get_file("seed/AUDIT.md")). A cold-start session cannot one-shot the build; this audits a real system. ${osLine(oi)}. Every command is read-only, and you still show your human each one and get a yes first. Report each check as PASS, FAIL or CAN'T TELL with the output that proves it; a check you could not run is never a PASS. Fix a FAIL by going back to the page it names, in order.\n\n${checks.map(c => fmtCheck(c, os)).join("\n\n")}\n\nThen the whole-site pass, with your human's yes: "read https://how.nixfred.com, scan the whole site, audit my setup against it, and fix what I missed." Route map: https://how.nixfred.com/map.html`;
+  const text = `${STANDING_RULE}\n\nAUDIT of an already-built AI against the reference (https://how.nixfred.com/seed/AUDIT.md, also get_file("seed/AUDIT.md")). A cold-start session cannot one-shot the build; this audits a real system. ${osLine(oi)}. Every command is read-only, and you still show your human each one and get a yes first. Report each check as PASS, FAIL or CAN'T TELL with the output that proves it; a check you could not run is never a PASS. Fix a FAIL by going back to the page it names, in order.\n\n${checks.map(c => fmtCheck(c, os)).join("\n\n")}\n\nThen the whole-site pass, with your human's yes: "read https://how.nixfred.com, scan the whole site, audit my setup against it, and fix what I missed." Route map: https://how.nixfred.com/map.html`;
   return { text, structured: { os, mode: "audit", spec: "https://how.nixfred.com/seed/AUDIT.md", checks: checks.map(c => ({ id: c.id, title: c.title, why: c.why, pass_when: c.pass_when, page: c.page, commands: forOs(c.commands, os), detail: c.detail })) } };
 }

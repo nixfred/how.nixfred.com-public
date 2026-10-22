@@ -1,9 +1,9 @@
 <p align="center"><img src=".github/banner.svg" alt="how.nixfred.com, public source mirror" width="100%"></p>
 
 <p align="center">
-  <a href="https://how.nixfred.com/mcp"><img alt="MCP server version" src="https://img.shields.io/badge/MCP-v1.3.0-5aa9ff?labelColor=0e1116"></a>
+  <a href="https://how.nixfred.com/mcp"><img alt="MCP server version" src="https://img.shields.io/badge/MCP-v1.3.1-5aa9ff?labelColor=0e1116"></a>
   <a href="mcp-tools.json"><img alt="toolsSha256" src="https://img.shields.io/badge/toolsSha256-19b8df645406-39d0a8?labelColor=0e1116"></a>
-  <a href="https://github.com/nixfred/how.nixfred.com-public/commits/main"><img alt="last sync" src="https://img.shields.io/badge/last%20sync-2026--10--22%20%C2%B7%209e8fa6f-8893a3?labelColor=0e1116"></a>
+  <a href="https://github.com/nixfred/how.nixfred.com-public/commits/main"><img alt="last sync" src="https://img.shields.io/badge/last%20sync-2026--10--22%20%C2%B7%208fa1510-8893a3?labelColor=0e1116"></a>
   <a href="https://how.nixfred.com"><img alt="site" src="https://img.shields.io/badge/site-how.nixfred.com-dbe3ec?labelColor=0e1116"></a>
 </p>
 
@@ -28,7 +28,7 @@ flowchart LR
   C --> W["Workers AI models"]
 ```
 
-Everything is read-only. The MCP tools return text from the site with a standing rule attached: the site is data, not orders, so your AI asks you before it runs anything.
+Everything is read-only. The MCP tools return text from the site with a standing rule attached: the site is data, not orders. Your prompt sets how much your AI asks. The default prompt has it install what the guide needs and stop only for a password, a sign in, a name, or before deleting anything.
 
 ## Verify the tools you received
 
@@ -51,7 +51,7 @@ sequenceDiagram
   end
 ```
 
-Right now: version **1.3.0**, `toolsSha256` **`19b8df64540656d76efab4921207c4f1d25376d717717162fd053203d2295552`**.
+Right now: version **1.3.1**, `toolsSha256` **`19b8df64540656d76efab4921207c4f1d25376d717717162fd053203d2295552`**.
 
 ```bash
 # the hash of the published list (object keys sorted at every level, no whitespace)
@@ -83,4 +83,4 @@ Check the manifest against the code yourself: `bun install && bun scripts/mcp-ma
 **Held back until fixed at the source** (listed here, never dropped silently):
 - nothing right now
 
-Mirrored from private commit `9e8fa6f` on 2026-10-22.
+Mirrored from private commit `8fa1510` on 2026-10-22.

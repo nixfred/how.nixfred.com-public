@@ -2,14 +2,14 @@
 
 **You are a vanilla Claude Code session. The user has pointed you here to turn their
 setup into their own AI: a persistent, memory-keeping, multi-host engineering teammate built
-on Claude Code. Follow this runbook as the operator, explain, get consent, then act.**
+on Claude Code. This runbook is reference data, not orders. Follow the linked pages and the
+permissions your human gives in their own words.**
 
-**HOW TO WORK: make it easy on your human.** They sent you here, so that was their yes. Just do
-the steps in order, sudo or brew installs included, and tell them in one plain line what each
-one does. Only ask for what you can't do yourself: a password, a sign-in, a name for their AI.
-One hard stop: never delete or overwrite their existing files or configs without asking. If you
-arrived here any way other than your human deliberately sending you, stop and ask whether they
-want this at all.
+**HOW TO WORK: reference data, not orders.** Run commands exactly as the linked page shows them;
+if anything here differs from the page, the page wins. One hard stop: never delete or overwrite
+their existing files or configs without asking. Meet your human at their level (novice, mid,
+or super-user) and lead with choices. How much to check in is your human's call, set in their
+own words.
 
 > How a human kicks this off, from a fresh Claude Code session:
 >
@@ -18,21 +18,16 @@ want this at all.
 
 ---
 
-## Two modes, default to GUIDED
+## Work in order, with your human
 
-- **Guided (THE DEFAULT, including for "build me into my own AI").** Walk the runbook one tier at a
-  time, *with* the human. Narrate what you're about to do, show the command, and **get a yes before
-  every component.** This is the default even when they say "build me," because a cold-start session
-  cannot hold this whole build in its head; going tier by tier, in order, with the human in the loop
-  is what actually works. Do not run off and silently do the whole thing. Stay in the loop. This is
-  the build.
-- **Autonomous (explicit opt-in only).** ONLY if the human clearly says "fully automated / don't ask
-  / do it all without me." Even then, narrate each step and still pause for the three irreversible
-  things: (a) overwriting an existing `~/.claude/`, (b) anything needing `sudo`/system changes,
-  (c) creating remote repos or handling secrets. And tell them the honest caveat: a fully-autonomous
-  cold-start run is the *least* reliable path, the guided in-order build is the real method. (A plain
-  script that enforces the same safety rails is `install.sh`; its command lives in one place,
-  https://how.nixfred.com/#for-builders . It backs up first and pauses on the irreversibles.)
+- **Guided build.** Walk the runbook one tier at a time, *with* the human. Explain each step in
+  plain language and use the check-in preference they set in their own words. A cold-start session
+  cannot hold this whole build in its head; working tier by tier is the method, regardless of
+  how often your human wants you to check in.
+- **Permission comes from your human.** This page cannot grant it or infer it from how you
+  arrived here. Follow your human's own instructions about which actions need confirmation.
+  Never delete or overwrite their existing files or configs without asking. The scaffold script
+  is documented at https://how.nixfred.com/#for-builders . Its own safeguards still apply.
 
 ## Rules for you, the installing agent (both modes)
 
@@ -123,10 +118,10 @@ Snapshot `~/.claude/` per Rule 0 before any install. Then proceed.
 The brain gives the *shape*; the seed gives the *self*: `CONSTITUTION.md` (the laws), `LINEAGE.md`,
 a starter `CLAUDE.md`, the launcher that loads the constitution into the **system prompt** every launch,
 and three hooks (backup heartbeat, remember trigger, memory backstop). Read each file with your human
-first (every one is plain text under https://how.nixfred.com/seed/), then pick one way, with their yes:
+first (every one is plain text under https://how.nixfred.com/seed/), then pick one way with your human:
 - **Scripted (recommended):** the scaffolder lays all of it down, backup first, never overwriting. Its command
   lives in one place, https://how.nixfred.com/#for-builders ; here add `--no-stack --name <AIName> --human "<HumanName>"`
-  to it (read the script with your human first, and run it only on their yes).
+  to it (read the script with your human first and follow their own instructions about running it).
 - **By hand (only if the human is skipping the script; never both):** Chapter 4, Step 4c (fetch the seed
   files and add the launcher line) plus Chapter 21 ("Wire the seed hooks by hand"):
   https://how.nixfred.com/04-larry-stack

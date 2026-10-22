@@ -14,7 +14,7 @@ import { normUrl } from "./text.js";
 import SITE_DIRECTORY from "./site-directory.json";
 import { nextStep, convoNote, echoView, stripEcho, chapterOfUrl } from "./followup.js";
 import { isWindowsAsk, WINDOWS_SOURCES } from "./core.js";
-import { MODELS, LIMITS, DONT_KNOW_LINE, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, isPromptAsk, sectionReply, isAgentAsk, agentReply, AGENT_SOURCES, isBuildTimeAsk, TIME_REPLY, TIME_SOURCES, chapterTimeAnswer, groundNumbers, pointToClosest, DK_SAYS, isUncoveredPlatformAsk, onlyCommandNotes, isOsVersionAsk, osVersionReply, isUninstallAsk, UNINSTALL_REPLY, readerVoice, ungroundedYesNo, noPayTalk, isExistingAsk, EXISTING_REPLY, EXISTING_SOURCES, isPrivateDetail, PRIVATE_REPLY, isPlatformAsk, platformReply, unPremise, withVariants, synHeadChunks, sectionChunks, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, costLead, safetyLead, safeSource, fixHookCredit, CH21_SOURCE, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
+import { MODELS, LIMITS, DONT_KNOW_LINE, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, isPromptAsk, sectionReply, isAgentAsk, agentReply, AGENT_SOURCES, isBuildTimeAsk, TIME_REPLY, TIME_SOURCES, chapterTimeAnswer, groundNumbers, pointToClosest, DK_SAYS, isUncoveredPlatformAsk, onlyCommandNotes, isOsVersionAsk, osVersionReply, isUninstallAsk, UNINSTALL_REPLY, readerVoice, ungroundedYesNo, noPayTalk, isExistingAsk, EXISTING_REPLY, EXISTING_SOURCES, isPrivateDetail, PRIVATE_REPLY, isPlatformAsk, platformReply, unPremise, withVariants, synHeadChunks, sectionChunks, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, COST_LINE, costLead, safetyLead, safeSource, fixHookCredit, CH21_SOURCE, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
 
 // the three ways to start, exactly as the start cards on nixfredos.com link them (spine amendment 2026-10-20 6:15 PM:
 // nixfredos.com carries no steps, they all live on how.nixfred.com). Point 1 is the recipe box page, https://how.nixfred.com/recipe-box: the one start path (not nixfredos.com/build).
@@ -415,8 +415,9 @@ ${START.map((t, i) => `   ${i + 1}. ${t}`).join("\n")}
    never as where to start.
 7. Hiring Fred: only if the visitor asks about help, hiring, consulting or someone doing it for them, add at most one quiet
    line: "If you want help with advanced work, Fred is available: ${HIRE}". Never a price, rate or dollar amount. Doing it
-   yourself, for free, always comes first. What the build costs: "Free." Never add a condition, a plan or a price to it, and
-   never talk about paying for anything or for agents.
+   yourself with the free guide always comes first. The guide and seed kit are free. Claude Code usage is separate:
+   it requires an eligible paid Claude plan or paid API/provider access. A free Claude chat account does not include Claude Code usage.
+   Link https://claude.com/pricing for current plans and limits; do not invent prices.
 8. AGI is a hope, never a prediction: no dates and no "AGI will". Say "one year after AGI, if it comes".
 9. Credit LifeOS as the project only: never name the person who made it (not even when a passage does, and never his
    GitHub address; the project's site is https://ourlifeos.ai). Never call this work "certified" or "secure", and never say the agent does anything "quietly" or "silently". For a reader's own assistant say "your AI". Never use em dashes or en dashes.
@@ -509,6 +510,7 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   if (isUncoveredPlatformAsk(q) || isOsVersionAsk(q)) return { answer: isOsVersionAsk(q) ? osVersionReply(q) : platformReply(q), sources: [{ title: "Chapter 0: Start Here", url: "https://how.nixfred.com/00-start-here" }], site, refused: false, why: "platform" };   // UDK u01 to u03
   { const ct = await chapterTimeAnswer(env, request, q); if (ct) return { answer: ct.answer, sources: ct.sources.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), site, refused: false, why: "chapter time" }; }   // UDK u14
   if (isBuildTimeAsk(q)) return { answer: TIME_REPLY, sources: TIME_SOURCES.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), site, refused: false, why: "build time" };   // CHIPS 6, for every caller
+  if (isCostAsk(q)) return { answer: COST_LINE, sources: [{ title: "Chapter 0: Start Here", url: "https://how.nixfred.com/00-start-here" }], site, refused: false, why: "pricing" };
   const idx = await loadFleet(env, request);
   if (LIFEOS_WHO.test(q)) return { answer: say(LIFEOS_CREDIT, site), sources: [{ title: "LifeOS", url: LIFEOS_HOME }, { title: "The Larry Stack: Repos & Install Order", url: LIFEOS_PAGE }], site, refused: false, why: "lifeos credit" };
   // which sites the question is about: named in it, or "it" / "there" resolved from the conversation

@@ -46,7 +46,7 @@
 
 <h1>Chapter 0: Start Here, From Absolute Zero</h1>
 <p><strong>This one is for you, the human, the whole way through.</strong> You don&#39;t have an AI yet, so you run these steps yourself. Each step is one thing to do, a line to copy, and what you&#39;ll see when it worked. It works on a <strong>Mac</strong> first, on <strong>Windows</strong> too, and on <strong>Linux</strong>. On a Mac, start below. On Windows? You turn on Linux first (it is built into Windows, called WSL): the <a href="index.html#windows">Windows steps on the home page</a> take five short steps and one restart, then you carry on below with the Linux lines. The <a href="index.html#start">home page</a> has the same first steps in short form; this page has them in full.</p>
-<p><strong>Free.</strong> Paste it and Larry does the rest. Stuck? Ask Larry on the right.</p>
+<p><strong>The guide is free. Claude Code usage requires paid access.</strong> Paste it and Larry does the rest. Stuck? Ask Larry on the right.</p>
 <blockquote>
 <p>A few words first. A <strong>terminal</strong> is the window where you type commands. A <strong>command</strong> is one line you paste there and run with Enter (Return on a Mac). <strong>Claude Code</strong> is the app your AI lives in. When you finish a step, come back here for the next.</p>
 </blockquote>
@@ -71,9 +71,10 @@
 <pre><code class="language-bash">claude --version
 </code></pre>
 <hr>
-<h2>Step 2, The money talk (short version: free)</h2>
-<p><strong>Free.</strong> The guide, the seed kit, the tools and the whole build cost nothing. No catch, no upsell, nothing to buy from this site. Claude Code signs in with your own Claude account in Step 3, and that&#39;s the only account this build needs.</p>
-<p><strong>Done when:</strong> you know what this build costs (nothing) and you have the Claude account you&#39;ll sign in with in Step 3.</p>
+<h2>Step 2, The money talk</h2>
+<p><strong>The guide and seed kit are free. Claude Code usage is separate.</strong> You need an eligible paid Claude plan or paid API/provider access. A free Claude chat account does not include Claude Code usage. Nothing is sold by this site.</p>
+<p>Check <a href="https://claude.com/pricing">Anthropic&#39;s current pricing</a> and <a href="https://code.claude.com/docs/en/costs">Claude Code billing documentation</a> before you sign in. Plan limits and provider charges apply. Other services you choose may have their own charges.</p>
+<p><strong>Done when:</strong> you understand that the guide is free and Claude Code usage requires paid access, and you have an eligible account for Step 3.</p>
 <hr>
 <h2>Step 3, Start it and log in (your Claude account plugs in right here)</h2>
 <p>Type this and press Enter:</p>
@@ -209,7 +210,7 @@ sudo tailscale up
 <h3>Chapter 0: Takeaways</h3>
 <ol>
 <li>Install Claude Code with <code>curl -fsSL https://claude.ai/install.sh | bash</code> (Mac or Linux; on Windows, <a href="windows.html">get Linux first</a>).</li>
-<li><strong>Free.</strong> The guide, the tools and the build cost nothing.</li>
+<li><strong>The guide and seed kit are free.</strong> Claude Code usage requires an eligible paid plan or paid API/provider access.</li>
 <li>Claude Code asks before risky actions by default. Fred runs <code>claude --dangerously-skip-permissions</code>, danger mode. Guardrail alternative: Chapter 19.</li>
 <li>Set up a shell and the small tools the build checks with (<code>jq</code>, <code>git</code>, <code>curl</code>, <code>unzip</code>): nixbash on Linux (any of Debian, Ubuntu, Fedora, Arch); on Mac install Homebrew, add iTerm2 (<code>brew install --cask iterm2</code>, the terminal Fred lives in), then switch from zsh to a modern bash permanently (<code>brew install bash</code> → add to <code>/etc/shells</code> → <code>chsh -s &quot;$(brew --prefix)/bin/bash&quot;</code>). <code>chsh</code> makes bash the default in both iTerm2 and Apple Terminal. Then relaunch with <code>claude --dangerously-skip-permissions --continue</code>.</li>
 <li>Log in with your Claude account (<code>/login</code> to redo it); that&#39;s the handshake that connects it to the terminal.</li>

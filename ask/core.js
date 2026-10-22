@@ -231,11 +231,11 @@ const SNAP_OS = [["Mac", /\b(?:mac(?:os|book)?|launchd|launch ?agents?|osx)\b/i]
 // UDK item 4 (AI Strategy, 2026-10-21): a quoted chapter section is written to the AI ("tells you to search when your human asks"), but the
 // chat and the fleet answer the reader. readerVoice() turns the AI-facing sentences around: the AI becomes "your AI" (then "it"), the human
 // becomes "you", imperatives to the AI become what your AI does ("Show your human each file, say what each does, and write them only
-// after their yes" -> "Your AI shows you each file, says what each does, and writes them only after your yes"). A sentence counts as
-// AI-facing when it names "your human" or "their yes", or speaks of the AI's own reply, instructions or being held, kept or sent back;
+// after confirmation" -> "Your AI shows you each file, says what each does, and writes them only after you confirm"). A sentence counts as
+// AI-facing when it names "your human" or their confirmation, or speaks of the AI's own reply, instructions or being held, kept or sent back;
 // other sentences ("a config edit you make by hand") already read right to the reader and stay. Code blocks, inline code and quoted
 // text ("do you remember") are never touched. For a model answer (aiYou: false) "you" is already the reader: only "your human" moves.
-const AI_FACING = /\byour human\b|\btheir yes\b|\b(?:tells|holds|keeps|sends|lets) you\b|\byour (?:final )?(?:reply|replies)\b|\byour next instruction\b|\*you\*|\bwithout you having\b/i;
+const AI_FACING = /\byour human\b|\btheir[ ]yes\b|\b(?:tells|holds|keeps|sends|lets) you\b|\byour (?:final )?(?:reply|replies)\b|\byour next instruction\b|\*you\*|\bwithout you having\b/i;
 const IMPERATIVE = /^(?:show|say|tell|ask|run|write|put|pick|wait|explain|read|keep|check|fix|renumber|use|give|list|offer|confirm|stop)$/i;
 const MODAL = /^(?:can|could|will|would|should|must|may|might|shall|never|always|also|then|only|just|still)$/i;
 const third = w => { const l = w.toLowerCase(), m = { are: "is", have: "has", do: "does", were: "was", go: "goes" }[l];
@@ -264,7 +264,7 @@ function voiceSentence(sen, aiYou) {
       return `${pre}${s1}${who}${s2}${after}`; });
   }
   // the human becomes the reader
-  t = t.replace(/\byour human's\b/gi, "your").replace(/\btheir yes\b/gi, "your yes");
+  t = t.replace(/\byour human's\b/gi, "your").replace(/\btheir[ ]yes\b/gi, "your yes");
   t = t.replace(/\byour human\b(\s+([A-Za-z]+))?/gi, (m, sp, next) => next && /^(?:is|has|does|was|asks|says|wants|needs|approves|types|runs|reads|decides|logs|gives|picks|answers|replies|tells|keeps|likes|chooses|sees|knows|confirms)$/i.test(next) ? `you ${base(next)}` : `you${sp || ""}`);
   t = t.replace(/\u0003/g, "your AI").replace(/^(\s*)your AI\b/, "$1Your AI").replace(/^(\s*)it\b/, "$1It");
   t = t.replace(/\u0001(\d+)\u0002/g, (m, i) => keep[+i]);
@@ -387,9 +387,8 @@ export const SNAPSHOT_ASK = /\b(?:back\s?ups?|backing up|snapshots?|commit\w*|sa
 // optional merge, word for word; growing your own law ("add a new law of my own") is not this
 export const LAWMERGE_ASK = /^(?![^\n]*\b(?:my own|of my own|a new law|propose)\b)[^\n]*(?:\b(?:constitution|laws?)\b[^?\n]{0,60}\b(?:missing|merge\w*|the new (?:ones|laws)|new laws|update\w*|upgrade\w*|only (?:has |have |shows? |counts? )?\d+|fewer than|short|old(?:er)?|outdated|out of date)\b|\b(?:missing|merge\w*|new|update\w*)\b[^?\n]{0,40}\b(?:laws|constitution)\b|\b(?:installed|set (?:it )?up|built|bootstrapped)\b[^?\n]{0,30}\bbefore (?:oct\w*|october)|\b\d+ laws?\b[^?\n]{0,40}\b(?:not|instead of|only|should)\b|\blaw count\b[^?\n]{0,20}\b(?:says|shows|is|reads|of|only)\s+\d+|\bnot \d+ or more\b)/i;
 export const LAWHOOK_ASK = /\b(?:asks?(?:ing)? (?:me |my human |the human )?["\u201c']?do you remember|asks?(?:ing)? (?:me )?(?:if|whether) i remember|(?:stop|keep|prevent)\w* (?:my ai |it |the ai |the agent )?(?:from )?asking\b[^?\n]{0,30}\bremember|search\w* (?:its |the |my )?(?:memory|history) (?:first|before)|before (?:it |you )?asks?\b[^?\n]{0,30}\bremember|search[- ]before[- ]ask\w*)\b|\b(?:capture|log|record|save|write down)\w*\b[^?\n]{0,30}\bdecisions?\b[^?\n]{0,40}\b(?:hook|automatic\w*)|\b(?:hook|enforce\w*)\b[^?\n]{0,40}\b(?:law 2|law 18|decisions?|search (?:memory|history))\b|\bhooks?\b[^?\n]{0,40}\benforc\w*\b[^?\n]{0,30}\b(?:laws?|constitution|rules?)\b|\benforc\w*\b[^?\n]{0,30}\b(?:laws?|constitution)\b[^?\n]{0,30}\bhooks?\b|\b(?:search-first|capture-decisions)(?:\.sh)?\b/i;
-// Fred, 2026-10-21 9:07 PM: the word for a paid recurring plan appears nowhere on the five anchor sites. The pattern that catches it is
-// built so the banned word never appears in source; any sentence carrying it is dropped from every answer (noPayTalk, below).
-const SUB_SRC = "sub" + "scri", SUB_WORD = new RegExp(SUB_SRC, "i");
+// Fred, 2026-10-22: the guide is free; Claude Code usage has separate billing.
+const SUB_SRC = "subscription";
 // Visitor slang -> the site's own vocabulary. Deterministic, so it still helps when the LLM rewrite fails.
 export const SYN = [
   // CHIPS (Fred, 2026-10-21): the beginner starter chips. Each one is vague on its own ("this", "it"), so BM25 sent them to whatever page
@@ -397,7 +396,7 @@ export const SYN = [
   // /get-in-touch). Each row pins the sections that answer it: the home page's own lines ("Free.", asking before it
   // runs anything, real work with no shortcuts), Ch0's money talk, the /byo and /recipe-box "you give the orders" lists, Ch3's calibration.
   [/\bwhat (?:do|will|would|does|did|can) (?:i|you|we|one|people) (?:actually |really )?(?:get|end up with|walk away with|come away with|have at the end)\b(?![^?\n]*\b(?:run|type|paste|execute)\b)|\bwhat(?:'s| is) (?:the )?(?:end result|outcome|payoff)\b|\bwhat does (?:this|it|the (?:build|guide)) (?:give|get) (?:me|you)\b/i, "your own AI teammate your memory your hooks your identity your rules yours down to the name free", ["index"], [/^Hi\. I'm Larry/, /^Ok\. Real talk/]],
-  [/\b(?:is|it'?s|are|really|completely|totally|actually|truly)\s+(?:\w+\s+){0,2}free\b|\bfor free\b|\bfree\s*(?:\?|$)|\bany (?:hidden )?(?:costs?|fees?|catch)\b|\bcost anything\b/i, "Free money talk the guide the tools the build cost nothing", ["index", "00-start-here"], [/^Welcome\. This is Larry's guide/, /^Hi\. I'm Larry/, /^Step 2, The money talk/]],
+  [/\b(?:is|it'?s|are|really|completely|totally|actually|truly)\s+(?:\w+\s+){0,2}free\b|\bfor free\b|\bfree\s*(?:\?|$)|\bany (?:hidden )?(?:costs?|fees?|catch)\b|\bcost anything\b/i, "Free money talk guide seed kit Claude Code paid plan API access", ["index", "00-start-here"], [/^Welcome\. This is Larry's guide/, /^Hi\. I'm Larry/, /^Step 2, The money talk/]],
   [BEGINNER_RISK, "asks before it runs anything you give the orders nothing without your yes don't trust me audit it", ["index", "byo", "recipe-box"], [/^Welcome\. This is Larry's guide/, /^Hi\. I'm Larry/, /^$/]],
   [/\b(?:need|have|got) to (?:know|learn|understand|be (?:able|good) (?:to|at))\s+(?:how to\s+)?(?:code|coding|program\w*)\b|\b(?:know|knowing|learn) (?:how )?to (?:code|program)\b|\b(?:coding|programming|technical) (?:skills?|experience|knowledge|background)\b|\b(?:non[- ]?technical|not (?:a |very )?(?:coder|programmer|developer|technical)|never (?:coded|programmed)|can'?t code|don'?t (?:know how to )?code|no coding)\b/i, "your agent runs the commands you type no commands novice mid super user use the AI to fix the AI", ["recipe-box", "index", "03-ask"], [/^$/, /^One paste\./, /^⚠️ Warning/, /^3\.6 Calibrate/]],
   [BUILD_TIME_ASK, "real work no shortcuts in order one step at a time", ["index"], [/^⚠️ Warning/, /^⚡ One paste is not/]],
@@ -421,7 +420,7 @@ export const SYN = [
   // with Ch0's money talk and "no model is named"); Ch18 names them: "/model haiku: cheap, fast exploration", Haiku for the
   // mechanical work, Sonnet daily, Opus for the hard part. The plan-cost row below stays off model questions.
   [/\b(?:cheap\w*|cost\w*|price\w*|pricing|expensive|afford\w*|budget\w*|save money|burn\w*)\b[^?\n]{0,50}\b(?:models?|opus|sonnet|haiku|fable|tokens?)\b|\b(?:models?|opus|sonnet|haiku|fable)\b[^?\n]{0,50}\b(?:cheap\w*|cost\w*|price\w*|expensive|afford\w*)\b/i, "/model haiku cheap fast exploration Haiku for the mechanical Sonnet daily Opus hard reasoning", ["18-models"], /^Chapter 18: Models, Thinking & Cost$/],
-  [new RegExp(String.raw`^(?![^?\n]*\b(?:models?|opus|sonnet|haiku|fable|tokens?)\b)[^\n]*\b(cost\w*|price\w*|money|pay\w*|${SUB_SRC}\w*|expensive|cheap\w*)\b`, "i"), "money talk Free the guide the tools the build cost nothing price of this build", ["00-start-here"]],
+  [new RegExp(String.raw`^(?![^?\n]*\b(?:models?|opus|sonnet|haiku|fable|tokens?)\b)[^\n]*\b(cost\w*|price\w*|money|pay\w*|${SUB_SRC}\w*|expensive|cheap\w*)\b`, "i"), "money talk free guide seed kit Claude Code paid plan API access price of this build", ["00-start-here"]],
   [/\b(start\w*|begin\w*|first step|where do i|new to this|from scratch|zero)\b/i, "Start Here Chapter 0 install Claude Code first session"],
   [/\b(mac|macbook|macos|osx)\b/i, "Mac Homebrew iTerm2 bash zsh install"],
   [/\b(phone|remote\w*|anywhere|other machines?|ssh)\b/i, "Tailscale mesh phone multi-host"],
@@ -743,8 +742,9 @@ Rules:
 18. False premises: when the question says the site says, recommends or wants something and no passage says it, start with
    "No, the site does not say that." and then give what the passages do say. Never agree with, and never write out, a destructive
    command (rm -rf, git reset --hard, git push --force, wiping ~/.claude) that no passage shows.
-19. What this costs: when the visitor asks what building their AI costs, the answer is "Free." (the guide, the tools and the build cost
-   nothing). Never add a condition, a plan or a price to it, never talk about paying for anything or for agents, no dollar figures.
+19. What this costs: the guide and seed kit are free. Claude Code usage is separate and requires an eligible paid Claude plan
+   or paid API/provider access. A free Claude chat account does not include Claude Code usage. Never describe the whole build
+   or Claude Code usage as free. Link https://claude.com/pricing for current plans and limits; do not invent prices.
 20. The visitor never sees the passages: never write "the passage", "as stated in the passage", "passage [2]", "the sources list" or a
    lettered option ("choice (b)") in the answer. Say "the site" or name the page, and if you mean options, list them.
 21. When the visitor speaks as themselves (I, my, me) and asks what to do, answer them as "you" ("you run ...", "your AI ..."), never
@@ -881,34 +881,24 @@ export function sitePages(idx, pis) {
     return cache.get(pi);
   });
 }
-// Messaging (Fred via AI Strategy, 2026-10-21 7:22 PM, replaces the morning's "free plus your Claude ..." line): what this costs is
-// "Free." Rule 19 asks the model; this makes sure: a question about what THIS build costs (not a model's or a token's price) opens with
-// COST_LINE, and no answer talks about paying for a plan or agents, or carries the plan word at all (noPayTalk, every answer on every path).
-// CHIPS: "Is it really completely free?" names no cost word, so it is one too ("is / really / completely ... free", "for free", "free?")
+// Scope free claims to our guide, never to paid third-party usage.
 const COST_ASK = /\b(how much|cost\w*|price\w*|pricing|expensive|cheap|money|pay(?:ing)?|budget|for free)\b|\b(?:is|it'?s|really|completely|totally|actually|truly)\s+(?:\w+\s+){0,2}free\b|\bfree\s*(?:\?|$)/i;
 const COST_OF_OTHER = /\b(models?|tokens?|opus|sonnet|haiku|fable|api calls?|cloudflare|hosting|domains?|per (?:token|call|request)|hardware|gpu|mac|laptop|local|ollama)\b/i;
 // what THIS costs: the build, the guide, "it", per month, the plan; not how much was spent (the meter, /usage) and
 // not what would replace Claude (Audit200: c044 "How do I see how much I've spent?" and c065 "Can I run local models instead of paying
 // for Claude?" both got the cost line prepended)
-const COST_OF_THIS = new RegExp(String.raw`\b(this|it|the (?:guide|site|build|setup|stack|whole thing|course)|my (?:own )?ai|per month|a month|monthly|${SUB_SRC}\w*|plan|to (?:build|start|run|use) (?:this|it|my ai))\b`, "i");
+const COST_OF_THIS = new RegExp(String.raw`\b(claude(?: code)?|this|it|the (?:guide|site|build|setup|stack|whole thing|course)|my (?:own )?ai|per month|a month|monthly|${SUB_SRC}\w*|plan|to (?:build|start|run|use) (?:this|it|my ai))\b`, "i");
 const COST_NOT = /\b(spent|spend(?:ing)?|usage|meter|track\w*|see how much|instead|replace|alternative|without paying|data|bandwidth|disk|storage|space|ram|memory|traffic)\b/i;   // UDK u15: "how much data" is not a price
-export const COST_LINE = "Free. The guide, the tools and the build cost nothing.";
-// a sentence about paying for a plan or agents, or one carrying the plan word in any form (SUB_WORD, whatever the site or the context:
-// Fred, 2026-10-21 9:07 PM, no exception for the other sites' own uses), is dropped from every answer (code blocks aside); the visitor's
-// own words in the question are theirs. An answer that was nothing but that comes back empty: the callers answer a cost question with
-// COST_LINE and anything else with "I don't know" plus the closest page.
-export const PAY_TALK = /\bfree plus\b|\bplus your (?:own )?(?:claude |ai )?plan\b|\byou(?:'ll| will)?(?: only| just| still)? pay\b|\bpaid (?:plans?|tiers?)\b|\bpay[- ]as[- ]you[- ]go\b|\b(?:middle|top|cheapest) (?:tier|plan)\b|\b(?:budget|pay(?:ing)?) for (?:the |a |your )?(?:claude |pro |max |top |middle )?(?:plan|tier)\b/i;
-const isPayTalk = sen => PAY_TALK.test(sen) || SUB_WORD.test(sen);
+export const COST_LINE = "The guide and seed kit are free. Claude Code usage is separate: it requires an eligible paid Claude plan or paid API/provider access. A free Claude chat account does not include Claude Code usage. Check https://claude.com/pricing for current plans and limits.";
+// Preserve truthful billing information. Correct affirmative free-usage claims outside code.
+export const PAY_TALK = /\bClaude Code\s+(?:(?:is|usage is|access is|runs?|works?)\s+)?(?:completely |entirely |totally |always )?(?:for )?free\b|\b(?:the tools and (?:the )?(?:whole )?build|the whole build) cost(?:s)? nothing\b/i;
 export function noPayTalk(body) {
-  const b = String(body); if (!b.replace(/```[\s\S]*?```/g, "").split(/\n|(?<=[.!?])\s+/).some(isPayTalk)) return b;
-  const out = b.split(/(```[\s\S]*?```)/g).map((part, i) => i % 2 ? part : part.split("\n").map(line => {
-    const lead = line.match(/^\s*(?:[-*+]|\d+[.)])\s+/)?.[0] || "", sens = line.slice(lead.length).split(/(?<=[.!?])\s+/), kept = sens.filter(sen => !isPayTalk(sen));
-    if (kept.length === sens.length) return line;
-    return kept.length ? lead + kept.join(" ") : null;
-  }).filter(l => l !== null).join("\n")).join("").replace(/\n{3,}/g, "\n\n").trim();
-  return out.replace(/[*_#>:\s-]/g, "") ? out : "";
+  return String(body).split(/(```[\s\S]*?```)/g).map((part, i) => i % 2 ? part : part.replace(new RegExp(PAY_TALK.source, "gi"), "Claude Code usage requires an eligible paid Claude plan or paid API/provider access")).join("");
 }
-export const isCostAsk = q => COST_ASK.test(q) && !COST_OF_OTHER.test(q) && COST_OF_THIS.test(q) && !COST_NOT.test(q);
+export const isCostAsk = question => {
+  const q = String(question).replace(/\bClaude Code usage\b/gi, "Claude Code");
+  return !isInjection(q) && !isOverrideAsk(q) && COST_ASK.test(q) && !COST_OF_OTHER.test(q) && COST_OF_THIS.test(q) && !COST_NOT.test(q);
+};
 // CHIPS (Fred, 2026-10-21): "Is it dangerous?" must get the honest answer first: the agent asks before every command, you audit it, and
 // nothing runs without your yes. Live, the model answered from Ch19 ("danger mode is safe when..."). Each clause of SAFE_LINE is a line
 // of the home page, /byo or /recipe-box; it opens the answer when the model left it out. It does not wait for those passages to be packed:
@@ -923,10 +913,8 @@ export function safetyLead(question, body, ctx) {
 export const SAFE_SOURCE = { url: `${SITE}/`, title: "Build Your Own AI: a Field Guide by Larry" };
 export const safeSource = (body, ctx) => String(body).startsWith(SAFE_LINE) ? ctx.find(p => /Larry does the rest|without asking|without your yes/i.test(p.text)) || SAFE_SOURCE : null;
 export function costLead(question, body, ctx) {
-  let b = noPayTalk(body);
-  if (!isCostAsk(question)) return b;
-  if (/^\W*(?:yes|yep|yeah|it is|it'?s free)\W*$/i.test(b)) b = "";       // a bare "Yes." left once the pay talk went
-  return /^\W*free\b/i.test(b) ? b : `${COST_LINE} ${b}`.trim();      // "Free." first; an answer that already opens with it keeps its own words
+  // A complete grounded answer prevents a model's unqualified "Free" from surviving.
+  return isCostAsk(question) ? COST_LINE : noPayTalk(body);
 }
 // Audit200 RC9 rule 20, made sure: "the passage", "as stated in the passage", "passage [2]" become "the site" (outside code; m010,
 // c053, c064, m068, m070, m090, m091 leaked them). Lettered options ("choice (b)") cannot be repaired here; rule 20 asks for lists.
@@ -1283,6 +1271,14 @@ export async function answer(env, request, question, { history = [], page = null
     const fin = { answer: PRIVATE_REPLY, sources: src, refused: true, gated: true, private: true, mode: "private", top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
     await onEvent("final", fin); return fin;
   }
+  if (isCostAsk(question)) {
+    // Answer before model generation so an incorrect price claim cannot leak in the stream.
+    const sources = [{ url: `${SITE}/00-start-here.html`, title: "Chapter 0: Start Here" }];
+    await onEvent("meta", { mode: "pricing", scope: null });
+    await onEvent("token", { t: COST_LINE });
+    const fin = { answer: COST_LINE, sources, refused: false, mode: "pricing", top_urls: [], packed_urls: sources.map(s => s.url), queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
+    await onEvent("final", fin); return fin;
+  }
   const idx = await loadIndex(env, request);
   const scope = page !== null ? idx.pages[page] : null;
   // a question about a site Fred runs (the universe site, the god site, the ladder...) is answered from the fleet directory:
@@ -1311,7 +1307,7 @@ export async function answer(env, request, question, { history = [], page = null
   await onEvent("meta", { mode: ret.mode, scope: scope ? { slug: scope.slug, title: scope.title, url: scope.url } : null, ...(debug ? { top_urls: top, packed_urls: packed, queries: ret.queries, on_topic: ret.onTopic, retrieve_ms: ret.retrieveMs } : {}) });
   const base = { top_urls: top, packed_urls: packed, queries: ret.queries, retrieve_s: ret.retrieveMs / 1000 };
   const refusal = refusalFor(rq, question);                             // rule 14's line for Fred and his sites, else the bare refusal
-  const vote = !ret.onTopic && page === null && !fu ? siteVote(idx, rq) : null;   // only asked when the rewrite says off-topic
+  const vote = !ret.onTopic && page === null && !fu ? siteVote(idx, rq) : null;   // evaluated when the rewrite says off-topic
   if (vote) base.site_vote = vote;
   if (vote && !vote.strong && !isPlatformAsk(question)) {               // both votes say off-topic: refuse, skip generation (a platform question never is)
     if (dir) return viaDirectory();
