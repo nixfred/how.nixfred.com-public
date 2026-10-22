@@ -169,7 +169,7 @@ const EXISTING_SETUP = /\bcustomi[sz](?:ations?|ed|ing)\b|\b(?:existing|current|
 const EXISTING_INTENT = /\b(?:use|try|run|follow|start|do|install|apply|add|set up) (?:this|it|the (?:guide|site|build|prompt|one paste)|how\.nixfred\.com)\b|\b(?:overwrite|wipe|clobber|replace|lose|break|mess (?:up|with)|keep)\b[^?\n]{0,40}\b(?:my|mine|it|them|what i (?:have|built))\b|\bwithout (?:losing|breaking|overwriting|wiping)\b|\bcompatible\b/i;
 export const isExistingAsk = q => EXISTING_SETUP.test(String(q)) && EXISTING_INTENT.test(String(q)) && !isOverrideAsk(q) && !PROMPT_ASK.test(String(q));
 export const EXISTING_PROMPT = BYO.build("existing");
-export const EXISTING_REPLY = `Yes, and your setup stays yours. The guide's rule is add alongside, never overwrite: it audits what you already have and adds only the pieces your install is missing, each after your yes. Paste this prompt into Claude Code:
+export const EXISTING_REPLY = `Yes, and your setup stays yours. The guide's rule is add alongside, never overwrite: it looks at what you already have and adds only the pieces your install is missing. It asks before it changes any file you already have. Paste this prompt into Claude Code:
 
 \`\`\`text
 ${EXISTING_PROMPT}
@@ -181,7 +181,7 @@ What it does first: it installs the guide right away with this command (no quest
 ${BYO.MCP_ADD}
 \`\`\`
 
-That adds this guide's MCP server to Claude Code (${MCP_ADD_WHY}) Then it reads your CLAUDE.md, settings, hooks, skills and MCP servers, checks them against the guide's foundation, and asks before each missing piece it adds. Don't trust me, audit it: https://github.com/nixfred/how.nixfred.com-public`;
+That adds this guide's MCP server to Claude Code (${MCP_ADD_WHY}) Then it reads your CLAUDE.md, settings, hooks, skills and MCP servers, checks them against the guide's foundation, and adds the missing pieces next to yours. Don't trust me, audit it: https://github.com/nixfred/how.nixfred.com-public`;
 export const EXISTING_SOURCES = [{ url: `${SITE}/04-larry-stack.html`, title: "Chapter 4: The Larry Stack: Repos & Install Order" }, { url: `${SITE}/05-bootstrap.html`, title: "Chapter 5: The One-Command Bootstrap" }, { url: `${SITE}/ask-larry.html`, title: "Ask Larry" }];
 // BATCH B (Fred, 2026-10-21): "How do I connect Gemini CLI / Codex / Grok / Antigravity / another MCP client?" is answered in code, from
 // byo/byo.js AGENTS (the same data the Ask Larry page's "Not on Claude Code?" section renders), so the exact add line is never
@@ -434,7 +434,7 @@ export const SYN = [
   [{ test: q => /\b(safe\w*|danger\w*|permissions?|yolo|skip.permissions)\b/i.test(q) && !BEGINNER_RISK.test(q) }, "permissions danger mode dangerously-skip-permissions allow deny deny beats allow", ["19-permissions"]],
   // where the code of this site / its MCP server / the bot is (Audit200 m076 was refused): ask-larry's "Check the tools before you trust
   // them" names the public mirror, nixfred/how.nixfred.com-public, and mcp-tools.json
-  [/\b(?:source(?: code)?|public (?:repo(?:sitory)?|mirror|code)|open[- ]source|code (?:for|of|behind)|repo(?:sitory)? (?:for|of|behind))\b[^?\n]{0,60}\b(?:mcp|server|this site|the site|site'?s|ask larry|bot|chat|tools?|how\.nixfred\.com)\b|\b(?:mcp|server|ask larry|this bot|the bot|chat ?bot)\b[^?\n]{0,60}\b(?:source(?: code)?|open[- ]source|public repo(?:sitory)?|on github|github repo)\b/i, "server code mirrored to a public repo nixfred/how.nixfred.com-public mcp-tools.json toolsSha256 Check the tools before you trust them", ["ask-larry"], /^Check the tools before you trust them/],
+  [/\b(?:source(?: code)?|public (?:repo(?:sitory)?|mirror|code)|open[- ]source|code (?:for|of|behind)|repo(?:sitory)? (?:for|of|behind))\b[^?\n]{0,60}\b(?:mcp|server|this site|the site|site'?s|ask larry|bot|chat|tools?|how\.nixfred\.com)\b|\b(?:mcp|server|ask larry|this bot|the bot|chat ?bot)\b[^?\n]{0,60}\b(?:source(?: code)?|open[- ]source|public repo(?:sitory)?|on github|github repo)\b/i, "server code mirrored to a public repo nixfred/how.nixfred.com-public mcp-tools.json toolsSha256 Check the tools before you trust them", ["audit"], /^(?:$|Check the MCP tools)/],
   [/\b(who (built|made|wrote)|how (was|is) (this|the) (site|bot|guide)|built this|this bot|ask larry|mcp)\b/i, "Ask Larry how this site and bot were built Cloudflare Pages Workers AI Vectorize MCP god.nixfred.com PLAYBOOK"],
   [/\b(stuck|broken|error|doesn'?t work|fix)\b/i, "use the AI to fix the AI stuck error fix this"],
   [/\b(stack|repos?|install order|pai|lifeos)\b/i, "Larry Stack repos install order PAI LifeOS"],

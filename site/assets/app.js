@@ -351,7 +351,7 @@ var BYO = (function(){
     if (kind === 'recipe') out.push('- I will not type any commands. You run them. The only thing I do myself is the sign-in click in the browser.');
     if (kind === 'existing') out.push(
       '- My setup is mine. Never overwrite, replace, move or reformat anything I already have: my CLAUDE.md, settings.json, hooks, skills, agents, commands and MCP servers.',
-      '- Cherry-pick: add only the pieces my install is missing, one at a time, each after my yes, alongside my own. If a piece of the guide has the same name as one of mine, mine stays: copy my file to a backup first, then merge in only the missing lines after my yes.');
+      '- Add only the pieces my install is missing, next to my own. Before you change a file I already have, ask me first (that is the one hard stop). Then back it up and add only the missing lines.');
     return out;
   }
   var HELP_LINE = 'If you get stuck, use search_site or ask_larry from the guide, and tell me straight when you do not know.';
@@ -424,7 +424,7 @@ var BYO = (function(){
         intro: 'I want to build the Recipe Box (' + RECIPE_BOX + ') with you, in my own private copy on GitHub. First set up my own AI the way how.nixfred.com teaches, then make my copy and build it together with me.',
         rest: [
           'Step 3. Get GitHub ready.',
-          '1. Run gh --version. If gh is missing, ask me, then install it the way the guide shows for my OS (get_page "07-forever-repo" has the line for a Mac, for Debian and Ubuntu, and for Arch).',
+          '1. Run gh --version. If gh is missing, install it the way the guide shows for my OS (get_page "07-forever-repo" has the line for a Mac, for Debian and Ubuntu, and for Arch).',
           '2. Run gh auth status. If I am already signed in, say so and skip to Step 4.',
           '3. If I am not signed in, walk me through it. If I have no GitHub account yet, send me to https://github.com/signup first (an email, a password, a code; that part is mine), and wait for me.',
           '4. Then run gh auth login --hostname github.com --git-protocol https --web. It prints a one-time code and an address, then waits for me. Start it so you can read its output while it waits (in the background), read me the code and the address, and wait while I do the browser step. Do not ask me to paste a token.',
@@ -432,7 +432,7 @@ var BYO = (function(){
           '',
           'Step 4. Make my private copy.',
           '1. Check that the Recipe Box really is a template: gh api repos/' + tpl + ' --jq .is_template. Show me what it prints.',
-          '2. If it prints true, ask me what to call my copy (I suggest my-recipe-box), then run: gh repo create my-recipe-box --private --template ' + tpl,
+          '2. If it prints true, run: gh repo create my-recipe-box --private --template ' + tpl,
           '3. If it prints anything else, or the call fails, do not use the template flag. Clone it into ' + dir + ' (git clone ' + RECIPE_BOX + '.git ' + dir + '), run git remote rename origin upstream inside it, then create my own private repo from that folder: gh repo create my-recipe-box --private --source=. --remote=origin --push',
           '4. If a repo with that name already exists on my account, stop and ask me for another name. Never overwrite anything.',
           '5. Show me that my copy is private: gh repo view my-recipe-box --json isPrivate,url',

@@ -272,7 +272,7 @@ Then move on. (You do these Chapter 0 steps by hand. From Chapter 1 on, your AI 
 
 Claude Code is running in your shell, on the network, the way Fred runs it. From here the book talks *to your AI*. First thing to tell it: whether you're a **novice**, **mid**, or **super-user** in a terminal. It tunes every step to you. Nothing here pastes something scary at you blind, and a good AI tells you in plain words what just happened whenever a hook fires, a command runs, or something errors.
 
-**The easiest way on:** paste the one prompt from the [home page](index.html#start) into Claude Code. It connects this guide and walks the chapters with you, asking before it runs anything.
+**The easiest way on:** paste the one prompt from the [home page](index.html#start) into Claude Code. It connects this guide and does the chapters with you, one plain line per step.
 
 **Or hand over one chapter at a time.** Each chapter opens with a short brief for you, then says *point your AI at this page.* That means: in Claude Code, type **`read`** and the page's address, for example `read https://how.nixfred.com/01-the-paradigm`, and press Enter. Your AI reads the whole page. If that fails, paste the chapter text in instead. From there your AI reads each chapter, gets the step to 100%, logs where you are, and pulls the next one itself, pausing for you at the human-only steps and the approvals. (Starting fresh later? Ask it "where are we on how.nixfred.com?" It keeps a progress ledger so neither of you has to remember.)
 

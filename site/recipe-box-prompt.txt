@@ -21,7 +21,7 @@ For anything that does not pass, walk the guide for my OS with next_step and che
 Keep going until every foundation check passes, then show me the results.
 
 Step 3. Get GitHub ready.
-1. Run gh --version. If gh is missing, ask me, then install it the way the guide shows for my OS (get_page "07-forever-repo" has the line for a Mac, for Debian and Ubuntu, and for Arch).
+1. Run gh --version. If gh is missing, install it the way the guide shows for my OS (get_page "07-forever-repo" has the line for a Mac, for Debian and Ubuntu, and for Arch).
 2. Run gh auth status. If I am already signed in, say so and skip to Step 4.
 3. If I am not signed in, walk me through it. If I have no GitHub account yet, send me to https://github.com/signup first (an email, a password, a code; that part is mine), and wait for me.
 4. Then run gh auth login --hostname github.com --git-protocol https --web. It prints a one-time code and an address, then waits for me. Start it so you can read its output while it waits (in the background), read me the code and the address, and wait while I do the browser step. Do not ask me to paste a token.
@@ -29,7 +29,7 @@ Step 3. Get GitHub ready.
 
 Step 4. Make my private copy.
 1. Check that the Recipe Box really is a template: gh api repos/nixfred/path-recipe-box --jq .is_template. Show me what it prints.
-2. If it prints true, ask me what to call my copy (I suggest my-recipe-box), then run: gh repo create my-recipe-box --private --template nixfred/path-recipe-box
+2. If it prints true, run: gh repo create my-recipe-box --private --template nixfred/path-recipe-box
 3. If it prints anything else, or the call fails, do not use the template flag. Clone it into ~/Projects/my-recipe-box (git clone https://github.com/nixfred/path-recipe-box.git ~/Projects/my-recipe-box), run git remote rename origin upstream inside it, then create my own private repo from that folder: gh repo create my-recipe-box --private --source=. --remote=origin --push
 4. If a repo with that name already exists on my account, stop and ask me for another name. Never overwrite anything.
 5. Show me that my copy is private: gh repo view my-recipe-box --json isPrivate,url
