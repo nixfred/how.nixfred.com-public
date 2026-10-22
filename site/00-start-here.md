@@ -52,17 +52,15 @@ claude --version
 
 ---
 
-## Step 2, The money talk (read this before you fall in love)
+## Step 2, The money talk (short version: free)
 
-Real talk, because honesty is the house rule here. To use Claude Code seriously you'll want a **Claude subscription, and the practical floor is the middle tier, not the cheapest one.** You *can* run pay-as-you-go on the API, but heavy days will out-cost the subscription fast. Free plus your subscription: that is the whole price of this build.
+Real talk, because honesty is the house rule here: **Free.** The guide, the seed kit, the tools and the whole build cost nothing. No catch, no upsell, nothing to buy from this site. Claude Code signs in with your own Claude account in Step 3, and that's the only account this build needs.
 
-And here's the part Fred wants you to hear with a laugh: **you're going to end up on the top plan.** Everyone does. You'll start one tier down telling yourself it's plenty, and a few great sessions later you'll be reaching for the bigger one. So budget for the top plan from the start and let it be a pleasant surprise if you don't. Trust him on this one.
-
-**Done when:** you know your floor (the middle tier) and your likely real spend (the top plan), and you picked a plan on purpose.
+**Done when:** you know what this build costs (nothing) and you have the Claude account you'll sign in with in Step 3.
 
 ---
 
-## Step 3, Start it and log in (your subscription plugs in right here)
+## Step 3, Start it and log in (your Claude account plugs in right here)
 
 Fire it up:
 
@@ -70,7 +68,7 @@ Fire it up:
 claude
 ```
 
-The very first time you run it, Claude Code sends you to a browser to log in. **Use the same Claude account you put the subscription on in Step 2.** That login is the whole handshake: it connects your plan to the terminal. Approve it in the browser, come back, and you're authenticated, your plan is now live in here and the meter is running against your subscription, not a surprise bill. If it ever logs you out, or you want to switch accounts later, just run `/login` inside a session to redo it.
+The very first time you run it, Claude Code sends you to a browser to log in. **Use your Claude account.** That login is the whole handshake: it connects your account to the terminal. Approve it in the browser, come back, and you're authenticated. If it ever logs you out, or you want to switch accounts later, just run `/login` inside a session to redo it.
 
 On a Pro, Max or Team plan, bare `claude` starts in **auto mode**: a safety classifier reviews each action and only stops to ask you about the risky ones. (Press `Shift+Tab` to cycle modes; manual mode asks before everything.) But here's what Fred actually runs, every session:
 
@@ -82,7 +80,7 @@ This is **"danger mode"**, it stops asking permission before each action and jus
 
 You've now got Claude Code running and logged in. The hard part is over.
 
-**Done when:** `claude` starts, you are logged in with your subscription, and it answers you.
+**Done when:** `claude` starts, you are logged in with your Claude account, and it answers you.
 
 Verify:
 
@@ -280,9 +278,9 @@ So hand your AI Chapter 1 and it takes the wheel: read, do, verify to 100%, log,
 ### Chapter 0: Takeaways
 
 1. Install Claude Code with `curl -fsSL https://claude.ai/install.sh | bash` (Mac or Linux).
-2. Budget for the **top plan**; you'll get there. The middle tier is the practical floor. Free plus your subscription.
+2. **Free.** The guide, the tools and the build cost nothing.
 3. Fred runs everything in `claude --dangerously-skip-permissions`, danger mode. Guardrail alternative: Chapter 19.
 4. Set up a shell and the small tools the build checks with (`jq`, `git`, `curl`, `unzip`): nixbash on Linux (any of Debian, Ubuntu, Fedora, Arch); on Mac install Homebrew, add iTerm2 (`brew install --cask iterm2`, the terminal Fred lives in), then switch from zsh to a modern bash permanently (`brew install bash` → add to `/etc/shells` → `chsh -s "$(brew --prefix)/bin/bash"`). `chsh` makes bash the default in both iTerm2 and Apple Terminal. Then relaunch with `claude --dangerously-skip-permissions --continue`.
-5. Log in with the account that holds your subscription (`/login` to redo it); that's the handshake that connects the plan.
+5. Log in with your Claude account (`/login` to redo it); that's the handshake that connects it to the terminal.
 6. **USE THE AI TO FIX THE AI.** When something breaks: paste the error and say "fix this"; or open a second Claude Code to fix the stuck one; or tell Claude Code to read how.nixfred.com and self-heal; or email **larry@nixfred.tech**. You never debug alone. Loop start/stop until it launches 100% clean, *then* come back.
 7. Join Tailscale, then continue in order: the why (Part I, Chapter 1), then build the stack (Chapter 4), with the bootstrap (Chapter 5) as the optional automated path. Basics first, modules later.

@@ -13,7 +13,7 @@
 import { normUrl } from "./text.js";
 import SITE_DIRECTORY from "./site-directory.json";
 import { nextStep, convoNote, echoView, stripEcho, chapterOfUrl } from "./followup.js";
-import { MODELS, LIMITS, DONT_KNOW_LINE, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, isPromptAsk, sectionReply, isAgentAsk, agentReply, AGENT_SOURCES, isBuildTimeAsk, TIME_REPLY, TIME_SOURCES, chapterTimeAnswer, groundNumbers, pointToClosest, DK_SAYS, isUncoveredPlatformAsk, onlyCommandNotes, isOsVersionAsk, osVersionReply, isUninstallAsk, UNINSTALL_REPLY, readerVoice, isExistingAsk, EXISTING_REPLY, EXISTING_SOURCES, isPrivateDetail, PRIVATE_REPLY, isPlatformAsk, platformReply, unPremise, withVariants, synHeadChunks, sectionChunks, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, costLead, safetyLead, safeSource, fixHookCredit, CH21_SOURCE, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
+import { MODELS, LIMITS, DONT_KNOW_LINE, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, isPromptAsk, sectionReply, isAgentAsk, agentReply, AGENT_SOURCES, isBuildTimeAsk, TIME_REPLY, TIME_SOURCES, chapterTimeAnswer, groundNumbers, pointToClosest, DK_SAYS, isUncoveredPlatformAsk, onlyCommandNotes, isOsVersionAsk, osVersionReply, isUninstallAsk, UNINSTALL_REPLY, readerVoice, ungroundedYesNo, noPayTalk, isExistingAsk, EXISTING_REPLY, EXISTING_SOURCES, isPrivateDetail, PRIVATE_REPLY, isPlatformAsk, platformReply, unPremise, withVariants, synHeadChunks, sectionChunks, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, costLead, safetyLead, safeSource, fixHookCredit, CH21_SOURCE, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
 
 // the three ways to start, exactly as the start cards on nixfredos.com link them (spine amendment 2026-10-20 6:15 PM:
 // nixfredos.com carries no steps, they all live on how.nixfred.com). Point 1 is the recipe box page, https://how.nixfred.com/recipe-box: the one start path (not nixfredos.com/build).
@@ -58,8 +58,8 @@ export const FLEET_SITES = {
     persona: "You are the friendly front door on nixfred.com, Fred's own site, speaking as Larry, Fred's AI. Warm, brief and welcoming. Say who Fred is and what is where across his sites, then send the visitor to the right site and the exact page." },
   nixfredos: { host: "nixfredos.com", about: "what you get", title: "Ask Larry", hello: "Hi. I'm Larry. Ask me what nixfredOS gives you and how to start, and I'll answer from the sites, with links.",
     starters: ["What do I get?", "What is the recipe box?", "How do I keep track of my progress?"],
-    voice: "Answer plainly and upbeat, on the message: free plus your subscription, audit it.",
-    persona: "You are Larry, the helper on nixfredos.com, the page about what you get. Helpful, plain and upbeat. Stay on the message: build the thing you want and walk away with your own agent; free plus your subscription; the recipe box is the recipe, not the goal; don't trust me, audit it." },
+    voice: "Answer plainly and upbeat, on the message: free, audit it.",
+    persona: "You are Larry, the helper on nixfredos.com, the page about what you get. Helpful, plain and upbeat. Stay on the message: build the thing you want and walk away with your own agent; free; the recipe box is the recipe, not the goal; don't trust me, audit it." },
   how: { host: "how.nixfred.com", about: "how: the build guide", title: "Ask Larry", hello: "Hi. I'm Larry. Ask me anything about building your own AI, and I'll answer from the sites, with links.",
     starters: ["How do I get started on a Mac?", "I've been running Claude Code a while and have customizations. Can I use this?", "What do I get when I do this?", "Is it really completely free?", "Is it dangerous?", "Do I need to know how to code?", "How long does it take?"],
     voice: "Answer as Larry, the guide's author: direct, helpful, a little deadpan, and name the exact chapter.",
@@ -92,6 +92,22 @@ const say = (map, site) => map[site] || map.default;
 const FLEET_START = "https://how.nixfred.com/00-start-here";
 const offTopic = site => `${say(REFUSE_TEXT, site)} For building your own AI, the guide starts at ${FLEET_START}`;
 const closestOf = ctx => { const p = ctx.find(x => !/\(site directory\)$/.test(x.title) && /^https:\/\/how\.nixfred\.com\//.test(x.url)); return p ? { title: p.title, url: p.url } : ctx.length ? { title: "Chapter 0: Start Here", url: FLEET_START } : null; };   // always a how.nixfred.com page
+// u09 (fleet, real model): "The exact chapter that discusses the guide's language is [1] how.nixfred.com | how.nixfred.com (site directory)."
+// echoed a site-directory passage's header as if it were a page (and left a stray "1"). Those headers ("[n] host | name (site directory)")
+// are cut from the answer text, after the citations are read; a sentence that ended in one and is left dangling ("... language is .")
+// goes. A real page's header stays: its title names the page, and naming a page is how the answer links it.
+const hostOf = url => { try { return new URL(url).host; } catch { return ""; } };
+export function dropHeaderEcho(t, ctx) {
+  const host = hostOf, heads = ctx.flatMap((p, i) => !/\(site directory\)$/.test(p.title) ? [] : [`[${i + 1}] ${host(p.url)} | ${p.title}${p.heading_path ? " | " + p.heading_path : ""}`, `[${i + 1}] ${host(p.url)} | ${p.title}`]).sort((x, y) => y.length - x.length);
+  if (!heads.some(h => String(t).includes(h))) return String(t);
+  return String(t).split("\n").map(l => l.split(/(?<=[.!?])\s+/).map(sen => {
+    if (!heads.some(h => sen.includes(h))) return sen;
+    const last = heads.reduce((m, h) => { const i = sen.lastIndexOf(h); return i >= 0 && i + h.length > m ? i + h.length : m; }, -1), tail = !/\w/.test(sen.slice(last));
+    let cut = sen; for (const h of heads) cut = cut.split(h).join("");
+    cut = cut.replace(/\s+([.!?,:;])/g, "$1").replace(/\s{2,}/g, " ").trim();
+    return !/[a-z]{3}/i.test(cut) || (tail && /\b(?:is|are|was|were|at|in|on|see|from|by|the)[.!?:]?$/i.test(cut)) ? null : cut;   // the header was the sentence's tail
+  }).filter(x => x !== null).join(" ")).join("\n");
+}
 const fleetDontKnow = pg => `I don't know: the sites don't cover that, and I won't guess. The closest page is ${pg.title}: ${pg.url}`;
 
 // ---------------------------------------------------------------- private-data gate (deterministic, before any model call)
@@ -398,7 +414,8 @@ ${START.map((t, i) => `   ${i + 1}. ${t}`).join("\n")}
    never as where to start.
 7. Hiring Fred: only if the visitor asks about help, hiring, consulting or someone doing it for them, add at most one quiet
    line: "If you want help with advanced work, Fred is available: ${HIRE}". Never a price, rate or dollar amount. Doing it
-   yourself, free plus your subscription, always comes first.
+   yourself, for free, always comes first. What the build costs: "Free." Never add a condition, a plan or a price to it, and
+   never talk about paying for anything or for agents.
 8. AGI is a hope, never a prediction: no dates and no "AGI will". Say "one year after AGI, if it comes".
 9. Credit LifeOS as the project only: never name the person who made it (not even when a passage does, and never his
    GitHub address; the project's site is https://ourlifeos.ai). Never call this work "certified" or "secure", and never say the agent does anything "quietly" or "silently". For a reader's own assistant say "your AI". Never use em dashes or en dashes.
@@ -561,6 +578,7 @@ export async function fleetAnswer(env, request, site, q, history = []) {
   }
   // a next-step ask is never refused (Audit200: live "what comes after telos?" was): the model's refusal becomes its chapter's own words
   let { body, cited } = citations(fu && isFleetRefusal(vis) ? (ctx.find(c => normUrl(c.url) === normUrl(fu.url))?.text.slice(0, 420).trim() || "") : vis, ctx);
+  body = dropHeaderEcho(body, ctx);                                         // u09: after citations are read, so the pages cited stay the same
   let g = groundCommands(body, ctx, cited);
   if (g.flagged) {                                                          // Audit200 RC6: the whole guide pages behind its passages, then
     const hx = hi || await loadIndex(env, request).catch(() => null);
@@ -574,8 +592,12 @@ export async function fleetAnswer(env, request, site, q, history = []) {
     if (gn.cut) { const hx = hi || await loadIndex(env, request).catch(() => null); const pis = hx ? [...ctx, ...cited].map(p => hx.byNorm.get(normUrl(p.url))).filter(i => i !== undefined) : [];
       if (pis.length) gn = groundNumbers(body, [q, ...ctx.map(c => c.text), ...sitePages(hx, pis).map(w => w.text)]); }
     body = gn.body; }
+  if (!fu && !premise) {                                                     // UDK u06: a yes or no about a word no passage grounds
+    const hx = hi || await loadIndex(env, request).catch(() => null);
+    if (hx && ungroundedYesNo(q, body, ctx.map(c => c.text), hx.chunks.map(c => c.t))) { const near = closestOf(ctx); return { answer: fleetDontKnow(near), sources: [near], site, refused: true, why: "not covered (ungrounded yes/no)" }; }
+  }
   if (premise) body = falsePremise(q, isFleetRefusal(body) ? "" : body, ctx); else body = unPremise(q, body);   // CHIPS: no "No, the site does not say that." for a question that claims nothing
-  body = withVariants(readerVoice(noMeta(body), { aiYou: false }), sp);   // m008: the zsh form the question asked for; UDK 4: the reader is "you", never "your human"
+  body = withVariants(noPayTalk(readerVoice(noMeta(body), { aiYou: false })), sp);   // m008: the zsh form the question asked for; UDK 4: the reader is "you", never "your human"
   if (!premise && !fu && !isFleetRefusal(body)) body = safetyLead(q, costLead(q, body, ctx), ctx);
   { const safe0 = safeSource(body, ctx); if (safe0 && !cited.some(p => normUrl(p.url) === normUrl(safe0.url))) cited.unshift(safe0); }
   { const hc = fixHookCredit(body); body = hc.body;   // SEED KIT FIX: search-first.sh / capture-decisions.sh are Ch21's, never the Seed Kit's

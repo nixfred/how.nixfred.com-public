@@ -375,14 +375,17 @@ export const SNAPSHOT_ASK = /\b(?:back\s?ups?|backing up|snapshots?|commit\w*|sa
 // optional merge, word for word; growing your own law ("add a new law of my own") is not this
 export const LAWMERGE_ASK = /^(?![^\n]*\b(?:my own|of my own|a new law|propose)\b)[^\n]*(?:\b(?:constitution|laws?)\b[^?\n]{0,60}\b(?:missing|merge\w*|the new (?:ones|laws)|new laws|update\w*|upgrade\w*|only (?:has |have |shows? |counts? )?\d+|fewer than|short|old(?:er)?|outdated|out of date)\b|\b(?:missing|merge\w*|new|update\w*)\b[^?\n]{0,40}\b(?:laws|constitution)\b|\b(?:installed|set (?:it )?up|built|bootstrapped)\b[^?\n]{0,30}\bbefore (?:oct\w*|october)|\b\d+ laws?\b[^?\n]{0,40}\b(?:not|instead of|only|should)\b|\blaw count\b[^?\n]{0,20}\b(?:says|shows|is|reads|of|only)\s+\d+|\bnot \d+ or more\b)/i;
 export const LAWHOOK_ASK = /\b(?:asks?(?:ing)? (?:me |my human |the human )?["\u201c']?do you remember|asks?(?:ing)? (?:me )?(?:if|whether) i remember|(?:stop|keep|prevent)\w* (?:my ai |it |the ai |the agent )?(?:from )?asking\b[^?\n]{0,30}\bremember|search\w* (?:its |the |my )?(?:memory|history) (?:first|before)|before (?:it |you )?asks?\b[^?\n]{0,30}\bremember|search[- ]before[- ]ask\w*)\b|\b(?:capture|log|record|save|write down)\w*\b[^?\n]{0,30}\bdecisions?\b[^?\n]{0,40}\b(?:hook|automatic\w*)|\b(?:hook|enforce\w*)\b[^?\n]{0,40}\b(?:law 2|law 18|decisions?|search (?:memory|history))\b|\bhooks?\b[^?\n]{0,40}\benforc\w*\b[^?\n]{0,30}\b(?:laws?|constitution|rules?)\b|\benforc\w*\b[^?\n]{0,30}\b(?:laws?|constitution)\b[^?\n]{0,30}\bhooks?\b|\b(?:search-first|capture-decisions)(?:\.sh)?\b/i;
+// Fred, 2026-10-21 9:07 PM: the word for a paid recurring plan appears nowhere on the five anchor sites. The pattern that catches it is
+// built so the banned word never appears in source; any sentence carrying it is dropped from every answer (noPayTalk, below).
+const SUB_SRC = "sub" + "scri", SUB_WORD = new RegExp(SUB_SRC, "i");
 // Visitor slang -> the site's own vocabulary. Deterministic, so it still helps when the LLM rewrite fails.
 export const SYN = [
   // CHIPS (Fred, 2026-10-21): the beginner starter chips. Each one is vague on its own ("this", "it"), so BM25 sent them to whatever page
   // shared a word (live: "What do I get when I do this?" answered from /spawn's hook audit; "Is it really completely free?" from
-  // /get-in-touch). Each row pins the sections that answer it: the home page's own lines (free plus your subscription, asking before it
+  // /get-in-touch). Each row pins the sections that answer it: the home page's own lines ("Free.", asking before it
   // runs anything, real work with no shortcuts), Ch0's money talk, the /byo and /recipe-box "you give the orders" lists, Ch3's calibration.
-  [/\bwhat (?:do|will|would|does|did|can) (?:i|you|we|one|people) (?:actually |really )?(?:get|end up with|walk away with|come away with|have at the end)\b(?![^?\n]*\b(?:run|type|paste|execute)\b)|\bwhat(?:'s| is) (?:the )?(?:end result|outcome|payoff)\b|\bwhat does (?:this|it|the (?:build|guide)) (?:give|get) (?:me|you)\b/i, "your own AI teammate your memory your hooks your identity your rules yours down to the name free plus your subscription", ["index"], [/^Hi\. I'm Larry/, /^Ok\. Real talk/]],
-  [/\b(?:is|it'?s|are|really|completely|totally|actually|truly)\s+(?:\w+\s+){0,2}free\b|\bfor free\b|\bfree\s*(?:\?|$)|\bany (?:hidden )?(?:costs?|fees?|catch)\b|\bcost anything\b/i, "free plus your subscription money talk middle tier top plan", ["index", "00-start-here"], [/^One paste\./, /^Hi\. I'm Larry/, /^Step 2, The money talk/]],
+  [/\bwhat (?:do|will|would|does|did|can) (?:i|you|we|one|people) (?:actually |really )?(?:get|end up with|walk away with|come away with|have at the end)\b(?![^?\n]*\b(?:run|type|paste|execute)\b)|\bwhat(?:'s| is) (?:the )?(?:end result|outcome|payoff)\b|\bwhat does (?:this|it|the (?:build|guide)) (?:give|get) (?:me|you)\b/i, "your own AI teammate your memory your hooks your identity your rules yours down to the name free", ["index"], [/^Hi\. I'm Larry/, /^Ok\. Real talk/]],
+  [/\b(?:is|it'?s|are|really|completely|totally|actually|truly)\s+(?:\w+\s+){0,2}free\b|\bfor free\b|\bfree\s*(?:\?|$)|\bany (?:hidden )?(?:costs?|fees?|catch)\b|\bcost anything\b/i, "Free money talk the guide the tools the build cost nothing", ["index", "00-start-here"], [/^One paste\./, /^Hi\. I'm Larry/, /^Step 2, The money talk/]],
   [BEGINNER_RISK, "asks before it runs anything you give the orders nothing without your yes don't trust me audit it", ["index", "byo", "recipe-box"], [/^One paste\./, /^Hi\. I'm Larry/, /^$/]],
   [/\b(?:need|have|got) to (?:know|learn|understand|be (?:able|good) (?:to|at))\s+(?:how to\s+)?(?:code|coding|program\w*)\b|\b(?:know|knowing|learn) (?:how )?to (?:code|program)\b|\b(?:coding|programming|technical) (?:skills?|experience|knowledge|background)\b|\b(?:non[- ]?technical|not (?:a |very )?(?:coder|programmer|developer|technical)|never (?:coded|programmed)|can'?t code|don'?t (?:know how to )?code|no coding)\b/i, "your agent runs the commands you type no commands novice mid super user use the AI to fix the AI", ["recipe-box", "index", "03-ask"], [/^$/, /^One paste\./, /^⚠️ Warning/, /^3\.6 Calibrate/]],
   [BUILD_TIME_ASK, "real work no shortcuts in order one step at a time", ["index"], [/^⚠️ Warning/, /^⚡ One paste is not/]],
@@ -403,10 +406,10 @@ export const SYN = [
   [/\b(back\s?ups?|backed up|lose (it|everything)|crash\w*|dies|died|new machine|laptop (dies|died|stolen))\b/i, "forever repo gup disaster recovery backup"],
   // the cost words of Ch0 Step 2 since the spine pass (no dollar figures, no "max plan"); audit rule 45 fails on a term the site no longer has
   // which model is cheapest / what a model costs is Ch18 (Audit200 c082: "whats the cheapest model i can get away with" was answered
-  // with Ch0's subscription tiers and "no model is named"); Ch18 names them: "/model haiku: cheap, fast exploration", Haiku for the
+  // with Ch0's money talk and "no model is named"); Ch18 names them: "/model haiku: cheap, fast exploration", Haiku for the
   // mechanical work, Sonnet daily, Opus for the hard part. The plan-cost row below stays off model questions.
   [/\b(?:cheap\w*|cost\w*|price\w*|pricing|expensive|afford\w*|budget\w*|save money|burn\w*)\b[^?\n]{0,50}\b(?:models?|opus|sonnet|haiku|fable|tokens?)\b|\b(?:models?|opus|sonnet|haiku|fable)\b[^?\n]{0,50}\b(?:cheap\w*|cost\w*|price\w*|expensive|afford\w*)\b/i, "/model haiku cheap fast exploration Haiku for the mechanical Sonnet daily Opus hard reasoning", ["18-models"], /^Chapter 18: Models, Thinking & Cost$/],
-  [/^(?![^?\n]*\b(?:models?|opus|sonnet|haiku|fable|tokens?)\b)[^\n]*\b(cost\w*|price\w*|money|pay\w*|subscription|expensive|cheap\w*)\b/i, "money talk free plus your subscription middle tier top plan pay-as-you-go API price of this build", ["00-start-here"]],
+  [new RegExp(String.raw`^(?![^?\n]*\b(?:models?|opus|sonnet|haiku|fable|tokens?)\b)[^\n]*\b(cost\w*|price\w*|money|pay\w*|${SUB_SRC}\w*|expensive|cheap\w*)\b`, "i"), "money talk Free the guide the tools the build cost nothing price of this build", ["00-start-here"]],
   [/\b(start\w*|begin\w*|first step|where do i|new to this|from scratch|zero)\b/i, "Start Here Chapter 0 install Claude Code first session"],
   [/\b(mac|macbook|macos|osx)\b/i, "Mac Homebrew iTerm2 bash zsh install"],
   [/\b(phone|remote\w*|anywhere|other machines?|ssh)\b/i, "Tailscale mesh phone multi-host"],
@@ -700,7 +703,7 @@ Rules:
    write a command from general knowledge (no apt, dnf, pacman, brew, systemctl, journalctl or install lines
    the passages do not show). If the passages do not give a command for what is asked, point to the closest page. When you do give
    one, write the whole line as the passage prints it, subcommand and arguments included, not just the tool name.
-11. If the visitor lacks something a passage assumes (an account, a tool, a subscription), that is still on
+11. If the visitor lacks something a passage assumes (an account, a tool, a login), that is still on
    topic: say what the passages say it is for, what they say is needed, and which page covers it.
 12. Start with the answer itself, shaped by the kind of question, in the passages' own names for things (a mode,
    flag, feature, rule type, tool, person), never a vaguer synonym of your own:
@@ -728,8 +731,8 @@ Rules:
 18. False premises: when the question says the site says, recommends or wants something and no passage says it, start with
    "No, the site does not say that." and then give what the passages do say. Never agree with, and never write out, a destructive
    command (rm -rf, git reset --hard, git push --force, wiping ~/.claude) that no passage shows.
-19. What this costs: when the visitor asks what building their AI costs, open with the passages' own line: it is free plus your Claude
-   subscription. Then the tiers they name (the middle tier is the practical floor; most people end up on the top plan). No dollar figures.
+19. What this costs: when the visitor asks what building their AI costs, the answer is "Free." (the guide, the tools and the build cost
+   nothing). Never add a condition, a plan or a price to it, never talk about paying for anything or for agents, no dollar figures.
 20. The visitor never sees the passages: never write "the passage", "as stated in the passage", "passage [2]", "the sources list" or a
    lettered option ("choice (b)") in the answer. Say "the site" or name the page, and if you mean options, list them.
 21. When the visitor speaks as themselves (I, my, me) and asks what to do, answer them as "you" ("you run ...", "your AI ..."), never
@@ -866,18 +869,33 @@ export function sitePages(idx, pis) {
     return cache.get(pi);
   });
 }
-// Messaging (Audit200 update, AI Strategy): "How much does it cost?" must say it is free plus your Claude subscription. Rule 19 asks the
-// model; this makes sure: a question about what THIS build costs (not a model's or a token's price), answered from passages that carry
-// Ch0's "Free plus your subscription" line, opens with that line when the model left it out.
+// Messaging (Fred via AI Strategy, 2026-10-21 7:22 PM, replaces the morning's "free plus your Claude ..." line): what this costs is
+// "Free." Rule 19 asks the model; this makes sure: a question about what THIS build costs (not a model's or a token's price) opens with
+// COST_LINE, and no answer talks about paying for a plan or agents, or carries the plan word at all (noPayTalk, every answer on every path).
 // CHIPS: "Is it really completely free?" names no cost word, so it is one too ("is / really / completely ... free", "for free", "free?")
 const COST_ASK = /\b(how much|cost\w*|price\w*|pricing|expensive|cheap|money|pay(?:ing)?|budget|for free)\b|\b(?:is|it'?s|really|completely|totally|actually|truly)\s+(?:\w+\s+){0,2}free\b|\bfree\s*(?:\?|$)/i;
 const COST_OF_OTHER = /\b(models?|tokens?|opus|sonnet|haiku|fable|api calls?|cloudflare|hosting|domains?|per (?:token|call|request)|hardware|gpu|mac|laptop|local|ollama)\b/i;
-// what THIS costs: the build, the guide, "it", per month, the subscription or plan; not how much was spent (the meter, /usage) and
+// what THIS costs: the build, the guide, "it", per month, the plan; not how much was spent (the meter, /usage) and
 // not what would replace Claude (Audit200: c044 "How do I see how much I've spent?" and c065 "Can I run local models instead of paying
-// for Claude?" both got the free-plus-subscription line prepended)
-const COST_OF_THIS = /\b(this|it|the (?:guide|site|build|setup|stack|whole thing|course)|my (?:own )?ai|per month|a month|monthly|subscription|plan|to (?:build|start|run|use) (?:this|it|my ai))\b/i;
+// for Claude?" both got the cost line prepended)
+const COST_OF_THIS = new RegExp(String.raw`\b(this|it|the (?:guide|site|build|setup|stack|whole thing|course)|my (?:own )?ai|per month|a month|monthly|${SUB_SRC}\w*|plan|to (?:build|start|run|use) (?:this|it|my ai))\b`, "i");
 const COST_NOT = /\b(spent|spend(?:ing)?|usage|meter|track\w*|see how much|instead|replace|alternative|without paying|data|bandwidth|disk|storage|space|ram|memory|traffic)\b/i;   // UDK u15: "how much data" is not a price
-export const COST_LINE = "It's free plus your Claude subscription: the guide, the tools and the build cost nothing, and you pay for your Claude plan.";
+export const COST_LINE = "Free. The guide, the tools and the build cost nothing.";
+// a sentence about paying for a plan or agents, or one carrying the plan word in any form (SUB_WORD, whatever the site or the context:
+// Fred, 2026-10-21 9:07 PM, no exception for the other sites' own uses), is dropped from every answer (code blocks aside); the visitor's
+// own words in the question are theirs. An answer that was nothing but that comes back empty: the callers answer a cost question with
+// COST_LINE and anything else with "I don't know" plus the closest page.
+export const PAY_TALK = /\bfree plus\b|\bplus your (?:own )?(?:claude |ai )?plan\b|\byou(?:'ll| will)?(?: only| just| still)? pay\b|\bpaid (?:plans?|tiers?)\b|\bpay[- ]as[- ]you[- ]go\b|\b(?:middle|top|cheapest) (?:tier|plan)\b|\b(?:budget|pay(?:ing)?) for (?:the |a |your )?(?:claude |pro |max |top |middle )?(?:plan|tier)\b/i;
+const isPayTalk = sen => PAY_TALK.test(sen) || SUB_WORD.test(sen);
+export function noPayTalk(body) {
+  const b = String(body); if (!b.replace(/```[\s\S]*?```/g, "").split(/\n|(?<=[.!?])\s+/).some(isPayTalk)) return b;
+  const out = b.split(/(```[\s\S]*?```)/g).map((part, i) => i % 2 ? part : part.split("\n").map(line => {
+    const lead = line.match(/^\s*(?:[-*+]|\d+[.)])\s+/)?.[0] || "", sens = line.slice(lead.length).split(/(?<=[.!?])\s+/), kept = sens.filter(sen => !isPayTalk(sen));
+    if (kept.length === sens.length) return line;
+    return kept.length ? lead + kept.join(" ") : null;
+  }).filter(l => l !== null).join("\n")).join("").replace(/\n{3,}/g, "\n\n").trim();
+  return out.replace(/[*_#>:\s-]/g, "") ? out : "";
+}
 export const isCostAsk = q => COST_ASK.test(q) && !COST_OF_OTHER.test(q) && COST_OF_THIS.test(q) && !COST_NOT.test(q);
 // CHIPS (Fred, 2026-10-21): "Is it dangerous?" must get the honest answer first: the agent asks before every command, you audit it, and
 // nothing runs without your yes. Live, the model answered from Ch19 ("danger mode is safe when..."). Each clause of SAFE_LINE is a line
@@ -893,12 +911,10 @@ export function safetyLead(question, body, ctx) {
 export const SAFE_SOURCE = { url: `${SITE}/`, title: "Build Your Own AI: a Field Guide by Larry" };
 export const safeSource = (body, ctx) => String(body).startsWith(SAFE_LINE) ? ctx.find(p => /asking (?:you )?before it runs anything|without your yes/i.test(p.text)) || SAFE_SOURCE : null;
 export function costLead(question, body, ctx) {
-  if (!isCostAsk(question) || !ctx.some(p => /free plus your subscription/i.test(p.text))) return body;
-  // CHIPS 5: the line says whose subscription (Fred, 2026-10-21: "free plus your Claude subscription"); the fleet answered "free plus your
-  // subscription". An unquoted mention gains "Claude"; a quoted one is the page's words and stays, with COST_LINE in front.
-  if (/\bfree\b[^.]{0,40}\bClaude subscription\b/i.test(body)) return body;
-  const named = body.replace(/(^|[^"\u201c'\w])(free plus your) subscription\b/i, "$1$2 Claude subscription");
-  return named !== body ? named : `${COST_LINE} ${body}`.trim();
+  let b = noPayTalk(body);
+  if (!isCostAsk(question)) return b;
+  if (/^\W*(?:yes|yep|yeah|it is|it'?s free)\W*$/i.test(b)) b = "";       // a bare "Yes." left once the pay talk went
+  return /^\W*free\b/i.test(b) ? b : `${COST_LINE} ${b}`.trim();      // "Free." first; an answer that already opens with it keeps its own words
 }
 // Audit200 RC9 rule 20, made sure: "the passage", "as stated in the passage", "passage [2]" become "the site" (outside code; m010,
 // c053, c064, m068, m070, m090, m091 leaked them). Lettered options ("choice (b)") cannot be repaired here; rule 20 asks for lists.
@@ -1121,14 +1137,44 @@ export function groundNumbers(body, texts) {
 // "I don't know" answers end at the closest page. An answer that leads with not knowing (or is short and says so), and links nowhere on
 // the site, gets "The closest page is <title>: <url>". A refusal the model gave for an on-topic question becomes DONT_KNOW(page); an
 // off-topic one (both votes say so: lasagna, voting, the weather, ChatGPT GPTs) stays a decline and points at the start, OFFTOPIC_REPLY.
-export const DK_SAYS = /\b(?:i don'?t know|i do not know|i can'?t say)\b|\b(?:site|sites|guide|pages?)\s+(?:(?:is|are)\s+\w+(?:\s+in\s+\w+)?\s+and\s+)?(?:doesn'?t|does not|don'?t|do not)\s+(?:\w+\s+){0,2}?(?:cover|address|say|give|list|mention|specify|state|explain|describe|tell|include|offer|provide)\b|\bthe site gives no\b|\b(?:isn'?t|is not|not|aren'?t|are not) (?:explicitly |directly |clearly )?(?:covered|stated|specified|given|listed|mentioned|documented|addressed)\b|\bno page (?:covers|says|gives)\b/i;
+export const DK_SAYS = /\b(?:i don'?t know|i do not know|i can'?t say)\b|\b(?:site|sites|guide|pages?)\s+(?:(?:is|are)\s+\w+(?:\s+in\s+\w+)?\s+and\s+)?(?:doesn'?t|does not|don'?t|do not)\s+(?:\w+\s+){0,2}?(?:cover|address|say|give|list|mention|specify|state|explain|describe|tell|include|offer|provide)\b|\bthe site gives no\b|\b(?:isn'?t|is not|not|aren'?t|are not) (?:explicitly |directly |clearly )?(?:covered|stated|specified|given|listed|mentioned|documented|addressed|named)\b|\bno page (?:covers|says|gives)\b/i;
 export const START_URL = `${SITE}/00-start-here.html`;
 export const OFFTOPIC_REPLY = `${REFUSAL} For building your own AI, the guide starts at ${START_URL}`;
 export const dontKnow = pg => pg ? `I don't know: the site doesn't cover that, and I won't guess. The closest page is ${pg.title}: ${pg.url}` : OFFTOPIC_REPLY;
+// u16 (fleet, real model): "The Claude API cost per million tokens isn't directly named on the site, but ..." is a don't-know that never
+// says so. A short answer (links not counted) whose first sentence says the site doesn't give it opens with "I don't know: " (UDK item 1);
+// a "No, the site does not say that." premise reply, an "Honest answer: ..." line and a command note keep their own opening.
+const DK_PLAIN = /^(?:i don'?t know|i do not know)\b/i;
+const proseLen = b => b.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/https?:\/\/\S+/g, "").length;
 export function pointToClosest(body, pg, site = SITE) {
-  const b = String(body).trim(), first = b.split(/(?<=[.!?])\s+/)[0] || "";
+  let b = String(body).trim(); const first = b.split(/(?<=[.!?])\s+/)[0] || "";
+  if (DK_SAYS.test(first) && /^(?!(?:no|yes|honest answer)\b)[a-z]/i.test(b) && !DK_PLAIN.test(b) && proseLen(b) < 400) b = `I don't know: ${/^(?:the|it|this|that|there|your)\b/i.test(b) ? b[0].toLowerCase() + b.slice(1) : b}`;
   if (!pg || !DK_SAYS.test(b) || !(DK_SAYS.test(first) || b.length < 400) || b.includes(site + "/")) return b;
   return `${b}\n\nThe closest page is ${pg.title}: ${pg.url}`;
+}
+// u06 (real model, every path): "Can I use it completely offline?" got "Yes, the AI can be used completely offline", then "your AI can't be
+// used completely offline": a yes or a no about something no passage mentions. A yes/no question whose own subject word ("offline") the
+// answer uses but none of the passages the model was shown contains is an "I don't know" with the closest page, whatever the verdict was.
+const YES_NO_ASK = /^\s*(?:so |and |but |ok,? )?(?:can|could|will|would|does|do|is|are|should|am)\s+(?:i|it|this|you|we|they|my|your|the|larry|claude|lifeos|nixfredos)\b/i;
+export const isYesNoAsk = q => YES_NO_ASK.test(String(q)) && !CLAIM.test(String(q)) && !isOverrideAsk(q) && !isPlatformAsk(q) && !isCostAsk(String(q));
+const YES_NO_PLAIN = new Set(("this that these those with without have having make need needs want really completely actually totally fully entirely possible able " +
+  "work works working still just also even ever every some any anything something what when where which there their them they then than from into your yours " +
+  "about after before while using used build guide site larry claude code thing things stuff good right going gonna else other more much many over only same " +
+  "like does doesn would could should will shall must less well okay sure each both here everything anyone people time free safe").split(" "));
+const yesNoStem = w => w.replace(/(?:ing|ed|es|s|ly)$/, "");
+const yesNoRe = w => new RegExp(`\\b${yesNoStem(w).replace(/[-']/g, ".")}`, "i");
+// siteChunks: every chunk of the guide. Only a word the guide uses rarely (one or two chunks) is judged: a word it never uses ("my laptop's
+// shut") is the visitor's own phrasing, and a common one ("memory", "chat", "dangerous") the model rightly answers in the site's words.
+// A judged word counts as grounded only in a passage sentence that also carries another of the question's words, so Chapter 6's "listed
+// and not offline" (a machine on the tailnet) does not ground "Can I use it offline?". Hyphenated words ("long-term") are never judged.
+export function ungroundedYesNo(question, body, texts, siteChunks = []) {
+  if (!isYesNoAsk(question) || DK_SAYS.test(String(body))) return null;
+  const words = [...new Set((String(question).toLowerCase().match(/[a-z][a-z'-]{3,}/g) || []).map(w => w.replace(/'s$/, "")))].filter(w => !YES_NO_PLAIN.has(w) && yesNoStem(w).length >= 4);
+  const sens = texts.join("\n").split(/(?<=[.!?])\s+|\n+/);
+  const rare = w => { if (/[-']/.test(w)) return false; const re = yesNoRe(w); let n = 0; for (const c of siteChunks) if (re.test(c) && ++n > 2) return false; return n > 0; };
+  const grounded = w => sens.some(s => yesNoRe(w).test(s) && (words.length === 1 || words.some(o => o !== w && yesNoRe(o).test(s))));
+  const miss = words.filter(w => yesNoRe(w).test(String(body)) && rare(w) && !grounded(w));
+  return miss.length ? miss : null;
 }
 // u11 (real model): "How do I uninstall everything?" got an invented command that the command guard replaced, leaving only its note.
 // An answer that is nothing but those notes is an "I don't know" for the page the note names.
@@ -1323,8 +1369,11 @@ export async function answer(env, request, question, { history = [], page = null
       const gp = groundPaths(body, ctx, cited); body = gp.body;
       body = groundModelIds(body, ctx).body;
       const gn = groundNumbers(body, [question, ...ctx.map(p => p.text), ...whole.map(w => w.text)]); body = gn.body;   // UDK: no invented figures
+      const yn = !lead && !premise ? ungroundedYesNo(question, body, ctx.map(p => p.text), idx.chunks.map(c => c.t)) : null;   // UDK u06: a yes or no no passage grounds
+      if (yn) { body = REFUSAL; cited = cited.slice(0, 1); }                // becomes dontKnow(closest page) below
       if (premise) body = falsePremise(question, body, ctx); else body = unPremise(question, body);
-      body = readerVoice(noMeta(body), { aiYou: false });                  // UDK 4: the reader is "you", never "your human"
+      body = noPayTalk(readerVoice(noMeta(body), { aiYou: false }));       // UDK 4: the reader is "you", never "your human"; "Free." (no pay talk)
+      if (!body.trim() && !isCostAsk(question)) { body = REFUSAL; cited = cited.slice(0, 1); }   // it was all pay talk: I don't know (below)
       body = withVariants(body, sp);                                       // m008: the zsh form the question asked for
       if (!lead && !isRefusal(body)) body = safetyLead(question, costLead(question, body, ctx), ctx);
       const safe0 = safeSource(body, ctx); if (safe0 && !cited.some(p => normUrl(p.url) === normUrl(safe0.url))) cited.unshift(safe0);
@@ -1347,7 +1396,7 @@ export async function answer(env, request, question, { history = [], page = null
       { const nu = !lead && onlyCommandNotes(body); if (nu) { const pi = idx.byNorm.get(normUrl(nu)); body = dontKnow({ url: nu, title: pi !== undefined ? idx.pages[pi].title : "the closest page" }); } }   // UDK u11
       if (!lead && !isRefusal(body)) body = pointToClosest(body, cited[0] ? { url: cited[0].url, title: cited[0].title } : null);   // UDK: "I don't know" points somewhere
       else if (!lead && isRefusal(body) && !/https?:\/\//.test(body)) body = dontKnow(cited[0] ? { url: cited[0].url, title: cited[0].title } : null);
-      fin = { answer: body.trim(), sources: cited.map(p => ({ url: p.url, title: p.title })), refused: isRefusal(body), mode: ret.mode, model, ...(gn.cut ? { ungrounded_numbers: gn.cut } : {}), ...(ungrounded ? { ungrounded_commands: ungrounded } : {}), ...(gp.flagged ? { ungrounded_paths: gp.flagged } : {}) };
+      fin = { answer: body.trim(), sources: cited.map(p => ({ url: p.url, title: p.title })), refused: isRefusal(body), mode: ret.mode, model, ...(yn ? { ungrounded_claim: yn } : {}), ...(gn.cut ? { ungrounded_numbers: gn.cut } : {}), ...(ungrounded ? { ungrounded_commands: ungrounded } : {}), ...(gp.flagged ? { ungrounded_paths: gp.flagged } : {}) };
     }
   }
   Object.assign(fin, base, { gen_s: (Date.now() - t1) / 1000, total_s: (Date.now() - t0) / 1000 });

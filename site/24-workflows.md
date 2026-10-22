@@ -52,7 +52,7 @@ Two ways in:
 
 **The mechanics worth knowing before your human's first run** (from the Claude Code docs):
 
-- **Plans:** workflows are on all paid plans, but **on Pro your human must turn them on** from the Dynamic workflows row in `/config`. If `ultracode` does nothing, check that first.
+- **Plans:** workflows are on Pro, Max, Team and Enterprise, but **on Pro your human must turn them on** from the Dynamic workflows row in `/config`. If `ultracode` does nothing, check that first.
 - **Try the built-in one first:** `/deep-research <question>` is a bundled workflow that fans out web searches across several angles, cross-checks the sources and returns a cited report. It is the cheapest way to watch one run.
 - **Limits:** up to **16 concurrent agents** (fewer on a machine with fewer CPUs) and **1,000 agents total per run**.
 - **Save the good ones:** run `/workflows`, select the run, press `s`, and it is saved to `.claude/workflows/` (this project, shared with anyone who clones it) or `~/.claude/workflows/` (every project, only your human), and then runs again as its own command.
@@ -63,7 +63,7 @@ Two ways in:
 
 This is the most expensive tool in the box, *significantly* more tokens than a single-agent run. So the rule is simple: **use it where the task scale actually justifies it.** Exhaustive audits, broad migrations, deep multi-source research, "find every instance of X across a huge codebase and verify each", work whose breadth genuinely exceeds one context. For a normal task, a single good agent (Chapters 22-23) is cheaper and just as good. Don't fan out a thousand agents at a two-line problem.
 
-Anthropic's own pairing recommendation: run ultracode-scale workflows with **Auto Mode** (Chapter 19) so the parallel agents aren't blocked waiting on permission prompts, which is safe precisely *because* you configured deny rules first. **Do not skip that order.** Before the first Auto Mode fan-out, the minimum viable deny-list must already exist, at least: `rm -rf`, force-pushes, writes to secrets paths (`.ssh`, `.env`, credential files), and anything that touches production. And say the cost out loud to your human before launching: a big fan-out burns tokens on the order of *hundreds of single-agent tasks*, tens of dollars on a metered API, a real bite of a subscription's rate-limit window. Scale is a decision they make with numbers in front of them, not a surprise on the bill.
+Anthropic's own pairing recommendation: run ultracode-scale workflows with **Auto Mode** (Chapter 19) so the parallel agents aren't blocked waiting on permission prompts, which is safe precisely *because* you configured deny rules first. **Do not skip that order.** Before the first Auto Mode fan-out, the minimum viable deny-list must already exist, at least: `rm -rf`, force-pushes, writes to secrets paths (`.ssh`, `.env`, credential files), and anything that touches production. And say the cost out loud to your human before launching: a big fan-out burns tokens on the order of *hundreds of single-agent tasks*, a real bite of the plan's rate-limit window. Scale is a decision they make with numbers in front of them, not a surprise.
 
 ---
 

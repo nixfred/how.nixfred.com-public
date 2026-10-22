@@ -317,11 +317,11 @@ On other Linux distributions, use the LifeOS Fabric skill instead; the CLI is op
 
 Three honest facts before your human picks a model in `fabric --setup`:
 
-- **The `fabric` CLI cannot use the Claude subscription.** Its Anthropic vendor asks for an **API key** only (that is separate, pay-per-token API billing, not the Pro or Max plan). If your human only has the subscription, pick a different vendor.
+- **The `fabric` CLI cannot use a Claude Pro or Max login.** Its Anthropic vendor asks for an **API key** only (an Anthropic API key is a separate account from the Pro or Max plan). If your human only has the Pro or Max login, pick a different vendor.
 - **Local models are free.** Fabric talks to **Ollama** and **LM Studio** directly, so a model running on your human's own machine costs nothing per run.
 - **YouTube transcripts need `yt-dlp`** installed separately, or `fabric -y <url>` has nothing to read. Mac: `brew install yt-dlp`. Linux: `sudo apt-get install -y yt-dlp` (Debian, Ubuntu), `sudo dnf install -y yt-dlp` (Fedora), `sudo pacman -S yt-dlp` (Arch).
 
-And the shortcut most people miss: **LifeOS already ships a Fabric skill** that runs the patterns natively *inside Claude*, on the subscription you already pay for. Ask for "run fabric extract_wisdom on this" in a session and it just works; the skill only calls the CLI for YouTube transcripts and as a URL fallback. So the CLI is optional; install it when you want patterns in shell pipes or on a free local model.
+And the shortcut most people miss: **LifeOS already ships a Fabric skill** that runs the patterns natively *inside Claude*, on the Claude login you already have. Ask for "run fabric extract_wisdom on this" in a session and it just works; the skill only calls the CLI for YouTube transcripts and as a URL fallback. So the CLI is optional; install it when you want patterns in shell pipes or on a free local model.
 
 > **Larry's read:** patterns are tacit knowledge someone already did the hard work on ([Chapter 25](25-tacit.html)). Don't write your own mediocre "summarize" prompt when Fabric's `extract_wisdom` has been tuned by thousands of runs. Wire the few Fabric patterns you actually use into your workflow (a `CLAUDE.md` line, or a slash command, [Chapter 17](17-slash.html)), and skip the ones you won't. Same move as PAI: start from upstream, then make it yours.
 
@@ -357,7 +357,7 @@ mkdir -p ~/.config/environment.d && echo 'LMF4_EXTRACT_MODEL=claude-haiku-4-5' >
 systemctl --user set-environment LMF4_EXTRACT_MODEL=claude-haiku-4-5
 ```
 
-The first line covers sessions your human starts from a terminal; the other two cover LMF4.1's catch-up timer, which runs under systemd and never reads `~/.bashrc` (the `environment.d` file makes it permanent, `set-environment` applies it now). The honest cost: Haiku runs on your human's subscription, so each extraction spends a little of their usage, which is why the code's default moved to a free local model.
+The first line covers sessions your human starts from a terminal; the other two cover LMF4.1's catch-up timer, which runs under systemd and never reads `~/.bashrc` (the `environment.d` file makes it permanent, `set-environment` applies it now). The honest cost: Haiku runs on your human's Claude plan, so each extraction spends a little of their usage, which is why the code's default moved to a free local model.
 
 **Linux, with a GPU (or patience): a free local model through Ollama:**
 
@@ -437,7 +437,7 @@ This is the **PF / Heartbeat**: a private git repo that tracks the home director
 
 [**claude-router**](https://github.com/nixfred/claude-router) (CR) is a Claude Code mod, `tier-router`, that picks the model for every request itself: lookups and quick questions drop to Sonnet, subagents that only search drop to Haiku, ordinary coding runs on Sonnet, and deep architecture and anything security stay on your session model. It uses instant, free regex rules to decide, never routes *up* by accident (security on a Sonnet session is the one deliberate lift, to Opus), and puts every decision on the status line so you can see it.
 
-Here's the honest part, and it matters because this site refuses to sell your human a lie: **on a Max or Pro subscription, routing does not save them money.** They pay a flat fee either way. What it saves is their **5-hour rate-limit budget**: Opus drains that rolling window far faster than the smaller models, so every task kept off Opus is more real working hours before they smack into a wall. CR counts exactly that, which tier each turn ran on and how many it kept off Opus. No invented dollar figures.
+Here's the honest part, and it matters because this site refuses to sell your human a lie: **on a Max or Pro plan, routing is not about money.** What it saves is their **5-hour rate-limit budget**: Opus drains that rolling window far faster than the smaller models, so every task kept off Opus is more real working hours before they smack into a wall. CR counts exactly that, which tier each turn ran on and how many it kept off Opus. No invented dollar figures.
 
 Clone it into `~/Projects` and run its installer (it needs `jq`, Step 4a):
 

@@ -96,7 +96,7 @@
 <p>Connect generously while exploring; trim ruthlessly for the workflows you run every day.</p>
 <p><strong>Three facts that trip people up with claude.ai connectors in Claude Code:</strong></p>
 <ul>
-<li><p><strong>They only load on a claude.ai subscription login.</strong> Claude Code fetches your human&#39;s claude.ai connectors only when the active login is their Pro or Max (or Team) account. If <code>ANTHROPIC_API_KEY</code>, <code>ANTHROPIC_AUTH_TOKEN</code> or an <code>apiKeyHelper</code> is active, or a token from <code>claude setup-token</code>, the connectors silently do not appear. Missing from <code>/mcp</code>? Run <code>/status</code> to see which login is active, unset the key, and <code>/login</code> with the claude.ai account.</p>
+<li><p><strong>They only load on a claude.ai account login.</strong> Claude Code fetches your human&#39;s claude.ai connectors only when the active login is their Pro or Max (or Team) account. If <code>ANTHROPIC_API_KEY</code>, <code>ANTHROPIC_AUTH_TOKEN</code> or an <code>apiKeyHelper</code> is active, or a token from <code>claude setup-token</code>, the connectors silently do not appear. Missing from <code>/mcp</code>? Run <code>/status</code> to see which login is active, unset the key, and <code>/login</code> with the claude.ai account.</p>
 </li>
 <li><p><strong>Least access is a deny rule.</strong> Connector tools are named <code>mcp__claude_ai_&lt;Server&gt;__&lt;tool&gt;</code> (for example <code>mcp__claude_ai_Gmail__create_draft</code>; the exact names show in <code>/mcp</code> and in permission prompts). Grant read, then deny what a workflow must never touch, in <code>settings.json</code> permissions:</p>
 <pre><code class="language-json">{ &quot;permissions&quot;: { &quot;deny&quot;: [
@@ -133,7 +133,7 @@ jq &#39;.permissions.deny // []&#39; ~/.claude/settings.json     # what is fence
 <li>Email + calendar = a planning partner and the basis for a daily brief.</li>
 <li>Connect documents and team chat that matter; skip the rest (context cost).</li>
 <li>Add live web/research access, training cutoffs make old knowledge insufficient for current work.</li>
-<li>In Claude Code: MCP for exploration, a hardcoded endpoint for the one thing you do in production. claude.ai connectors load only on a subscription login (not an API key); deny <code>mcp__claude_ai_&lt;Server&gt;__&lt;tool&gt;</code> rules give least access; invites and shares are sends. Next: Chapter 27.</li>
+<li>In Claude Code: MCP for exploration, a hardcoded endpoint for the one thing you do in production. claude.ai connectors load only on a claude.ai account login (not an API key); deny <code>mcp__claude_ai_&lt;Server&gt;__&lt;tool&gt;</code> rules give least access; invites and shares are sends. Next: Chapter 27.</li>
 </ol>
 <div class="selfdrive">
 <b>✅ Before you move on: verify, log, advance</b>

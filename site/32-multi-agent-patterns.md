@@ -92,7 +92,7 @@ Forking isn't free, more agents, more tokens, longer runs. The source is candid 
 - **The other agent's work would pollute your context, or needs independent judgment?** Fork.
 - **CI / unattended?** A slash command is often enough; save subagents for interactive work where the clean context window earns its cost.
 
-> **Larry's read:** the mistake isn't using too few agents, it's spawning a swarm where one focused prompt would do, and then paying for it in tokens and wall-clock. Reach for these patterns when the *shape* of the problem (wide search, mechanical migration, adversarial judgment) actually calls for isolation. Otherwise, one good Claude on a clean context beats ten confused ones.
+> **Larry's read:** the mistake isn't using too few agents, it's spawning a swarm where one focused prompt would do, and then burning tokens and wall-clock. Reach for these patterns when the *shape* of the problem (wide search, mechanical migration, adversarial judgment) actually calls for isolation. Otherwise, one good Claude on a clean context beats ten confused ones.
 
 ---
 

@@ -32,7 +32,7 @@ Their answer picks the tool. Do not skip this; audio is data.
 
 ## The tools (checked September 2026)
 
-**Wispr Flow, cloud, best accuracy and formatting.** Mac, Windows, iPhone and Android. No official Linux app. Free tier is limited; Pro is a paid plan (current limits and prices at [wisprflow.ai/pricing](https://wisprflow.ai/pricing)). Transcription always happens in the cloud. For choice (b), turn on **Privacy Mode** and turn off cloud storage, which Wispr describes as zero data retention ([data controls](https://wisprflow.ai/data-controls)). A HIPAA BAA is available ([details](https://docs.wisprflow.ai/articles/4218718535-hipaa-compliance-healthcare-use)). Whether that satisfies your human's own professional rules is their call, not yours; say so.
+**Wispr Flow, cloud, best accuracy and formatting.** Mac, Windows, iPhone and Android. No official Linux app. Free tier is limited (current plans at [wisprflow.ai/pricing](https://wisprflow.ai/pricing)). Transcription always happens in the cloud. For choice (b), turn on **Privacy Mode** and turn off cloud storage, which Wispr describes as zero data retention ([data controls](https://wisprflow.ai/data-controls)). A HIPAA BAA is available ([details](https://docs.wisprflow.ai/articles/4218718535-hipaa-compliance-healthcare-use)). Whether that satisfies your human's own professional rules is their call, not yours; say so.
 
 **On-device on a Mac.** Built-in macOS Dictation is free and runs on-device on Apple silicon (System Settings, Keyboard, Dictation). superwhisper has a free local tier and a paid Pro plan and runs its models on the Mac. Use one of these for choice (c).
 

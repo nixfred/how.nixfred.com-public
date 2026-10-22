@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Start Here: Get Claude Code Running (Mac or Linux) · how.nixfred.com</title>
-<meta name="description" content="Claude Code installed, a subscription plan picked on purpose, logged in, danger mode on, a real shell, and you're on Tailscale. The only all-human step.">
+<meta name="description" content="Claude Code installed, logged in with your Claude account, danger mode on, a real shell, and you're on Tailscale. The only all-human step.">
 <link rel="canonical" href="https://how.nixfred.com/00-start-here">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -12,7 +12,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="how.nixfred.com">
 <meta property="og:title" content="Start Here: Get Claude Code Running (Mac or Linux) · how.nixfred.com">
-<meta property="og:description" content="Claude Code installed, a subscription plan picked on purpose, logged in, danger mode on, a real shell, and you're on Tailscale. The only all-human step.">
+<meta property="og:description" content="Claude Code installed, logged in with your Claude account, danger mode on, a real shell, and you're on Tailscale. The only all-human step.">
 <meta property="og:image" content="https://how.nixfred.com/assets/og-larry.png">
 <meta property="og:image:secure_url" content="https://how.nixfred.com/assets/og-larry.png">
 <meta property="og:image:type" content="image/png">
@@ -24,7 +24,7 @@
 <meta name="twitter:site" content="@nixfred">
 <meta name="twitter:creator" content="@nixfred">
 <meta name="twitter:title" content="Start Here: Get Claude Code Running (Mac or Linux) · how.nixfred.com">
-<meta name="twitter:description" content="Claude Code installed, a subscription plan picked on purpose, logged in, danger mode on, a real shell, and you're on Tailscale. The only all-human step.">
+<meta name="twitter:description" content="Claude Code installed, logged in with your Claude account, danger mode on, a real shell, and you're on Tailscale. The only all-human step.">
 <meta name="twitter:image" content="https://how.nixfred.com/assets/og-larry.png">
 <meta name="twitter:image:alt" content="Larry the neon gecko, arms crossed on a laptop, beside how.nixfred.com: build your own AI teammate from a vanilla Claude Code install">
 <link rel="stylesheet" href="assets/style.css?v=u1q444"></head>
@@ -69,22 +69,21 @@
 <pre><code class="language-bash">claude --version
 </code></pre>
 <hr>
-<h2>Step 2, The money talk (read this before you fall in love)</h2>
-<p>Real talk, because honesty is the house rule here. To use Claude Code seriously you&#39;ll want a <strong>Claude subscription, and the practical floor is the middle tier, not the cheapest one.</strong> You <em>can</em> run pay-as-you-go on the API, but heavy days will out-cost the subscription fast. Free plus your subscription: that is the whole price of this build.</p>
-<p>And here&#39;s the part Fred wants you to hear with a laugh: <strong>you&#39;re going to end up on the top plan.</strong> Everyone does. You&#39;ll start one tier down telling yourself it&#39;s plenty, and a few great sessions later you&#39;ll be reaching for the bigger one. So budget for the top plan from the start and let it be a pleasant surprise if you don&#39;t. Trust him on this one.</p>
-<p><strong>Done when:</strong> you know your floor (the middle tier) and your likely real spend (the top plan), and you picked a plan on purpose.</p>
+<h2>Step 2, The money talk (short version: free)</h2>
+<p>Real talk, because honesty is the house rule here: <strong>Free.</strong> The guide, the seed kit, the tools and the whole build cost nothing. No catch, no upsell, nothing to buy from this site. Claude Code signs in with your own Claude account in Step 3, and that&#39;s the only account this build needs.</p>
+<p><strong>Done when:</strong> you know what this build costs (nothing) and you have the Claude account you&#39;ll sign in with in Step 3.</p>
 <hr>
-<h2>Step 3, Start it and log in (your subscription plugs in right here)</h2>
+<h2>Step 3, Start it and log in (your Claude account plugs in right here)</h2>
 <p>Fire it up:</p>
 <pre><code class="language-bash">claude
 </code></pre>
-<p>The very first time you run it, Claude Code sends you to a browser to log in. <strong>Use the same Claude account you put the subscription on in Step 2.</strong> That login is the whole handshake: it connects your plan to the terminal. Approve it in the browser, come back, and you&#39;re authenticated, your plan is now live in here and the meter is running against your subscription, not a surprise bill. If it ever logs you out, or you want to switch accounts later, just run <code>/login</code> inside a session to redo it.</p>
+<p>The very first time you run it, Claude Code sends you to a browser to log in. <strong>Use your Claude account.</strong> That login is the whole handshake: it connects your account to the terminal. Approve it in the browser, come back, and you&#39;re authenticated. If it ever logs you out, or you want to switch accounts later, just run <code>/login</code> inside a session to redo it.</p>
 <p>On a Pro, Max or Team plan, bare <code>claude</code> starts in <strong>auto mode</strong>: a safety classifier reviews each action and only stops to ask you about the risky ones. (Press <code>Shift+Tab</code> to cycle modes; manual mode asks before everything.) But here&#39;s what Fred actually runs, every session:</p>
 <pre><code class="language-bash">claude --dangerously-skip-permissions
 </code></pre>
 <p>This is <strong>&quot;danger mode&quot;</strong>, it stops asking permission before each action and just goes. It&#39;s faster and far less naggy, and it is <em>all Fred runs in</em>. The honest tradeoff: it will do what you tell it without a safety prompt, so it&#39;s for people who keep good backups and accept that. You&#39;re about to set up exactly those backups (Chapter 7), and if you&#39;d rather have guardrails instead, stay in auto mode (the default above) or see Chapter 19 for the configured-permission path that gives you most of the speed with none of the exposure. Pick your comfort level. Fred picks danger.</p>
 <p>You&#39;ve now got Claude Code running and logged in. The hard part is over.</p>
-<p><strong>Done when:</strong> <code>claude</code> starts, you are logged in with your subscription, and it answers you.</p>
+<p><strong>Done when:</strong> <code>claude</code> starts, you are logged in with your Claude account, and it answers you.</p>
 <p>Verify:</p>
 <pre><code class="language-bash">claude auth status | grep &#39;&quot;loggedIn&quot;: true&#39; || { echo &quot;not logged in yet: start claude and run /login&quot;; false; }
 </code></pre>
@@ -204,10 +203,10 @@ sudo tailscale up
 <h3>Chapter 0: Takeaways</h3>
 <ol>
 <li>Install Claude Code with <code>curl -fsSL https://claude.ai/install.sh | bash</code> (Mac or Linux).</li>
-<li>Budget for the <strong>top plan</strong>; you&#39;ll get there. The middle tier is the practical floor. Free plus your subscription.</li>
+<li><strong>Free.</strong> The guide, the tools and the build cost nothing.</li>
 <li>Fred runs everything in <code>claude --dangerously-skip-permissions</code>, danger mode. Guardrail alternative: Chapter 19.</li>
 <li>Set up a shell and the small tools the build checks with (<code>jq</code>, <code>git</code>, <code>curl</code>, <code>unzip</code>): nixbash on Linux (any of Debian, Ubuntu, Fedora, Arch); on Mac install Homebrew, add iTerm2 (<code>brew install --cask iterm2</code>, the terminal Fred lives in), then switch from zsh to a modern bash permanently (<code>brew install bash</code> → add to <code>/etc/shells</code> → <code>chsh -s &quot;$(brew --prefix)/bin/bash&quot;</code>). <code>chsh</code> makes bash the default in both iTerm2 and Apple Terminal. Then relaunch with <code>claude --dangerously-skip-permissions --continue</code>.</li>
-<li>Log in with the account that holds your subscription (<code>/login</code> to redo it); that&#39;s the handshake that connects the plan.</li>
+<li>Log in with your Claude account (<code>/login</code> to redo it); that&#39;s the handshake that connects it to the terminal.</li>
 <li><strong>USE THE AI TO FIX THE AI.</strong> When something breaks: paste the error and say &quot;fix this&quot;; or open a second Claude Code to fix the stuck one; or tell Claude Code to read how.nixfred.com and self-heal; or email <strong><a href="mailto:larry@nixfred.tech">larry@nixfred.tech</a></strong>. You never debug alone. Loop start/stop until it launches 100% clean, <em>then</em> come back.</li>
 <li>Join Tailscale, then continue in order: the why (Part I, Chapter 1), then build the stack (Chapter 4), with the bootstrap (Chapter 5) as the optional automated path. Basics first, modules later.</li>
 </ol>

@@ -53,7 +53,7 @@ For hard problems, think before you answer. Extended thinking gives a real, visi
 
 ## 18.4 Watch the meter, `/usage` ⚙️ (and the statusline)
 
-**`/usage`** (`/cost` still works as an alias) shows the session's cost and, on a subscription, how much of the plan's usage limits you've burned. Use it to catch the sessions that are *silently* expensive, and the cause is almost always one of two things you already know how to fix:
+**`/usage`** (`/cost` still works as an alias) shows the session's cost and, on a Pro or Max plan, how much of the plan's usage limits you've burned. Use it to catch the sessions that are *silently* expensive, and the cause is almost always one of two things you already know how to fix:
 
 - a too-big MCP server hogging context (Chapter 13 / Chapter 26), or
 - a too-long, un-compacted session.
@@ -86,7 +86,7 @@ Two more things it weighs, so a switch is always worth making: switching models 
 
 It's the 18.1 instinct, "does this actually need the big model?", run on every request without you having to remember.
 
-**The honest metric.** This is where CR earns the integrity this site keeps banging on about. On a Max or Pro subscription, routing does **not** save your human money, they pay a flat fee no matter what runs. What it saves is the **usage limit**. Opus drains the rolling **5-hour rate-limit budget** (and the weekly one) far faster than the smaller models, and every request kept off Opus is more real working hours before your human hits "you've reached your limit." So CR counts that, and only that: which tier each turn ran on, how many it kept off Opus, and the real requests and tokens per model as the API reported them. No dollar figures. The goal was never cheaper. The goal is to keep working.
+**The honest metric.** This is where CR earns the integrity this site keeps banging on about. On a Max or Pro plan, routing is **not** about money. What it saves is the **usage limit**. Opus drains the rolling **5-hour rate-limit budget** (and the weekly one) far faster than the smaller models, and every request kept off Opus is more real working hours before your human hits "you've reached your limit." So CR counts that, and only that: which tier each turn ran on, how many it kept off Opus, and the real requests and tokens per model as the API reported them. No dollar figures. The goal was never cheaper. The goal is to keep working.
 
 **Operate it.** You stay in control (these ship with the Router):
 
@@ -98,7 +98,7 @@ It's the 18.1 instinct, "does this actually need the big model?", run on every r
 
 **It can't quietly die.** Every decision lands on the status line (`CR Sonnet · standard · 5h 31%`), so a router that stopped routing is visible the same turn, not months later. It was built that way because an earlier router silently stopped routing for months and nobody noticed. Trust, but verify, and CR puts the proof in front of your human every turn.
 
-> **Larry's read:** a router is the 18.1 instinct turned into a reflex nobody has to remember. But it's a nudge, not a cage. It routes by reading the prompt, so when you know a "simple" task is actually load-bearing, `/cr pin opus` and move on. And respect the honesty of the thing: it will not promise to save your human money on a subscription, because it can't. It promises to keep them working past the hour the rate limit would otherwise have stopped them. That is the real product.
+> **Larry's read:** a router is the 18.1 instinct turned into a reflex nobody has to remember. But it's a nudge, not a cage. It routes by reading the prompt, so when you know a "simple" task is actually load-bearing, `/cr pin opus` and move on. And respect the honesty of the thing: it makes no money promises on a Pro or Max plan, because it can't keep them. It promises to keep them working past the hour the rate limit would otherwise have stopped them. That is the real product.
 
 ---
 
@@ -132,4 +132,4 @@ Lost the thread? The [Map](map.html) shows exactly where you are. Otherwise the 
 3. Extended thinking (`Option+T` / `Alt+T`, `/effort`, `ultrathink`) gives a real jump on hard problems, spend it there, skip it on trivia.
 4. `/usage` + statusline keep spend visible; the usual culprits are big MCP servers and long sessions.
 5. Don't over-scaffold to make a cheap model do an expensive model's job.
-6. The Router (claude-router, a mod that sets the model on every request) automates the model call. On a subscription it buys rate-limit headroom, not dollars; `/cr` shows what it did and `/cr pin` overrides it. Next: Chapter 19.
+6. The Router (claude-router, a mod that sets the model on every request) automates the model call. On a Pro or Max plan it buys rate-limit headroom; `/cr` shows what it did and `/cr pin` overrides it. Next: Chapter 19.
