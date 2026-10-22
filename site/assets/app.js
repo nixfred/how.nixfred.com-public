@@ -369,6 +369,7 @@ var BYO = (function(){
     return [
       kind === 'existing' ? 'Step 2. Audit my setup before you change anything. Read what I already have (my CLAUDE.md, settings.json, hooks, skills, agents, commands and MCP servers) and tell me in plain words what is there. Then check it against the guide\'s foundation: identity, memory, rules and the core setup.' :
       'Step 2. Build my own AI\'s foundation first: its identity, memory, rules and the core setup from the guide' + (kind === 'ai' ? '.' : ', before we touch any repo.'),
+      'For the Brain, install nixfredOS (the guide\'s default, Chapter 4 Step 4b). Right after it installs, turn on its status bar the way Step 4b shows and tell me in one line: Your status bar is on: it shows your model, how full my memory is, and how long we\'ve been at it.',
       'Call get_install_plan with starting_point "built" for the foundation checks. Use check_step to skip whatever is already done, and tell me in one line what was already there.',
       'For anything that does not pass, walk the guide for my OS with next_step and check_step, one step at a time. Never run a command the guide does not show. When it is time to name my AI, I pick the name, not you.',
       'Keep going until every foundation check passes, then show me the results.'

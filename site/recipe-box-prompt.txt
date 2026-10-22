@@ -16,6 +16,7 @@ If the how-nixfred tools do not show up, tell me to quit and start again with cl
 Then go straight to get_install_plan and start on the guide's first step.
 
 Step 2. Build my own AI's foundation first: its identity, memory, rules and the core setup from the guide, before we touch any repo.
+For the Brain, install nixfredOS (the guide's default, Chapter 4 Step 4b). Right after it installs, turn on its status bar the way Step 4b shows and tell me in one line: Your status bar is on: it shows your model, how full my memory is, and how long we've been at it.
 Call get_install_plan with starting_point "built" for the foundation checks. Use check_step to skip whatever is already done, and tell me in one line what was already there.
 For anything that does not pass, walk the guide for my OS with next_step and check_step, one step at a time. Never run a command the guide does not show. When it is time to name my AI, I pick the name, not you.
 Keep going until every foundation check passes, then show me the results.

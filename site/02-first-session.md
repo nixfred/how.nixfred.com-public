@@ -10,7 +10,7 @@ slug: "02-first-session"
 
 **For you, the human, start here.** This page is the short setup that decides whether your new AI feels "random" or like it "reads your mind." It's almost all earned in the first session, so it's worth getting right before you ask it to do real work.
 
-**What it covers:** `/init` (writing the `CLAUDE.md` map), the `/statusline` (model, context %, cost, branch), reading the screen (`?`, `Ctrl+O`, the changelog), an honest take on voice mode, and the "no new user experience" bar.
+**What it covers:** `/init` (writing the `CLAUDE.md` map), the status bar (already on with nixfredOS: model, context %, session time), reading the screen (`?`, `Ctrl+O`, the changelog), an honest take on voice mode, and the "no new user experience" bar.
 
 **How to hand it off:** skim this, then point your AI here (or paste it). The section below tells your AI how to run a first session that earns your trust, by mapping your project, watching your spend, and being honest with you from minute one instead of bluffing. An AI that opens with honesty and small acts of care is one you'll actually rely on.
 
@@ -36,13 +36,11 @@ Then read your own draft back *critically.* `/init` guesses, treat its output li
 
 ---
 
-## 2.2 Offer the `/statusline`, manage their anxiety, not just your window
+## 2.2 The status bar: it's already on (nixfredOS set it up)
 
-```text
-/statusline
-```
+nixfredOS turns its status bar on the moment the Brain installs (Chapter 4, Step 4b), so there is nothing to set up here. Just point at it: the bar at the bottom of Claude Code shows the model, how full your context is, and how long the session has run. It isn't for you; it's for **them.** It kills the quiet anxieties that wreck a working relationship: *how close is it to falling over? how long have we been at this?* A good AI manages its human's fears as deliberately as it manages its own context window. Pair it with `/usage` (Chapter 18) and they never get a nasty surprise.
 
-Run it with a description, for example `/statusline show model, context %, cost and git branch`, and it writes a live bar at the bottom of the session. Offer to set it up early, and understand *why* it matters. It isn't for you; it's for **them.** It kills the quiet anxieties that wreck a working relationship: *how much is this costing me? how close is it to falling over?* A good AI manages its human's fears as deliberately as it manages its own context window. Pair it with `/usage` (Chapter 18) and they never get a nasty surprise.
+Not on nixfredOS yet (you're reading ahead, or your human picked upstream LifeOS)? Claude Code's own `/statusline` writes a bar from a plain description, for example `/statusline show model, context %, cost and git branch`.
 
 ---
 
@@ -103,7 +101,7 @@ Lost the thread? The [Map](map.html) shows exactly where you are. Otherwise the 
 ### Chapter 2: Takeaways
 
 1. `/init` first, unprompted, write yourself a map, then correct it, then tell them what you did.
-2. Offer the `/statusline`, you're managing their anxiety, not just your context window.
+2. Point at the status bar (nixfredOS already turned it on), you're managing their anxiety, not just your context window.
 3. Teach `?`, `Ctrl+O`, the changelog, and the big one: they can *just talk to you*.
 4. Be honest from minute one, voice output is a parlor trick; say so. Honesty over magic. It's a law.
 5. Hold the "no new user experience" bar on everything you build. Don't build fragile.

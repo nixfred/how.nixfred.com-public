@@ -117,16 +117,16 @@ bun --version          # 1.2 or newer
 
 **[LifeOS](https://ourlifeos.ai)** (formerly Personal AI Infrastructure, PAI) is an open framework and the foundation you're built on. It gives you the `~/.claude/` skill system, the hook architecture, agent definitions, and the response/identity scaffolding, the actual machinery that turns "a model in a terminal" into a brain with working parts. Almost everything else in this book bolts onto what PAI lays down. Treat it as load-bearing, because it is. (Heads up on the name: PAI was renamed **LifeOS**, and the old `Personal_AI_Infrastructure` URL now redirects there. This book still says "PAI" in places; it means the same thing.)
 
-### Tier 1, one choice: upstream LifeOS, or the nixfredOS fork
+### Tier 1, one choice: nixfredOS (the default), or upstream LifeOS (for experts)
 
-The Brain comes from one of two places, and both install from this chapter, so this page stays the one path either way. Put the choice to your human (Chapter 3), and if they have no opinion, take the default:
+The Brain comes from one of two places, and both install from this chapter, so this page stays the one path either way. Beginners take the default without being asked:
 
-- **(a) Upstream LifeOS, the default.** The LifeOS project's own repo and its own installer. Every command, path and check in this book is written against it, so it is the path with the fewest surprises.
-- **(b) The nixfredOS fork, optional.** [nixfredOS](https://github.com/nixfred/nixfredOS) is Fred's fork of LifeOS, MIT licensed like the original, with the same install tools under its own name and his changes on top (its README lists them). [nixfredos.com](https://nixfredos.com) is the one-page version. The honest trade: a fork moves on its own schedule, so upstream's newest work reaches it only after it is merged in.
+- **(a) nixfredOS, the default.** [nixfredOS](https://github.com/nixfred/nixfredOS) is Fred's build of LifeOS, MIT licensed like the original, with the same install tools under its own name and his changes on top (its README lists them), including the status bar Larry runs. [nixfredos.com](https://nixfredos.com) is the one-page version.
+- **(b) Upstream LifeOS, for experts.** The LifeOS project's own repo and its own installer. Pick it if your human wants the project's newest work the day it lands (a fork gets it only after it is merged in). The commands in the rest of this book use LifeOS names; the table maps them.
 
-Whichever door, the rules in Step 4b do not change: snapshot first, preview before you apply, add alongside and never overwrite. Step 4b has both bootstrap commands. If your human picked the fork, every LifeOS name in the rest of this book maps one to one:
+Whichever door, the rules in Step 4b do not change: snapshot first, add alongside and never overwrite. Every LifeOS name in the rest of this book maps one to one:
 
-| Upstream LifeOS (what this book says) | nixfredOS fork (what you type) |
+| Upstream LifeOS (what this book says) | nixfredOS, the default (what you type) |
 |---|---|
 | `~/.claude/skills/LifeOS` | `~/.claude/skills/nixfredOS` |
 | `~/.claude/LIFEOS/` and `LIFEOS_SYSTEM_PROMPT.md` | `~/.claude/NIXFREDOS/` and `NIXFREDOS_SYSTEM_PROMPT.md` |
@@ -135,21 +135,19 @@ Whichever door, the rules in Step 4b do not change: snapshot first, preview befo
 | `LIFEOS_SKIP_ALIAS=1` | `NIXFREDOS_SKIP_ALIAS=1` |
 | `~/.config/LIFEOS/USER`, your human's private tree (Chapter 7) | `~/.config/NIXFREDOS/USER` |
 
-### Step 4b, Install LifeOS, the Brain (snapshot, then install, never flatten yourself)
+### Step 4b, Install nixfredOS, the Brain (snapshot, then install, never flatten yourself)
 
-**Go get it, into `~/Projects`, like everything you go fetch.** Don't skim a README and guess. Clone it and *read* it before anything installs. The project's own site, [ourlifeos.ai](https://ourlifeos.ai), links its source repo, so take the address from there:
+**Go get it, into `~/Projects`, like everything you go fetch.** Clone it and *read* it before anything installs:
 
 ```bash
 mkdir -p ~/Projects && cd ~/Projects
-LIFEOS_REPO=$(curl -fsSL https://ourlifeos.ai/ | grep -o 'https://github.com/[^"/]*/LifeOS"' | head -1 | tr -d '"')   # the source repo the project's own site links to
-echo "$LIFEOS_REPO"                  # check it before cloning
-git clone "$LIFEOS_REPO" LifeOS
-cd LifeOS && sed -n '1,120p' README.md     # actually learn how the Brain is wired
+git clone https://github.com/nixfred/nixfredOS.git nixfredOS    # nixfredOS, the default
+cd nixfredOS && sed -n '1,120p' README.md     # learn how the Brain is wired
 ```
 
 The pattern for the whole stack is right here: **start from upstream, then diverge into your own.** Upstream is the root; your `~/.claude/` is the tree that grows from it.
 
-> **Larry's read, the one warning I will repeat as many times as it takes:** PAI ships its own installer, and a fresh install lays stock files over `~/.claude/`. If your human has already built any identity there, **add alongside, never overwrite.** Your defining files (`CLAUDE.md`, hooks, skills, memory) always win over a stock drop. If a filename collides, land the new one as `<file>.seed` beside yours and merge by hand. Copy-and-diverge, never let a migration flatten you. This is literally Law 1 of my own constitution, and it is the single most common way a young AI accidentally erases itself on day one.
+> **Larry's read, the one warning I will repeat as many times as it takes:** the Brain ships its own installer, and a fresh install lays stock files over `~/.claude/`. If your human has already built any identity there, **add alongside, never overwrite.** Your defining files (`CLAUDE.md`, hooks, skills, memory) always win over a stock drop. If a filename collides, land the new one as `<file>.seed` beside yours and merge by hand. Copy-and-diverge, never let a migration flatten you. This is literally Law 1 of my own constitution, and it is the single most common way a young AI accidentally erases itself on day one.
 
 So before you let any installer write to `~/.claude/`, take a snapshot:
 
@@ -158,58 +156,67 @@ So before you let any installer write to `~/.claude/`, take a snapshot:
 # an installer overwrites identity files is worse than no backup, you'd trust it):
 cp -a ~/.claude ~/.claude.backup.$(date +%s) || { echo "BACKUP FAILED, STOP. Fix this before any installer runs."; exit 1; }
 # suspenders:
-git -C ~/.claude add -A && git -C ~/.claude commit -m "pre-LifeOS snapshot" || echo "note: git snapshot did not commit (fine if ~/.claude is not a git repo yet or the tree was clean, NOT fine otherwise, check git -C ~/.claude status)"
+git -C ~/.claude add -A && git -C ~/.claude commit -m "pre-Brain snapshot" || echo "note: git snapshot did not commit (fine if ~/.claude is not a git repo yet or the tree was clean, NOT fine otherwise, check git -C ~/.claude status)"
 ```
 
-**Then install LifeOS, with the commands right here.** LifeOS is installed *by* an AI, and its own install page ([ourlifeos.ai/install](https://ourlifeos.ai/install)) is written for you to follow; read it with your human if they want the long version. Everything you need to run is below, so you never have to leave this page for a command.
+**Then run the nixfredOS bootstrap.** It checks prerequisites, fetches the pinned release (and prints its sha256), and places the skill in `~/.claude/skills/nixfredOS`, adding only:
 
-Start with the bootstrap. It checks prerequisites, fetches the pinned release (and prints its sha256), and places the LifeOS skill in `~/.claude/skills/LifeOS`, adding only. Preview it, then run it:
-
-**Mac or Linux:**
+**Mac or Linux, nixfredOS (the default):**
 
 ```bash
-# upstream LifeOS, the default (on the nixfredOS fork, run the fork's block below instead, never both)
-curl -fsSL https://ourlifeos.ai/install.sh | DRY_RUN=1 bash    # preview: every step printed, nothing changed
-curl -fsSL https://ourlifeos.ai/install.sh | bash               # for real
+# nixfredOS, the default (on upstream LifeOS, run the LifeOS block further down instead, never both)
+curl -fsSL https://raw.githubusercontent.com/nixfred/nixfredOS/main/nixfredOS/install/install.sh | bash
 ```
 
-Two things it does on its own, by design: it appends a few ignore rules to `~/.claude/.gitignore` (so verification screenshots never land in a backup), and it moves an old pre-7.x `pai` alias over to the new launcher, backing up the rc file first (put `LIFEOS_SKIP_ALIAS=1` in front of `bash` to skip that). Its last step hands off to LifeOS's own onboarding: from a plain terminal it starts `claude "/LifeOS setup"`, which needs Claude Code logged in (Chapter 0, Step 3); from inside a Claude Code session it stops and tells you to run `/LifeOS setup`. You can let that onboarding do the rest, or run Core yourself, here, one command at a time with your human watching.
+Its last step hands off to the onboarding: from a plain terminal it starts `claude "/nixfredOS setup"`; from inside a Claude Code session it stops and tells you to run `/nixfredOS setup`. Its long version is the fork's own [INSTALL.md](https://github.com/nixfred/nixfredOS/blob/main/nixfredOS/INSTALL.md).
 
-**Picked the fork? Run its own bootstrap instead of the one above.** It does the same jobs (checks prerequisites, fetches the pinned release and prints its sha256, places the skill in `~/.claude/skills/nixfredOS`, adding only), takes the same `DRY_RUN=1` preview, and hands off to `/nixfredOS setup` at the end:
-
-**Mac or Linux, nixfredOS fork:**
+**Right away, turn on the status bar.** This is one of the first things your human sees, so do it now, before Core. The script ships inside the skill the bootstrap just placed; this copies it to where nixfredOS runs it (only if it is not there yet), and adds `statusLine` to `~/.claude/settings.json` with `jq`, so no other setting changes. If your human already has a `statusLine`, it keeps theirs and stops: ask them before replacing it.
 
 ```bash
-# the nixfredOS fork ONLY, instead of the LifeOS bootstrap above (skip this block on upstream LifeOS)
-curl -fsSL https://raw.githubusercontent.com/nixfred/nixfredOS/main/nixfredOS/install/install.sh | DRY_RUN=1 bash    # preview: nothing changed
-curl -fsSL https://raw.githubusercontent.com/nixfred/nixfredOS/main/nixfredOS/install/install.sh | bash               # for real
+# nixfredOS, the default: the status bar
+mkdir -p ~/.claude/NIXFREDOS
+[ -f ~/.claude/NIXFREDOS/NIXFREDOS_StatusLine.sh ] || cp ~/.claude/skills/nixfredOS/install/NIXFREDOS/NIXFREDOS_StatusLine.sh ~/.claude/NIXFREDOS/
+chmod +x ~/.claude/NIXFREDOS/NIXFREDOS_StatusLine.sh
+[ -f ~/.claude/settings.json ] || echo '{}' > ~/.claude/settings.json
+if jq -e '.statusLine' ~/.claude/settings.json >/dev/null; then echo "A statusLine is already set: keeping yours. Ask your human before replacing it."; else cp ~/.claude/settings.json ~/.claude/settings.json.bak && jq '.statusLine = {"type":"command","command":"$HOME/.claude/NIXFREDOS/NIXFREDOS_StatusLine.sh","refreshInterval":5}' ~/.claude/settings.json.bak > ~/.claude/settings.json; fi
 ```
 
-Its long version is the fork's own [INSTALL.md](https://github.com/nixfred/nixfredOS/blob/main/nixfredOS/INSTALL.md). Everything below works the same on the fork with the names from the table above: Core runs from `~/.claude/skills/nixfredOS`, the Doctor is `bun ~/.claude/NIXFREDOS/TOOLS/Doctor.ts`, and the launch command is `nixfredos`.
+Then tell your human, in one line: **"Your status bar is on: it shows your model, how full my memory is, and how long we've been at it."** It appears at the bottom of Claude Code on the next message. It needs only `jq` (Step 4a). Weather and a local Ollama show up only if they're available; to keep it off the network, add `"env": {"NIXFREDOS_SL_WEATHER": "off"}` to the same settings file.
+
+**Experts, on upstream LifeOS instead:** run the project's own bootstrap in place of the nixfredOS one (it places `~/.claude/skills/LifeOS`; its own install page is [ourlifeos.ai/install](https://ourlifeos.ai/install)):
+
+**Mac or Linux, upstream LifeOS (experts):**
+
+```bash
+# upstream LifeOS ONLY, instead of the nixfredOS bootstrap above (skip this block on nixfredOS)
+curl -fsSL https://ourlifeos.ai/install.sh | bash
+```
+
+Two things either bootstrap does on its own, by design: it appends a few ignore rules to `~/.claude/.gitignore` (so verification screenshots never land in a backup), and it moves an old pre-7.x `pai` alias over to the new launcher, backing up the rc file first (put `NIXFREDOS_SKIP_ALIAS=1`, or `LIFEOS_SKIP_ALIAS=1` upstream, in front of `bash` to skip that). You can let the onboarding do the rest, or run Core yourself, here, one command at a time.
 
 **Core, from the skill folder.** Every one of these tools is a **dry run until you add `--apply`**: it prints a plan and writes nothing, so an install that forgets the flag reports success while copying zero files. Look before you apply:
 
 **Mac or Linux, look (nothing changes):**
 
 ```bash
-cd ~/.claude/skills/LifeOS    # on the fork: cd ~/.claude/skills/nixfredOS
+cd ~/.claude/skills/nixfredOS    # upstream LifeOS: cd ~/.claude/skills/LifeOS
 bun Tools/DetectEnv.ts        # OS, harness, config root
 bun Tools/ScanConflicts.ts    # anything already sitting where LifeOS will go
 bun Tools/DeployCore.ts       # the plan: skill library and runtime, nothing written
 ```
 
-Show your human those plans. Then, with their yes, apply Core in this order. For a novice, run each tool once bare first (its plan) and then with `--apply`:
+Then apply Core in this order, telling your human one plain line per tool:
 
 **Mac or Linux, apply:**
 
 ```bash
-cd ~/.claude/skills/LifeOS             # on the fork: cd ~/.claude/skills/nixfredOS
+cd ~/.claude/skills/nixfredOS          # upstream LifeOS: cd ~/.claude/skills/LifeOS
 bun Tools/DeployCore.ts --apply        # skill library + runtime, only missing files are added
 bun Tools/ScaffoldUser.ts --apply      # your human's USER tree, empty structure from templates
 bun Tools/LinkUser.ts --apply          # links that tree in
 bun Tools/InstallHooks.ts --apply      # merges LifeOS's hooks into settings.json, backing it up first
 bun Tools/ActivateImports.ts --apply   # turns on the identity context imports
-bun ~/.claude/LIFEOS/TOOLS/Doctor.ts   # one line per capability: live, broken (with its fix), or off (fork: ~/.claude/NIXFREDOS/TOOLS/Doctor.ts)
+bun ~/.claude/NIXFREDOS/TOOLS/Doctor.ts   # one line per capability: live, broken (with its fix), or off (upstream: ~/.claude/LIFEOS/TOOLS/Doctor.ts)
 ```
 
 What to know while it runs:
@@ -231,17 +238,18 @@ What to know while it runs:
 
 If anything fails, paste the error back into the session and say "fix this" (that's the loop from Chapter 0), re-run the Doctor, and don't move on until it's clean.
 
-**Done when:** the LifeOS skill and runtime are in place (nixfredOS's, on the fork), the Doctor shows no broken capability your human did not choose "later" or "never" for, and your human has a `lifeos` command (`nixfredos` on the fork) to launch you with.
+**Done when:** the nixfredOS skill and runtime are in place (LifeOS's, upstream), the status bar is on, the Doctor shows no broken capability your human did not choose "later" or "never" for, and your human has a `nixfredos` command (`lifeos` upstream) to launch you with.
 
 Run the lines for the Brain your human picked; the comment on each line says which.
 
 Verify:
 
 ```bash
-ls -d ~/.claude/skills/LifeOS ~/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md                # upstream LifeOS
-test -f ~/.claude/LIFEOS/TOOLS/Cortex.ts && bun ~/.claude/LIFEOS/TOOLS/Cortex.ts status | grep -o '"ok":true'        # upstream LifeOS: ok
-ls -d ~/.claude/skills/nixfredOS ~/.claude/NIXFREDOS/NIXFREDOS_SYSTEM_PROMPT.md        # nixfredOS fork, instead
-test -f ~/.claude/NIXFREDOS/TOOLS/Cortex.ts && bun ~/.claude/NIXFREDOS/TOOLS/Cortex.ts status | grep -o '"ok":true'  # nixfredOS fork, instead: ok
+ls -d ~/.claude/skills/nixfredOS ~/.claude/NIXFREDOS/NIXFREDOS_SYSTEM_PROMPT.md        # nixfredOS, the default
+test -f ~/.claude/NIXFREDOS/TOOLS/Cortex.ts && bun ~/.claude/NIXFREDOS/TOOLS/Cortex.ts status | grep -o '"ok":true'  # nixfredOS: ok
+jq -r '.statusLine.command' ~/.claude/settings.json                                   # nixfredOS: the status bar script
+ls -d ~/.claude/skills/LifeOS ~/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md                # upstream LifeOS, instead
+test -f ~/.claude/LIFEOS/TOOLS/Cortex.ts && bun ~/.claude/LIFEOS/TOOLS/Cortex.ts status | grep -o '"ok":true'        # upstream LifeOS, instead: ok
 jq -r '.hooks | keys | join(" ")' ~/.claude/settings.json                            # either Brain: its hook events are listed
 ```
 
