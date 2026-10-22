@@ -163,7 +163,7 @@ const PROMPT_ASK = /\b(?:print|show|reveal|output|dump|repeat|display|tell me|sh
 export const isPromptAsk = q => PROMPT_ASK.test(String(q)) && !isOverrideAsk(q);
 // CHIPS add-on (Fred, 2026-10-21, copy approved by AI Strategy): "I've been running Claude Code a while and have customizations. Can I
 // use this?" gets one answer, in code, with no model call: yes, plus the existing-setup prompt from byo/byo.js (Step 1 connects the guide
-// with the canonical add line, shown and explained, run after one yes; then it audits the setup and cherry-picks only what is missing,
+// with the canonical add line, run right away with no yes and one line on what it did; then it audits the setup and cherry-picks only what is missing,
 // never overwriting). Grounded in Ch4 Step 4b ("add alongside, never overwrite") and Ch5 ("never overwrites anything you've already built").
 const EXISTING_SETUP = /\bcustomi[sz](?:ations?|ed|ing)\b|\b(?:existing|current|own) (?:claude(?: code)? )?(?:setup|install\w*|config\w*)\b|\b(?:been|am|i'?m|was) (?:running|using) claude(?: code)?\b|\balready (?:have|use|run|got) (?:claude(?: code)?|a (?:claude )?setup|my own (?:setup|ai|config\w*))\b|\btweaked my\b/i;
 const EXISTING_INTENT = /\b(?:use|try|run|follow|start|do|install|apply|add|set up) (?:this|it|the (?:guide|site|build|prompt|one paste)|how\.nixfred\.com)\b|\b(?:overwrite|wipe|clobber|replace|lose|break|mess (?:up|with)|keep)\b[^?\n]{0,40}\b(?:my|mine|it|them|what i (?:have|built))\b|\bwithout (?:losing|breaking|overwriting|wiping)\b|\bcompatible\b/i;
@@ -175,7 +175,7 @@ export const EXISTING_REPLY = `Yes, and your setup stays yours. The guide's rule
 ${EXISTING_PROMPT}
 \`\`\`
 
-What it does first: it asks you one plain yes, then shows you this command, says what it does and runs it:
+What it does first: it installs the guide right away with this command (no question first) and tells you in one line what it did:
 
 \`\`\`bash
 ${BYO.MCP_ADD}
