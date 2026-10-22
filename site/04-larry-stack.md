@@ -170,18 +170,19 @@ curl -fsSL https://raw.githubusercontent.com/nixfred/nixfredOS/main/nixfredOS/in
 
 Its last step hands off to the onboarding: from a plain terminal it starts `claude "/nixfredOS setup"`; from inside a Claude Code session it stops and tells you to run `/nixfredOS setup`. Its long version is the fork's own [INSTALL.md](https://github.com/nixfred/nixfredOS/blob/main/nixfredOS/INSTALL.md).
 
-**Right away, turn on the status bar.** This is one of the first things your human sees, so do it now, before Core. The script ships inside the skill the bootstrap just placed; this copies it to where nixfredOS runs it (only if it is not there yet), and adds `statusLine` to `~/.claude/settings.json` with `jq`, so no other setting changes. If your human already has a `statusLine`, it keeps theirs and stops: ask them before replacing it.
+**The status bar is on.** The nixfredOS bootstrap turns it on as it installs: it adds `statusLine` to `~/.claude/settings.json` only if none is set, backing the file up first, so your human's own status bar always stays. Run this block anyway, right after the bootstrap. It finishes the job on older releases and changes nothing that is already right:
 
 ```bash
-# nixfredOS, the default: the status bar
+# nixfredOS, the default: the status bar (a no-op when the bootstrap already did it)
 mkdir -p ~/.claude/NIXFREDOS
 [ -f ~/.claude/NIXFREDOS/NIXFREDOS_StatusLine.sh ] || cp ~/.claude/skills/nixfredOS/install/NIXFREDOS/NIXFREDOS_StatusLine.sh ~/.claude/NIXFREDOS/
 chmod +x ~/.claude/NIXFREDOS/NIXFREDOS_StatusLine.sh
 [ -f ~/.claude/settings.json ] || echo '{}' > ~/.claude/settings.json
-if jq -e '.statusLine' ~/.claude/settings.json >/dev/null; then echo "A statusLine is already set: keeping yours. Ask your human before replacing it."; else cp ~/.claude/settings.json ~/.claude/settings.json.bak && jq '.statusLine = {"type":"command","command":"$HOME/.claude/NIXFREDOS/NIXFREDOS_StatusLine.sh","refreshInterval":5}' ~/.claude/settings.json.bak > ~/.claude/settings.json; fi
+cp ~/.claude/settings.json ~/.claude/settings.json.bak && jq '(.statusLine //= {"type":"command","command":"$HOME/.claude/NIXFREDOS/NIXFREDOS_StatusLine.sh","refreshInterval":5}) | (.env.NIXFREDOS_SL_WEATHER //= "off")' ~/.claude/settings.json.bak > ~/.claude/settings.json
+jq -r '.statusLine.command' ~/.claude/settings.json    # the status bar script (if it is not nixfredOS's, your human had their own: ask before replacing it)
 ```
 
-Then tell your human, in one line: **"Your status bar is on: it shows your model, how full my memory is, and how long we've been at it."** It appears at the bottom of Claude Code on the next message. It needs only `jq` (Step 4a). Weather and a local Ollama show up only if they're available; to keep it off the network, add `"env": {"NIXFREDOS_SL_WEATHER": "off"}` to the same settings file.
+Then tell your human, in one line: **"Your status bar is on: it shows your model, how full my memory is, and how long we've been at it."** It appears at the bottom of Claude Code on the next message. It needs only `jq` (Step 4a). Weather is off by default (no network calls). To show it, set `NIXFREDOS_SL_WEATHER` to `on` in the `env` block of `~/.claude/settings.json`.
 
 **Experts, on upstream LifeOS instead:** run the project's own bootstrap in place of the nixfredOS one (it places `~/.claude/skills/LifeOS`; its own install page is [ourlifeos.ai/install](https://ourlifeos.ai/install)):
 
