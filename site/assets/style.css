@@ -500,6 +500,41 @@ body:not(.al-min) .al-pill{display:none}
 .nav-builders>summary::after{content:" ▾";color:var(--ink3)}
 .nav-builders[open]>summary::after{content:" ▴"}
 .nav-builders[open]>summary{margin-bottom:10px}
+/* SIMPLIFY (2026-10-21): the chapter list folds into one group, styled like For builders */
+.nav-chapters{margin:0 0 10px}
+.nav-chapters>summary{cursor:pointer;list-style:none;padding:9px 11px;border:1px dashed var(--line);border-radius:9px;color:var(--ink2);font-weight:700;font-size:14px}
+.nav-chapters>summary::-webkit-details-marker{display:none}
+.nav-chapters>summary::after{content:" ▾";color:var(--ink3)}
+.nav-chapters[open]>summary::after{content:" ▴"}
+.nav-chapters[open]>summary{margin-bottom:10px}
+/* the start, above the fold on the home page: welcome, what you get, Free., then Step 1 for your computer */
+.start [hidden]{display:none!important}
+.start h1.welcome{font-size:34px;line-height:1.2;margin:6px 0 10px}
+.start .get{font-size:19px;color:var(--ink);margin:0 0 8px;max-width:62ch}
+.free{font-size:22px;font-weight:800;color:var(--accent);margin:4px 0 6px}
+.calm{color:var(--ink2);margin:0 0 18px}
+.os-pick{margin:0 0 16px}
+.os-q{font-weight:700;margin:0 0 8px}
+.os-btn{display:inline-block;margin:0 8px 8px 0;padding:10px 18px;border:1px solid var(--accent);border-radius:10px;color:var(--ink);font-weight:700;background:var(--bg2)}
+.os-btn:hover{background:rgba(57,208,168,.1);text-decoration:none}
+.os-step{margin:0 0 6px;padding:14px 16px 6px;border:1px solid #2a5c4f;border-radius:12px;background:var(--bg2)}
+.os-step .os-h{font-size:15px;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;border:none;padding:0;margin:0 0 8px}
+.os-step+.os-step{margin-top:12px}
+.steps{margin:0 0 14px;padding-left:0;list-style:none;color:var(--ink2);line-height:1.6}
+.steps>li{margin:0 0 16px}
+.steps>li>b{color:var(--ink)}
+.steps pre{margin:8px 0 0}
+.saw{margin:8px 0 0;font-size:14.5px;color:var(--ink2)}
+.saw b{color:var(--accent)}
+.if{margin:8px 0 0;font-size:14px;color:var(--ink3)}
+.os-switch{margin:4px 0 8px;font-size:13.5px;color:var(--ink3)}
+.os-go{display:inline-block;background:var(--accent);color:#06281f;font-weight:800;padding:12px 20px;border-radius:12px;border:1px solid var(--accent)}
+.os-go:hover{filter:brightness(1.08);text-decoration:none;color:#06281f}
+.os-go.big{font-size:22px;padding:18px 30px}
+.wsl-back{text-align:center;margin:30px 0 14px}
+.start h2.then{font-size:15px;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;border:none;padding:0;margin:18px 0 8px}
+.start .spine{font-size:17px;font-weight:700;color:var(--ink);margin:8px 0 6px}
+@media(max-width:860px){.start h1.welcome{font-size:26px}.os-go.big{font-size:18px;padding:14px 20px}}
 
 /* phones (addendum 6): nothing may push the page sideways. Code blocks already scroll in their own box; inline code and long
    links wrap, wide tables scroll in their own box, and the Ask Larry form counts its padding inside its width. */

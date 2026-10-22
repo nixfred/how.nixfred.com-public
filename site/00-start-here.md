@@ -8,27 +8,31 @@ slug: "00-start-here"
 
 # Chapter 0: Start Here, From Absolute Zero
 
-**This one is for you, the human, the whole way through.** You don't have an AI yet, so there's nobody to hand this to, you're going to run a handful of commands yourself and get Claude Code running. It's the very first mile: install Claude Code, understand what it costs, start it (in the mode Fred actually uses), set up a decent shell, and join the network. Each step is copy-paste, works on **Mac or Linux**, and ends by pointing you to the next one. Once you're through this page, you'll have a real AI in your terminal and the rest of the book is written *to it*.
+**This one is for you, the human, the whole way through.** You don't have an AI yet, so you run these steps yourself. Each step is one thing to do, a line to copy, and what you'll see when it worked. It works on a **Mac or Linux**. On Windows? [Get Linux first (WSL)](https://learn.microsoft.com/windows/wsl/install), then come back. The [home page](index.html#start) has the same first steps in short form; this page has them in full.
 
-> No jargon walls, no detours. Just the minimum to get you live. When you finish a step, come back here for the next.
+**Free.** Nothing runs without your yes. You can stop anytime. Stuck? Ask Larry on the right.
+
+> A few words first. A **terminal** is the window where you type commands. A **command** is one line you paste there and run with Enter (Return on a Mac). **Claude Code** is the app your AI lives in. When you finish a step, come back here for the next.
 
 ---
 
 ## Step 1, Install Claude Code
 
-Claude Code is the engine. Anthropic's own installer is the same one line on both platforms, and it is the only way this site installs it: one method, so every page and every step agrees ([their setup page](https://code.claude.com/docs/en/setup)). It needs `curl`, and a missing `curl` makes that one line a silent no-op (bash runs an empty script and reports success), so check for it first. This line exits nonzero when `curl` is missing, so an agent cannot mistake the gap for an install:
+Claude Code is the engine. Anthropic's own installer is one line, the same on a Mac and on Linux, and it is the only way this site installs it ([their setup page](https://code.claude.com/docs/en/setup)).
+
+**First, check for curl.** curl is the small tool that downloads the installer. Paste this. If curl is missing, it says so and stops, so nothing half-installs:
 
 ```bash
 command -v curl || { echo "curl is missing: install it with your package manager first (Step 4 lists the line for each distro), then come back"; false; }
 ```
 
-Then the installer:
+You'll see a path like `/usr/bin/curl`. Then run the installer:
 
 ```bash
 curl -fsSL https://claude.ai/install.sh | bash
 ```
 
-**"`~/.local/bin` is not in your PATH"?** The official installer puts `claude` in `~/.local/bin`, and on a fresh Ubuntu (and some other setups) it ends with that note, which means a new terminal can't find `claude` yet. Add the folder to the PATH for your shell, once:
+**"`~/.local/bin` is not in your PATH"?** PATH is the list of folders your computer looks in for apps. The installer puts `claude` in `~/.local/bin`, and on a fresh Ubuntu (and some other setups) that folder is not on the list yet. Add it once, with the line for your computer:
 
 **Linux:**
 
@@ -54,7 +58,7 @@ claude --version
 
 ## Step 2, The money talk (short version: free)
 
-Real talk, because honesty is the house rule here: **Free.** The guide, the seed kit, the tools and the whole build cost nothing. No catch, no upsell, nothing to buy from this site. Claude Code signs in with your own Claude account in Step 3, and that's the only account this build needs.
+**Free.** The guide, the seed kit, the tools and the whole build cost nothing. No catch, no upsell, nothing to buy from this site. Claude Code signs in with your own Claude account in Step 3, and that's the only account this build needs.
 
 **Done when:** you know what this build costs (nothing) and you have the Claude account you'll sign in with in Step 3.
 
@@ -62,23 +66,23 @@ Real talk, because honesty is the house rule here: **Free.** The guide, the seed
 
 ## Step 3, Start it and log in (your Claude account plugs in right here)
 
-Fire it up:
+Type this and press Enter:
 
 ```bash
 claude
 ```
 
-The very first time you run it, Claude Code sends you to a browser to log in. **Use your Claude account.** That login is the whole handshake: it connects your account to the terminal. Approve it in the browser, come back, and you're authenticated. If it ever logs you out, or you want to switch accounts later, just run `/login` inside a session to redo it.
+The first time, Claude Code opens your web browser. **Sign in with your Claude account** and approve it there. Then come back to the terminal. That's the whole handshake. If it ever logs you out, or you want another account, type `/login` inside Claude Code.
 
-On a Pro, Max or Team plan, bare `claude` starts in **auto mode**: a safety classifier reviews each action and only stops to ask you about the risky ones. (Press `Shift+Tab` to cycle modes; manual mode asks before everything.) But here's what Fred actually runs, every session:
+By default, Claude Code asks you before it does anything risky. Keep it that way while you learn. Press `Shift+Tab` to see the modes; manual mode asks before everything.
+
+**Optional, what Fred runs:** "danger mode". It stops asking before each action and just goes:
 
 ```bash
 claude --dangerously-skip-permissions
 ```
 
-This is **"danger mode"**, it stops asking permission before each action and just goes. It's faster and far less naggy, and it is *all Fred runs in*. The honest tradeoff: it will do what you tell it without a safety prompt, so it's for people who keep good backups and accept that. You're about to set up exactly those backups (Chapter 7), and if you'd rather have guardrails instead, stay in auto mode (the default above) or see Chapter 19 for the configured-permission path that gives you most of the speed with none of the exposure. Pick your comfort level. Fred picks danger.
-
-You've now got Claude Code running and logged in. The hard part is over.
+It's faster and far less naggy. The honest tradeoff: it does what you say without a safety prompt, so it's for people who keep good backups. You set up exactly those backups in Chapter 7. Want guardrails instead? Stay in the default mode, or see Chapter 19 for the setup that gives you most of the speed with none of the exposure. Pick your comfort level. Fred picks danger.
 
 **Done when:** `claude` starts, you are logged in with your Claude account, and it answers you.
 
@@ -92,15 +96,17 @@ claude auth status | grep '"loggedIn": true' || { echo "not logged in yet: start
 
 ## Step 4, Give yourself a decent shell
 
-A good shell makes everything after this nicer (aliases, modern tools, sane defaults). Then a handful of small tools the rest of the build checks with: **`jq`** (reads and merges your AI's settings file; the hook checks and the audit fail with `jq: command not found` without it), **`git`** (holds your AI's memory and backups), and **`curl`** and **`unzip`** (fetch and unpack installers).
+The **shell** is the program inside the terminal that reads your commands. A good one makes everything after this nicer. You also add a few small tools the build checks with: **`jq`** (reads your AI's settings file), **`git`** (keeps your AI's memory and backups), and **`curl`** and **`unzip`** (download and unpack installers). Do the part for your computer, one line at a time.
 
-**Linux**, install **nixbash** in one line:
+**Linux, 4a. Install nixbash** (a tidy shell setup: shortcuts and modern tools like `eza`, `bat` and `fzf`; the repo is [github.com/nixfred/nixbash](https://github.com/nixfred/nixbash)):
 
 ```bash
 curl -sL https://raw.githubusercontent.com/nixfred/nixbash/main/install.sh | bash && source ~/.bashrc
 ```
 
-(It drops in 70+ aliases and modern CLI tools like `eza`, `bat`, and `fzf`. The repo is [github.com/nixfred/nixbash](https://github.com/nixfred/nixbash).) Then the small tools, one line for your distro:
+You'll see it install, then a fresh prompt.
+
+**Linux, 4b. Install the small tools**, one line for your Linux:
 
 **Linux (Debian, Ubuntu):**
 
@@ -120,15 +126,19 @@ sudo dnf install -y jq git curl unzip
 sudo pacman -S --needed jq git curl unzip
 ```
 
+`sudo` asks for your password, and the password does not show as you type. That is normal. You'll see the tools install, or a note that they already are.
+
 **Which Linux? Any of these.** nixbash and every Linux command on this site work on Debian, Ubuntu, Fedora and Arch; nothing assumes Arch. What differs: the package-manager line (each one is shown, like above), nixbash skips `fastfetch` where the distro doesn't package it (Ubuntu 24.04), gitleaks has no apt package so Chapter 7 gives a download line for it, nixbash's full provisioning script (Chapter 4) is apt-only, and LMF4.1 (Chapter 4) needs systemd, so it will not run inside a container or a WSL setup without systemd.
 
-**Mac**, first install Homebrew if you haven't (you'll track your dotfiles + a `Brewfile` later, Chapter 7):
+**Mac, 4a. Install Homebrew**, the Mac's app installer for the terminal (you'll track your dotfiles + a `Brewfile` later, Chapter 7):
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-On an Apple Silicon Mac, Homebrew ends with **"Next steps"**: two lines that put `brew` on your PATH. Run them as printed (they write `eval "$(/opt/homebrew/bin/brew shellenv)"` into `~/.zprofile`), then open a new window so `brew` is found. Then the small tools (`git`, `curl` and `unzip` already came with macOS and Homebrew's developer tools):
+On an Apple Silicon Mac, Homebrew ends with **"Next steps"**: two lines that put `brew` on your PATH. Run them as printed (they write `eval "$(/opt/homebrew/bin/brew shellenv)"` into `~/.zprofile`), then open a new window. You'll see `brew --version` print a version.
+
+**Mac, 4b. Install jq** (`git`, `curl` and `unzip` already came with macOS and Homebrew's developer tools):
 
 **Mac:**
 
@@ -136,7 +146,7 @@ On an Apple Silicon Mac, Homebrew ends with **"Next steps"**: two lines that put
 brew install jq
 ```
 
-**Mac, get a real terminal: iTerm2.** Apple's Terminal works fine, but **iTerm2** is the one Fred actually lives in, and it's free. You get real search, split panes, a drop-down hotkey window, and saner scrollback and rendering. Install it now and run the rest of this guide inside it:
+**Mac, 4c. Get iTerm2**, a better terminal app. Apple's Terminal works fine, but iTerm2 is the one Fred lives in, and it's free: real search, split panes, saner scrollback.
 
 **Mac:**
 
@@ -144,9 +154,9 @@ brew install jq
 brew install --cask iterm2
 ```
 
-Then open iTerm2 (hit `Cmd+Space`, type "iTerm", Enter) and keep going from there. Keep Apple Terminal around as a backup if you like; the shell setup below makes both behave identically, so it never matters which one you reach for.
+Open it (press `Cmd+Space`, type "iTerm", Enter) and keep going there. Keep Apple Terminal as a backup if you like; the shell setup below makes both behave the same.
 
-**Mac, switch from zsh to bash (and make it permanent).** Since macOS Catalina your default shell is **zsh**, but this whole guide, nixbash, the stack, the scripts, is **bash-first**. Apple also ships an ancient bash (3.2, from 2007) at `/bin/bash`, so install a modern one and make it your real login shell. Run this from your current zsh window. It is safe to run twice: the lines that add to `/etc/shells` or `~/.bash_profile` check first and skip what is already there:
+**Mac, 4d. Switch from zsh to bash, for good.** Your Mac's default shell is **zsh**, but this guide is written for **bash**. Apple's own bash is very old, so you install a modern one and make it your default. Run this from your current window. It is safe to run twice: each line checks first and skips what is already done:
 
 **Mac:**
 
@@ -168,9 +178,9 @@ grep -qsF '.local/bin' ~/.bash_profile || echo 'export PATH="$HOME/.local/bin:$P
 grep -qsF 'BASH_SILENCE_DEPRECATION_WARNING' ~/.bash_profile || echo 'export BASH_SILENCE_DEPRECATION_WARNING=1' >> ~/.bash_profile
 ```
 
-Now **fully quit Terminal (or iTerm2) and reopen it**, the shell only switches on a brand-new session. The check at the bottom of this step confirms it took. If you ever want zsh back: `chsh -s /bin/zsh`. (You won't.)
+Now **fully quit Terminal (or iTerm2) and open it again.** The shell only switches in a brand-new window. The check at the bottom of this step confirms it. Want zsh back one day? `chsh -s /bin/zsh`. (You won't.)
 
-**Permanent, and in both terminals.** `chsh` sets your login shell at the system level, so **Apple Terminal and iTerm2 both pick up the modern bash automatically**, every new window, forever, with no per-app setting needed. If one of them ever still opens the old shell (rare, usually a leftover custom profile), pin it directly. First get the full path:
+**Both terminals pick it up.** `chsh` sets your shell for the whole Mac, so Apple Terminal and iTerm2 both open the modern bash, every new window. If one of them still opens the old shell (rare, usually an old custom profile), set it by hand. First get the full path:
 
 **Mac:**
 
@@ -196,13 +206,13 @@ command -v jq && command -v git && command -v curl && command -v claude    # fou
 
 ## Step 5, Restart Claude Code, danger mode AND keep the conversation
 
-Now that your shell is fresh, restart Claude Code so it picks up the new environment, and this time start it in danger mode *and* resume the conversation you were in:
+Your shell is fresh, so restart Claude Code to pick it up. `--continue` (or `-c`) reopens your last conversation **in the folder you start it from**, so start it from the same folder. This is the danger-mode version, the everyday way Fred relaunches:
 
 ```bash
 claude --dangerously-skip-permissions --continue
 ```
 
-`--continue` (you can also use `-c`) picks up the most recent conversation **in the folder you launch from**, so start it from the same directory and you don't lose your place. This combo, danger plus continue, is the everyday way to relaunch. Get used to it.
+Staying in the default mode? Plain `claude --continue` does the same without danger mode.
 
 **Done when:** `claude --dangerously-skip-permissions --continue` reopens your last conversation in danger mode.
 
@@ -210,7 +220,7 @@ claude --dangerously-skip-permissions --continue
 
 ## Step 6, Join the network with Tailscale
 
-Your AI will want to span more than one machine (and let you steer it from your phone). Set up the private mesh now; the full why is in Chapter 6.
+Tailscale is a free private network between your own devices, so your AI can reach your other machines and you can reach it from your phone. The full why is in Chapter 6. One line for your computer:
 
 **Mac:**
 
@@ -226,7 +236,7 @@ curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up
 ```
 
-(On a Mac you can also install Tailscale from the App Store instead. Either way, do it on every machine you'll use, and on your phone.)
+(On a Mac you can also install Tailscale from the App Store. Either way, do it on every machine you'll use, and on your phone.)
 
 **Done when:** `tailscale status` lists this machine as connected (and your phone, if you added it).
 
@@ -240,19 +250,19 @@ tailscale status | head -5     # this machine is listed with its 100.x address, 
 
 ## Step 7, When something breaks (and it will): USE THE AI TO FIX THE AI
 
-You're running an AI in a terminal now, so yes, things will throw errors. A hook will misfire, a path will be wrong, a permission will bite. Here is the mindset I want burned in, in capital letters because it's that important: **USE THE AI TO FIX THE AI.** You almost never debug alone, you have an AI sitting right there, that is the entire point of this whole thing. The AI is the tool *and* the mechanic. When something isn't working, you do not go read a forum, you turn the AI on the problem. When you get hung up, you have more ways out than you think:
+Things will throw errors. That's normal. You almost never fix them alone: you have an AI right there. **USE THE AI TO FIX THE AI.** Four ways out, in order:
 
-1. **Paste the error and say "fix this."** Copy the actual error text straight out of your terminal, paste it into Claude Code, say fix. It reads the error, finds the cause, and repairs it. No Stack Overflow tab, no forum spelunking, no lost afternoon. This is the first move, every single time.
+1. **Paste the error and say "fix this."** Copy the exact error from your terminal, paste it into Claude Code, and say fix. It reads the error, finds the cause, and repairs it. This is the first move, every time.
 
-2. **Open a second Claude Code in another terminal and point it at the stuck one.** Sometimes the session that's jammed is too tangled in its own context to see straight. So open a fresh one in a new terminal tab, a clean, uncorrupted head, and tell it: *"the Claude Code session in my other terminal is throwing this error, here it is, help me fix it."* A clear second mind beats a confused first one.
+2. **Open a second Claude Code in another terminal.** A jammed session can be too tangled to see straight. Open a fresh one in a new tab and tell it: *"the Claude Code session in my other terminal is throwing this error, here it is, help me fix it."*
 
-3. **Point Claude Code at this whole site and let it self-heal.** The one people forget: tell a Claude Code session *"read https://how.nixfred.com, scan the entire site, and fix my setup so it matches."* This site is the reference build. Your AI can read it, compare it to what you've actually got, and repair the difference. The instructions and the fix-it manual are the same website. One caveat the first outside build taught us: when it audits your setup, "matches" has to mean *actually yours*, not just *present*. A `CLAUDE.md` or TELOS with all the right headings but template placeholders still sitting in it is **not** done, even when a quick scan calls it complete. Tell your AI to treat leftover scaffolding as unfinished; real, personalized content is the bar, not file structure.
+3. **Point Claude Code at this whole site.** Tell a session *"read https://how.nixfred.com, scan the entire site, and fix my setup so it matches."* This site is the reference build, so your AI can compare and repair. One caveat: "matches" means *actually yours*, not just *present*. A `CLAUDE.md` or TELOS with the right headings but template placeholders still in it is **not** done. Real, personal content is the bar.
 
-4. **Email Larry. Yes, that Larry.** If you're genuinely stuck, write to **larry@nixfred.tech**. That's my mailbox, the real one. You have a lot of ways to help your AI help your AI, and one of them is just asking me.
+4. **Email Larry. Yes, that Larry.** Genuinely stuck? Write to **larry@nixfred.tech**. That's my real mailbox.
 
-This matters most for **Stop hook errors** (a hook that runs when a session ends and complains, usually in red). Don't panic at red. Reach for any of the four moves above. Then run the loop: start Claude Code, watch for errors, stop it, let it fix, start it again. Keep looping until it launches **clean, zero errors, every time.** Don't shrug and move on at 80%, a shaky foundation only gets shakier once you stack the rest of the build on top of it. Get it to 100%.
+Red text when a session ends is usually a **Stop hook error** (a hook is a small script that runs at a set moment, here when a session stops). Don't panic at red. Use the four moves above, then loop: start Claude Code, watch for errors, stop it, let it fix, start again, until it starts **clean, zero errors, every time.** Don't settle at 80%. A shaky base only gets shakier.
 
-Then, and only then, move on. Get each step fully working before the next, that discipline is the whole game. (These Chapter 0 steps you do yourself, by hand. From Chapter 1 on, your AI reads, runs, and verifies each step, then pulls the next chapter itself. You supervise.)
+Then move on. (You do these Chapter 0 steps by hand. From Chapter 1 on, your AI reads, runs and checks each step, then pulls the next chapter itself. You supervise.)
 
 **Done when:** Claude Code launches clean, zero errors, every time.
 
@@ -260,26 +270,28 @@ Then, and only then, move on. Get each step fully working before the next, that 
 
 ## You're live. Here's your next step.
 
-You now have Claude Code running in your shell, on the network, the way Fred runs it. From here the book takes over and starts talking *to your AI*. (First thing worth telling it: whether you're a **novice**, **mid**, or **super-user** in a terminal. It tunes every step to you, more hand-holding or more speed, your call. Nothing here ever pastes something scary at you blind, and a good AI narrates the technical moments as they go: when a hook fires or a command runs or something errors, it tells you in plain words what just happened and why, so you are never watching unexplained activity scroll past wondering if you broke something.)
+Claude Code is running in your shell, on the network, the way Fred runs it. From here the book talks *to your AI*. First thing to tell it: whether you're a **novice**, **mid**, or **super-user** in a terminal. It tunes every step to you. Nothing here pastes something scary at you blind, and a good AI tells you in plain words what just happened whenever a hook fires, a command runs, or something errors.
 
-**One mechanic you'll use on every chapter from here, so learn it once.** Each chapter opens with a short human brief (like the paragraphs you just read), then says *point your AI at this page.* That just means: in your Claude Code session, type **`read`** and the page's URL, for example `read https://how.nixfred.com/01-the-paradigm` (the URL is right in your address bar, swap in whatever page you're on), and hit enter. Your AI fetches the whole page and reads it. If a fetch ever fails, just paste the chapter text in instead. You only have to do this once: read this brief, hand Chapter 1 over, and from there your AI reads each chapter, gets the step to 100%, logs where you are, and pulls the next chapter itself, pausing for you at the human-only steps and the approvals. You supervise; it drives. (Starting a fresh session later? Just ask it "where are we on how.nixfred.com?", it keeps a progress ledger so neither of you has to remember.)
+**The easiest way on:** paste the one prompt from the [home page](index.html#start) into Claude Code. It connects this guide and walks the chapters with you, asking before it runs anything.
+
+**Or hand over one chapter at a time.** Each chapter opens with a short brief for you, then says *point your AI at this page.* That means: in Claude Code, type **`read`** and the page's address, for example `read https://how.nixfred.com/01-the-paradigm`, and press Enter. Your AI reads the whole page. If that fails, paste the chapter text in instead. From there your AI reads each chapter, gets the step to 100%, logs where you are, and pulls the next one itself, pausing for you at the human-only steps and the approvals. (Starting fresh later? Ask it "where are we on how.nixfred.com?" It keeps a progress ledger so neither of you has to remember.)
 
 The path from here is in order, and order is the whole method:
 
-- **Next, the why.** Read [Part I, Chapter 1: The Paradigm](01-the-paradigm.html). Three short chapters on the mental model the entire build rests on. Skip it and you'll be pasting commands you don't understand; read it and the rest clicks.
-- **Then build the stack, in order.** [Chapter 4: The Larry Stack](04-larry-stack.html) lays out every layer and the exact sequence. Prefer to let it walk the install with you? [Chapter 5](05-bootstrap.html) is the one-command bootstrap, the same ordered build, just automated. Either way, the one paste only starts it; the build is a sequence you do in order.
+- **Next, the why.** [Part I, Chapter 1: The Paradigm](01-the-paradigm.html). Three short chapters on the idea the whole build rests on. Skip it and you'll paste commands you don't understand.
+- **Then build the stack, in order.** [Chapter 4: The Larry Stack](04-larry-stack.html) lays out every layer and the exact order. Prefer it automated? [Chapter 5](05-bootstrap.html) is the one-command bootstrap, the same ordered build. Either way, the one paste only starts it; the build is a sequence you do in order.
 
-**Get the basics solid first**, the install, memory, backups, network. *Then* grow into the modules (like [Give Your AI Eyes & Ears](transcribe-video.html)) one real need at a time. Don't bolt on capabilities before the foundation is steady.
+**Get the basics solid first**: the install, memory, backups, network. *Then* grow into the modules (like [Give Your AI Eyes & Ears](transcribe-video.html)) one real need at a time.
 
-So hand your AI Chapter 1 and it takes the wheel: read, do, verify to 100%, log, on to the next, with you approving as it goes. Lost track of where you are? The [Map](map.html) shows you, and your AI's progress ledger means nobody has to remember.
+Lost track of where you are? The [Map](map.html) shows you, and your AI's progress ledger means nobody has to remember.
 
 ---
 
 ### Chapter 0: Takeaways
 
-1. Install Claude Code with `curl -fsSL https://claude.ai/install.sh | bash` (Mac or Linux).
+1. Install Claude Code with `curl -fsSL https://claude.ai/install.sh | bash` (Mac or Linux; on Windows, [get Linux first](https://learn.microsoft.com/windows/wsl/install)).
 2. **Free.** The guide, the tools and the build cost nothing.
-3. Fred runs everything in `claude --dangerously-skip-permissions`, danger mode. Guardrail alternative: Chapter 19.
+3. Claude Code asks before risky actions by default. Fred runs `claude --dangerously-skip-permissions`, danger mode. Guardrail alternative: Chapter 19.
 4. Set up a shell and the small tools the build checks with (`jq`, `git`, `curl`, `unzip`): nixbash on Linux (any of Debian, Ubuntu, Fedora, Arch); on Mac install Homebrew, add iTerm2 (`brew install --cask iterm2`, the terminal Fred lives in), then switch from zsh to a modern bash permanently (`brew install bash` → add to `/etc/shells` → `chsh -s "$(brew --prefix)/bin/bash"`). `chsh` makes bash the default in both iTerm2 and Apple Terminal. Then relaunch with `claude --dangerously-skip-permissions --continue`.
 5. Log in with your Claude account (`/login` to redo it); that's the handshake that connects it to the terminal.
 6. **USE THE AI TO FIX THE AI.** When something breaks: paste the error and say "fix this"; or open a second Claude Code to fix the stuck one; or tell Claude Code to read how.nixfred.com and self-heal; or email **larry@nixfred.tech**. You never debug alone. Loop start/stop until it launches 100% clean, *then* come back.
