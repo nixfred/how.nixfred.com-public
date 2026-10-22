@@ -19,11 +19,11 @@
         hits.sort(function(a,b){return b.sc-a.sc;});
         if(!hits.length){sr.innerHTML='<div class="sr-none">no matches for "'+esc(q)+'"</div>';sr.hidden=false;return;}
         sr.innerHTML=hits.slice(0,12).map(function(h){
-          return '<a href="'+h.e.u+'"><b>'+esc(h.e.t)+'</b><span class="sr-p">'+esc(h.e.p)+'</span>'+(h.snip?'<em>'+esc(h.snip)+'</em>':'')+'</a>';
+          return '<a href="'+(/^(/|https?:)/.test(h.e.u)?'':'/')+h.e.u+'"><b>'+esc(h.e.t)+'</b><span class="sr-p">'+esc(h.e.p)+'</span>'+(h.snip?'<em>'+esc(h.snip)+'</em>':'')+'</a>';
         }).join('');
         sr.hidden=false;
       }
-      if(sidx){go();}else{fetch('search-index.json').then(function(r){return r.json();}).then(function(d){sidx=d;go();}).catch(function(){});}
+      if(sidx){go();}else{fetch('/search-index.json').then(function(r){return r.json();}).then(function(d){sidx=d;go();}).catch(function(){});}
     }
     si.addEventListener('input',function(){clearTimeout(st);st=setTimeout(run,150);});
     si.addEventListener('focus',run);
@@ -228,7 +228,7 @@ AskLarryPanel.citeText=function(s,here){
       var hits=sidx.map(function(e){var t=(e.t+' '+e.x).toLowerCase(),sc=0;words.forEach(function(w){if(t.indexOf(w)>=0)sc++;});return {e:e,sc:sc};}).filter(function(h){return h.sc;}).sort(function(a,b){return b.sc-a.sc;}).slice(0,4);
       el.innerHTML='<p>'+esc(msg)+'</p>'+(hits.length?'<p>Meanwhile, the pages that match your words:</p><ul>'+hits.map(function(h){return '<li><a href="'+esc(h.e.u)+'">'+esc(h.e.t)+'</a></li>';}).join('')+'</ul>':'<p>Try the search box, or start at <a href="00-start-here.html">Chapter 0</a>.</p>');
     }
-    if(sidx)go();else fetch('search-index.json').then(function(r){return r.json();}).then(function(d){sidx=d;go();}).catch(function(){el.innerHTML='<p>'+esc(msg)+'</p>';});
+    if(sidx)go();else fetch('/search-index.json').then(function(r){return r.json();}).then(function(d){sidx=d;go();}).catch(function(){el.innerHTML='<p>'+esc(msg)+'</p>';});
   }
   function send(q,prior,paint){
     var raw='', final=null;

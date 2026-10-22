@@ -27,7 +27,7 @@
       var hits=sidx.map(function(e){var t=(e.t+' '+e.x).toLowerCase(),sc=0;words.forEach(function(w){if(t.indexOf(w)>=0)sc++;});return {e:e,sc:sc};}).filter(function(h){return h.sc;}).sort(function(a,b){return b.sc-a.sc;}).slice(0,4);
       el.innerHTML='<p>'+esc(msg)+'</p>'+(hits.length?'<p>Meanwhile, the pages that match your words:</p><ul>'+hits.map(function(h){return '<li><a href="'+esc(h.e.u)+'">'+esc(h.e.t)+'</a></li>';}).join('')+'</ul>':'<p>Try the search box, or start at <a href="00-start-here.html">Chapter 0</a>.</p>');
     }
-    if(sidx)go();else fetch('search-index.json').then(function(r){return r.json();}).then(function(d){sidx=d;go();}).catch(function(){el.innerHTML='<p>'+esc(msg)+'</p>';});
+    if(sidx)go();else fetch('/search-index.json').then(function(r){return r.json();}).then(function(d){sidx=d;go();}).catch(function(){el.innerHTML='<p>'+esc(msg)+'</p>';});
   }
   function send(q,prior,paint){
     var raw='', final=null;
