@@ -8,7 +8,7 @@ slug: "00-start-here"
 
 # Chapter 0: Start Here, From Absolute Zero
 
-**This one is for you, the human, the whole way through.** You don't have an AI yet, so you run these steps yourself. Each step is one thing to do, a line to copy, and what you'll see when it worked. It works on a **Mac or Linux**. On Windows? [Get Linux first (WSL)](https://learn.microsoft.com/windows/wsl/install), then come back. The [home page](index.html#start) has the same first steps in short form; this page has them in full.
+**This one is for you, the human, the whole way through.** You don't have an AI yet, so you run these steps yourself. Each step is one thing to do, a line to copy, and what you'll see when it worked. It works on a **Mac or Linux**. On Windows? [Get Linux first (WSL)](windows.html), then come back. The [home page](index.html#start) has the same first steps in short form; this page has them in full.
 
 **Free.** Nothing runs without your yes. You can stop anytime. Stuck? Ask Larry on the right.
 
@@ -289,7 +289,7 @@ Lost track of where you are? The [Map](map.html) shows you, and your AI's progre
 
 ### Chapter 0: Takeaways
 
-1. Install Claude Code with `curl -fsSL https://claude.ai/install.sh | bash` (Mac or Linux; on Windows, [get Linux first](https://learn.microsoft.com/windows/wsl/install)).
+1. Install Claude Code with `curl -fsSL https://claude.ai/install.sh | bash` (Mac or Linux; on Windows, [get Linux first](windows.html)).
 2. **Free.** The guide, the tools and the build cost nothing.
 3. Claude Code asks before risky actions by default. Fred runs `claude --dangerously-skip-permissions`, danger mode. Guardrail alternative: Chapter 19.
 4. Set up a shell and the small tools the build checks with (`jq`, `git`, `curl`, `unzip`): nixbash on Linux (any of Debian, Ubuntu, Fedora, Arch); on Mac install Homebrew, add iTerm2 (`brew install --cask iterm2`, the terminal Fred lives in), then switch from zsh to a modern bash permanently (`brew install bash` → add to `/etc/shells` → `chsh -s "$(brew --prefix)/bin/bash"`). `chsh` makes bash the default in both iTerm2 and Apple Terminal. Then relaunch with `claude --dangerously-skip-permissions --continue`.

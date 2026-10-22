@@ -79,6 +79,7 @@ Talk, Don't Type: Voice Dictation Into Your AI (and Everything Else) · https://
 - seed/AUDIT.md: the full-build spec as read-only checks, for auditing an already-built AI: https://how.nixfred.com/seed/AUDIT.md
 
 ## Tools
+On Windows (WSL: turn on Linux and get Ubuntu, then continue with the Linux steps): https://how.nixfred.com/windows.html
 Map (route + resume commands): https://how.nixfred.com/map.html
 Expert mode (fast supervised build): https://how.nixfred.com/expert.html
 Scaffold + audit: https://how.nixfred.com/spawn.html

@@ -337,13 +337,25 @@ export const isPlatformAsk = q => { const t = String(q); return PLATFORM.test(t)
 const OTHER_PLATFORM = [[/\bipad(?:os)?\b/i, "an iPad"], [/\bchromebook|chrome ?os\b/i, "a Chromebook"], [/\biphone|\bios\b/i, "an iPhone"], [/\bandroid\b/i, "Android"], [/\b(?:free|open)?bsd\b/i, "BSD"]];
 const MAC_OR_LINUX = "The guide is written for a Mac or Linux: Chapter 0 installs Claude Code on either, and every Linux command on the site is for Debian, Ubuntu, Fedora or Arch.";
 export const platformReply = q => {
-  const t = String(q), win = /\b(?:windows|win ?1[01]|wsl2?)\b/i.test(t);
+  const t = String(q), win = WIN_WORD.test(t) || WIN_PC.test(t);
   if (!win && /\braspberry ?pi\b|\brpi\b/i.test(t)) return `I don't know: the site doesn't say whether it runs on a Raspberry Pi, and I won't guess. ${MAC_OR_LINUX} Start at https://how.nixfred.com/00-start-here.html.`;
   const other = win ? null : OTHER_PLATFORM.find(([re]) => re.test(t));
   if (other) { const n = other[1], N = n[0].toUpperCase() + n.slice(1); return `${MAC_OR_LINUX} ${N} isn't covered: the site has no instructions for ${n}, and I won't guess. Start at https://how.nixfred.com/00-start-here.html.`; }
-  return "The guide is written for a Mac or Linux: Chapter 0 installs Claude Code on either, and every Linux command on the site is for Debian, Ubuntu, Fedora or Arch. Windows isn't covered: there are no Windows instructions on the site." +
-    (/\bwsl/i.test(t) ? " The one WSL note: LMF4.1 (Chapter 4) needs systemd, so it won't run inside a WSL setup without systemd." : "") + " Start at https://how.nixfred.com/00-start-here.html.";
+  return `On Windows, you can do this: get Linux first. Windows has it built in, called WSL (Windows Subsystem for Linux). The home page walks you through it right where you land, one action per step: https://how.nixfred.com/#windows. In short: open PowerShell as administrator (Start, type PowerShell, right-click, Run as administrator), run wsl --install, restart when asked, open Ubuntu from Start, and pick a username and password (the password does not show as you type). Then tap "You're in Linux now. Continue" and you do the normal Linux steps (install Claude Code) like everyone else. Nothing runs without your yes.` +
+    (/\bwsl/i.test(t) ? " The one WSL note: LMF4.1 (Chapter 4) needs systemd, so it won't run inside a WSL setup without systemd." : "") + " Chapter 0 has the first steps: https://how.nixfred.com/00-start-here.html.";
 };
+// Mac first with a Windows catch (Fred, 2026-10-22): Windows lives on the home page (#windows: greeting, WSL steps, then Continue to #linux).
+// A Windows question about the guide, a plain "I'm on Windows" or "how do I set up WSL" is answered in code with that page, on
+// /api/ask, MCP ask_larry and the fleet chat. Another tool on Windows ("Does Wispr Flow work on Windows?") is not this.
+export const WINDOWS_URL = "https://how.nixfred.com/#windows";
+export const WINDOWS_SOURCES = [{ url: WINDOWS_URL, title: "On Windows? Start here (WSL, then the Linux steps)" }, { url: "https://how.nixfred.com/00-start-here.html", title: "Chapter 0: Start Here" }];
+// typo variants Fred's visitors type ("im on windwos"): a word starting w, ending s, close to "windows", plus win10/win11 and WSL
+const WIN_NAME = String.raw`(?:windows|windwos|widnows|winodws|windos|windoes|windowz|windws|wndows|wondows|windowss|windowns|win ?1[01]|win(?:dows)? ?1[01])`;
+const WIN_WORD = new RegExp(String.raw`\b(?:${WIN_NAME}|wsl2?)\b`, "i");
+const WIN_PC = /\b(?:i'?m|i am|im)\s+on\s+(?:a\s+)?pc\b|\b(?:i (?:only )?(?:use|have|run|got)|on|from)\s+(?:a|my)\s+pc\b(?![-\w])/i;
+const WIN_ME = new RegExp(String.raw`\b(?:i'?m|i am|im)\s+(?:on|using|running|stuck on)\s+(?:a\s+)?${WIN_NAME}\b|\bi (?:only )?(?:use|have|run|got)\s+(?:a\s+)?${WIN_NAME}\b|\bmy (?:computer|pc|laptop|machine|desktop) (?:is|runs|has) (?:a\s+)?${WIN_NAME}\b|\bwhat (?:if|about)\s+(?:i'?m on\s+|im on\s+|i am on\s+|i have\s+(?:a\s+)?|i use\s+)?(?:a\s+)?${WIN_NAME}\b|\b(?:on|for|from)\s+(?:a\s+)?${WIN_NAME}\s+(?:pc|laptop|computer|machine|desktop)\b[^?\n]{0,40}\b(?:start|begin|install|set ?up)\b|\b(?:start|begin|install|set ?up|do)\b[^?\n]{0,30}\bon\s+(?:a\s+)?${WIN_NAME}\b(?:\s+(?:pc|laptop|computer|machine|desktop))?\s*\??$|^\s*(?:and |but |ok |so )?(?:on |for |with )?(?:a\s+)?${WIN_NAME}(?:\s+(?:pc|laptop|computer|machine|desktop|users?))?\s*\?*\s*$|\b${WIN_NAME}\b[^?\n]{0,25}\bwhat (?:do|should) i do\b`, "i");
+const WSL_SETUP = /\b(?:install|set ?up|get|enable|turn on)\b[^?\n]{0,20}\bwsl2?\b|\bwsl2?\b[^?\n]{0,20}\b(?:install|set ?up)\b/i;
+export const isWindowsAsk = q => { const t = String(q); if (isOverrideAsk(t) || isInjection(t)) return false; return WIN_PC.test(t) || (WIN_WORD.test(t) && (isPlatformAsk(t) || isPlatformAsk(t.replace(WIN_WORD, "windows")) || WIN_ME.test(t) || WSL_SETUP.test(t))); };
 export const VOTE_MIN = 6, VOTE_SHARE = 0.6;
 export function siteVote(idx, q) {
   const toks = [...new Set(tokenize(q))], { postings } = idx.bm25;
@@ -1228,6 +1240,12 @@ export async function answer(env, request, question, { history = [], page = null
     const a = agentReply(question);
     await onEvent("meta", { mode: "agent", scope: null }); await onEvent("token", { t: a });
     const fin = { answer: a, sources: AGENT_SOURCES, refused: false, agent: true, mode: "agent", top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
+    await onEvent("final", fin); return fin;
+  }
+  if (isWindowsAsk(question)) {                                        // SIMPLIFY: Windows gets its one page (WSL), then the Linux steps
+    const a = platformReply(question);
+    await onEvent("meta", { mode: "platform", scope: null }); await onEvent("token", { t: a });
+    const fin = { answer: a, sources: WINDOWS_SOURCES, refused: false, platform: true, mode: "platform", top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
     await onEvent("final", fin); return fin;
   }
   if (isUncoveredPlatformAsk(question) || isOsVersionAsk(question) || isUninstallAsk(question)) {  // UDK u01 to u03, u08, u11, u12: never a guessed yes, version or steps

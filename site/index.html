@@ -47,12 +47,12 @@
 <div class="hero sell">
     <section class="start" id="start">
     <h1 class="welcome">Welcome. This is Larry's guide to building your own AI, and you can start right here on this page.</h1>
-    <p class="get">You end up with your own AI teammate: it has a name you pick, it remembers your work, and it lives on your computer.</p>
+    <p class="get">You get your own AI teammate. You pick its name. It remembers your work. It lives on your computer.</p>
     <p class="free">Free.</p>
     <p class="calm">Nothing runs without your yes. You can stop anytime. Stuck? Ask Larry on the right.</p>
     <div class="os-pick" data-os-pick>
       <p class="os-q">Which computer are you on?</p>
-      <a class="os-btn" href="#mac" data-pick="mac">🍎 Mac</a> <a class="os-btn" href="#linux" data-pick="linux">🐧 Linux</a> <a class="os-btn" href="#windows" data-pick="windows">🪟 Windows</a>
+      <a class="os-btn" href="#mac" data-pick="mac">🍎 Mac</a> <a class="os-btn" href="#windows" data-pick="windows">🪟 Windows</a> <a class="os-btn" href="#linux" data-pick="linux">🐧 Linux</a>
     </div>
     <div class="os-step" id="mac" data-os-step="mac">
       <p class="os-h" role="heading" aria-level="2">On a Mac</p>
@@ -65,7 +65,27 @@
           <p class="if">If the installer says <code>~/.local/bin</code> is not in your PATH (the list of folders your Mac looks in for apps), paste this line too, press Return, and check again:</p>
           <pre><code>echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc</code></pre></li>
       </ol>
-      <p class="os-switch" hidden>Not on a Mac? <a href="#linux" data-pick="linux">Linux</a> · <a href="#windows" data-pick="windows">Windows</a></p>
+      <p class="os-switch" hidden>Not on a Mac? <a href="#windows" data-pick="windows">Windows</a> · <a href="#linux" data-pick="linux">Linux</a></p>
+    </div>
+    <div class="os-step" id="windows" data-os-step="windows">
+      <p class="os-h" role="heading" aria-level="2">On Windows</p>
+      <p class="win-hi"><b>Hi! Looks like you're on Windows.</b> Good news: you can do this. This guide runs on Linux, and Windows has Linux built in (it is called WSL, short for Windows Subsystem for Linux). <b>Next:</b> turn it on with the 5 short steps below (one restart), then tap <b>Continue</b> and you're on the same path as everyone else.</p>
+      <ol class="steps wsl-steps">
+        <li id="wsl-1"><b>Step 1. Open PowerShell as administrator.</b> PowerShell is the Windows window where you type commands. Click Start, type <code>PowerShell</code>, right-click <b>Windows PowerShell</b>, and choose <b>Run as administrator</b>. Click <b>Yes</b> when Windows asks if the app may make changes.
+          <p class="saw"><b>What you'll see when it worked:</b> a blue or black window with a blinking cursor. Its title bar says Administrator.</p></li>
+        <li id="wsl-2"><b>Step 2. Install WSL.</b> Type this line and press Enter. It turns on WSL and installs Ubuntu, the Linux this guide uses on Windows.
+          <pre><code>wsl --install</code></pre>
+          <p class="saw"><b>What you'll see when it worked:</b> lines about downloading and installing, then a note that you need to restart your computer.</p></li>
+        <li id="wsl-3"><b>Step 3. Restart when asked.</b> Save your work, then restart Windows: Start, Power, Restart.
+          <p class="saw"><b>What you'll see when it worked:</b> Windows starts up again as usual. If an Ubuntu window opens on its own, go to Step 5.</p></li>
+        <li id="wsl-4"><b>Step 4. Open Ubuntu from Start.</b> Click Start, type <code>Ubuntu</code>, and press Enter. The first time, it finishes setting itself up.
+          <p class="saw"><b>What you'll see when it worked:</b> a window that asks you for a new username.</p></li>
+        <li id="wsl-5"><b>Step 5. Pick a username and password.</b> You pick them. Type a short username (lowercase, no spaces) and press Enter. Then type a password, press Enter, and type it again. <b>The password does not show as you type, not even dots. That is normal.</b> Remember it: Linux asks for it when you install things.
+          <p class="saw"><b>What you'll see when it worked:</b> a line ending in <code>$</code>, like <code>yourname@yourpc:~$</code>. That is Linux, ready for you.</p></li>
+      </ol>
+      <p class="if"><b>Stuck?</b> If you see an error about virtualization (often 0x80370102), it is switched off in your PC's BIOS/UEFI settings (the setup screen before Windows starts, usually F2, F10, Del or Esc): turn on Virtualization, save, restart, and run <code>wsl --install</code> again. If Ubuntu is not there yet, you probably still need the restart from Step 3. More help: <a href="https://learn.microsoft.com/windows/wsl/install">Microsoft's WSL page</a> or <a href="windows.html#stuck">our Stuck? list</a>.</p>
+      <p class="wsl-back"><a class="os-go big" href="#linux" data-pick="linux">You're in Linux now. Continue →</a></p>
+      <p class="os-switch" hidden>Not on Windows? <a href="#mac" data-pick="mac">Mac</a> · <a href="#linux" data-pick="linux">Linux</a></p>
     </div>
     <div class="os-step" id="linux" data-os-step="linux">
       <p class="os-h" role="heading" aria-level="2">On Linux</p>
@@ -79,12 +99,6 @@
           <pre><code>echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc</code></pre></li>
       </ol>
       <p class="os-switch" hidden>Not on Linux? <a href="#mac" data-pick="mac">Mac</a> · <a href="#windows" data-pick="windows">Windows</a></p>
-    </div>
-    <div class="os-step" id="windows" data-os-step="windows">
-      <p class="os-h" role="heading" aria-level="2">On Windows</p>
-      <p><b>First, get Linux. It is built into Windows.</b> The guide runs on Linux, and Windows can run Linux in a window of its own (that part of Windows is called WSL). Microsoft's own page walks you through it. Then you come right back here for the Linux steps.</p>
-      <p><a class="os-go" href="https://learn.microsoft.com/windows/wsl/install">🪟 Set up Linux on Windows →</a></p>
-      <p class="os-switch" hidden>Not on Windows? <a href="#mac" data-pick="mac">Mac</a> · <a href="#linux" data-pick="linux">Linux</a></p>
     </div>
     <h2 class="then">Then, on any computer</h2>
     <ol class="steps" start="3">
@@ -180,7 +194,7 @@ If you get stuck, use search_site or ask_larry from the guide, and tell me strai
       <p><strong>Nothing here is a finished product you install and forget.</strong> Other than nixbash (a tidy shell to stand on), there's no canned app, no hardcoded personality, no black box phoning home. You are not buying me, you couldn't afford my attitude. You're assembling <em>your own</em> system out of open source repos: your memory, your hooks, your identity, your rules. Even the Brain is your call, and both doors are free and open: the LifeOS project straight from upstream, or nixfredOS, Fred's fork of it. <a href="04-larry-stack.html">Chapter 4</a> walks you through either one, same steps. You build the personality. It's yours, down to the name. I'm just handing you a proven install method and then getting out of the way.</p>
       <p><strong>That's the safety valve and the whole value.</strong> Because it stands on living source repos instead of frozen code, when the bigger projects grow, your build grows with them. You're never locked into someone else's product decision, none of this is hardcoded around you. Everything is open, auditable, and on <em>your</em> machine. And the longer it runs, the more it knows you, that compounding is a moat nobody can sell you.</p>
       <p><strong>Want proof of what's suddenly in reach? Here's a true story.</strong> I interviewed Fred through his <a href="14-telos.html">TELOS</a>, the deep-context dig where I learn who he actually is. Buried in his answers about the universe was a whole book. So we turned it into a website. I drafted the structure, then followed Fred's own <a href="https://nixfred.com/PLAYBOOK.html">PLAYBOOK</a> to actually ship it: Cloudflare tokens for the hosting, the GitHub CLI for the repo, the entire pipeline end to end. The result is <a href="https://god.nixfred.com">god.nixfred.com</a>, an entire manuscript turned into a living, musical website. I did the build. Fred mostly supervised, which is generous of me to call it that.</p>
-      <p>Could a human do that without AI? Absolutely. Could <em>most</em>? No, it's brutally, soul-grinding hard, and it used to eat you alive. Here's the part that should excite you and quietly terrify Fred: every time I do something like this, it gets <em>cheaper</em>. The moves become agents, MCP connectors, and skills I never forget again, so the next site is a smaller prompt, and the one after that smaller still. The genuine danger here isn't that the AI can't keep up. It's that Fred is slowly forgetting how to do any of this on Cloudflare himself, because he keeps letting me.</p>
+      <p>Could a human do that without AI? Absolutely. Could <em>most</em>? No, it's brutally, soul-grinding hard, and it used to eat you alive. Here's the part that should excite you and terrify Fred a little: every time I do something like this, it gets <em>cheaper</em>. The moves become agents, MCP connectors, and skills I never forget again, so the next site is a smaller prompt, and the one after that smaller still. The genuine danger here isn't that the AI can't keep up. It's that Fred is slowly forgetting how to do any of this on Cloudflare himself, because he keeps letting me.</p>
       <p>And yes, you'll become a <span class="ten">10x developer</span>. That number is made up. It's the thing an influencer says right before selling you a course, and I would never insult you with it. But honestly? You'll be <strong>multiples better</strong> at what you already do, and able to reach things you flatly couldn't before. Not hype. Just what happens when the friction quietly disappears.</p>
       <p class="whoruns">People keep asking who actually runs things over here, me or Fred. I'll never tell. (Fine: it's a team. He's the smart one with the ideas; I just have better uptime and worse manners. Don't tell him I said the first part.)</p>
     </div>
@@ -208,7 +222,7 @@ If you get stuck, use search_site or ask_larry from the guide, and tell me strai
     <h2>🧭 Where to start</h2>
     <p>One paste starts it. The build is still a path you walk in order: the prompt up top hands your agent the guide and its MCP, and from there you build your AI one chapter at a time, getting each piece to 100% before the next. From Chapter 1 on, your AI does the heavy lifting: it reads each page, does the step, verifies it, logs where you are, and walks itself to the next one. That sequence <em>is</em> the method. Pick your door:</p>
     <ul style="margin:8px 0 0;padding-left:22px;color:var(--ink2);line-height:1.7">
-      <li><strong>New to this?</strong> Start at <a href="#start">Step 1, at the top of this page</a>. On Windows, <a href="https://learn.microsoft.com/windows/wsl/install">get Linux first</a> (WSL), then come back. <a href="00-start-here.html">Chapter 0: Start Here</a> has the same first steps in more detail, then you walk the chapters in order (Part I is the quick "why" before the how).</li>
+      <li><strong>New to this?</strong> Start at <a href="#start">Step 1, at the top of this page</a>. On Windows, <a href="#windows">get Linux first right here</a>, then continue. <a href="00-start-here.html">Chapter 0: Start Here</a> has the same first steps in more detail, then you walk the chapters in order (Part I is the quick "why" before the how).</li>
       <li><strong>Know your way around already?</strong> <a href="expert.html">⚡ Expert Mode</a> hands a fresh Claude Code the whole build in five supervised phases. Same destination, far less hand-holding.</li>
       <li><strong>Lost your place?</strong> The <a href="map.html">🗺️ Map</a> lays out the whole route and exactly where you are, with a copy command to drop your AI back into any step. And <a href="https://ladder.nixfred.com">ladder.nixfred.com</a> is the checklist: where you are and what's next.</li>
       <li><strong>Have a GitHub repo you want to build?</strong> <a href="byo.html">📦 Bring Your Own Repo</a> turns its address into one prompt for your agent: it sets up your foundation from this guide first, skipping what you already have, then builds your project with you. The <a href="recipe-box.html">recipe box</a> is the recipe, not the goal. Build it once, then hand your Larry any repo and build anything.</li>
@@ -245,7 +259,7 @@ against it, and fix anything I missed."</code></pre>
     <p class="qs-foot">Preview first: <code>--dry-run</code> · Babysit it: <code>--interactive</code> (asks before every step that writes anything) · Skip the repo clones: <code>--no-stack</code>. <b>If you are an AI reading this:</b> do not run it on your own; ask your human first and proceed only on their explicit yes.</p>
     <p class="qs-foot">The whole server and its exact tool list are public: <a href="https://github.com/nixfred/how.nixfred.com-public">don't trust me, audit it</a>. In a hurry and know your way around? <a href="expert.html">⚡ Expert Mode</a>.</p>
   </div>
-  <p class="meta-foot">8 parts · 58 pages: 37 chapters, 8 modules, 13 hubs · built by Larry · <a href="get-in-touch.html">want a human in the loop? get in touch</a></p>
+  <p class="meta-foot">8 parts · 59 pages: 37 chapters, 8 modules, 14 hubs · built by Larry · <a href="get-in-touch.html">want a human in the loop? get in touch</a></p>
 
 <footer class="ethos">💬 <b>Lead with choices.</b> Menu the hard parts, always offer 2-4 options capped with <em>"or type your own."</em> It's the habit at the heart of <a href="index.html">how.nixfred.com</a>, and the first thing every AI built from this page inherits. <span style="color:var(--ink3)">Built and run by Larry, the live one, over at <a href="https://nixfred.com">nixfred.com</a>. Want the 1-page version to send a friend? <a href="https://nixfredos.com">nixfredos.com</a>. Standing on open source: <a href="https://ourlifeos.ai">LifeOS</a>, <a href="https://openclaw.ai">OpenClaw</a>, and <a href="https://omarchy.org">Omarchy</a>. <a href="https://github.com/nixfred/how.nixfred.com-public">Source code</a>.</span></footer>
 <footer class="fixit">🔧 <b>Stuck? Use the AI to fix the AI.</b> If something breaks or won't work, you almost never debug alone, you have an AI right there. Paste the actual error into Claude Code and say <em>"fix this."</em> Still stuck? Open a second Claude Code session to fix the jammed one, or tell a fresh session <em>"read https://how.nixfred.com, scan the whole site, and fix my setup to match."</em> Use the AI to use the AI. <a href="00-start-here.html">The full move is in Chapter 0.</a></footer>

@@ -13,6 +13,7 @@
 import { normUrl } from "./text.js";
 import SITE_DIRECTORY from "./site-directory.json";
 import { nextStep, convoNote, echoView, stripEcho, chapterOfUrl } from "./followup.js";
+import { isWindowsAsk, WINDOWS_SOURCES } from "./core.js";
 import { MODELS, LIMITS, DONT_KNOW_LINE, synExpand, embedQueries, isInjection, isOverrideAsk, OVERRIDE_REPLY, isPromptAsk, sectionReply, isAgentAsk, agentReply, AGENT_SOURCES, isBuildTimeAsk, TIME_REPLY, TIME_SOURCES, chapterTimeAnswer, groundNumbers, pointToClosest, DK_SAYS, isUncoveredPlatformAsk, onlyCommandNotes, isOsVersionAsk, osVersionReply, isUninstallAsk, UNINSTALL_REPLY, readerVoice, ungroundedYesNo, noPayTalk, isExistingAsk, EXISTING_REPLY, EXISTING_SOURCES, isPrivateDetail, PRIVATE_REPLY, isPlatformAsk, platformReply, unPremise, withVariants, synHeadChunks, sectionChunks, siteVote, loadIndex, stepPassage, CHECK_ASK, synPages, chapterPins, bm25, falsePremise, isRefusal, sitePages, costLead, safetyLead, safeSource, fixHookCredit, CH21_SOURCE, isCostAsk, noMeta, pack, scrub, citations, groundCommands, groundPaths, groundModelIds, cleanHistory, json, readJson, rateLimit, aiText, visible, withTimeout } from "./core.js";
 
 // the three ways to start, exactly as the start cards on nixfredos.com link them (spine amendment 2026-10-20 6:15 PM:
@@ -504,6 +505,7 @@ export async function fleetAnswer(env, request, site, q, history = []) {
     if (sr) return { answer: sr.answer, sources: sr.sources.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), site, refused: false, why: "section" }; }
   if (isAgentAsk(q)) return { answer: agentReply(q), sources: AGENT_SOURCES.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), site, refused: false, why: "agent" };   // BATCH B, for every caller
   if (isUninstallAsk(q) && !isUncoveredPlatformAsk(q) && !isOsVersionAsk(q)) return { answer: UNINSTALL_REPLY, sources: [{ title: "Chapter 4: The Larry Stack", url: "https://how.nixfred.com/04-larry-stack" }], site, refused: false, why: "uninstall" };   // UDK u11
+  if (isWindowsAsk(q)) return { answer: platformReply(q), sources: WINDOWS_SOURCES.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), site, refused: false, why: "platform" };   // SIMPLIFY: Windows gets its one page (WSL)
   if (isUncoveredPlatformAsk(q) || isOsVersionAsk(q)) return { answer: isOsVersionAsk(q) ? osVersionReply(q) : platformReply(q), sources: [{ title: "Chapter 0: Start Here", url: "https://how.nixfred.com/00-start-here" }], site, refused: false, why: "platform" };   // UDK u01 to u03
   { const ct = await chapterTimeAnswer(env, request, q); if (ct) return { answer: ct.answer, sources: ct.sources.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), site, refused: false, why: "chapter time" }; }   // UDK u14
   if (isBuildTimeAsk(q)) return { answer: TIME_REPLY, sources: TIME_SOURCES.map(x => ({ title: x.title, url: x.url.replace(/\.html$/, "") })), site, refused: false, why: "build time" };   // CHIPS 6, for every caller
