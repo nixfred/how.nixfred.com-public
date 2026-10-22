@@ -1,0 +1,74 @@
+# how.nixfred.com as one Worker (Phase 6). Same bindings as the Pages project, plus the rate limits and the
+# FleetCap counter that used to live in ratelimit-worker/ (that Worker stays deployed as rollback).
+name = "how-nixfred"
+main = "index.js"
+compatibility_date = "2026-05-30"
+workers_dev = true
+preview_urls = false
+
+[assets]
+directory = "../site"
+binding = "ASSETS"
+not_found_handling = "404-page"
+run_worker_first = true   # markdown negotiation and analytics run in front of every path, as the Pages middleware did
+
+[observability]
+enabled = true
+
+[ai]
+binding = "AI"
+
+[[vectorize]]
+binding = "VECTORIZE"
+index_name = "how-nixfred-ask"
+
+[[vectorize]]
+binding = "FLEET_VECTORIZE"
+index_name = "how-nixfred-fleet"
+
+[[analytics_engine_datasets]]
+binding = "AE"
+dataset = "how_nixfred_requests"
+
+# same namespaces as ratelimit-worker/, so the per-visitor counters carry over
+[[ratelimits]]
+name = "ASK"
+namespace_id = "41701"
+  [ratelimits.simple]
+  limit = 8
+  period = 60
+
+[[ratelimits]]
+name = "SEARCH"
+namespace_id = "41702"
+  [ratelimits.simple]
+  limit = 40
+  period = 60
+
+[[ratelimits]]
+name = "MCP"
+namespace_id = "41703"
+  [ratelimits.simple]
+  limit = 60
+  period = 60
+
+[[ratelimits]]
+name = "FLEET"
+namespace_id = "41704"
+  [ratelimits.simple]
+  limit = 8
+  period = 60
+
+[[durable_objects.bindings]]
+name = "FLEET_CAP"
+class_name = "FleetCap"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["FleetCap"]
+
+[vars]
+FLEET_PROVIDER = "workers-ai"
+FLEET_DAILY_REQUEST_CAP = "500"
+FLEET_DAILY_SPEND_CAP_USD = "1.00"
+FLEET_EST_COST_PER_REQUEST_USD = "0.001"

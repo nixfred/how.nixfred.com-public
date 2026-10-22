@@ -1,0 +1,46 @@
+# Tiny private Worker that owns the Workers rate-limiting binding for how.nixfred.com.
+# Pages Functions cannot hold a rate-limit binding themselves, so /api/* and /mcp call this
+# through a service binding (wrangler.toml at the repo root: [[services]] binding = "RL").
+# No public route: workers_dev and preview URLs are off; only the Pages project can reach it.
+name = "how-nixfred-ratelimit"
+main = "index.js"
+compatibility_date = "2026-10-01"
+workers_dev = false
+preview_urls = false
+
+[[ratelimits]]
+name = "ASK"          # /api/ask : 8 questions per minute per visitor
+namespace_id = "41701"
+  [ratelimits.simple]
+  limit = 8
+  period = 60
+
+[[ratelimits]]
+name = "SEARCH"       # /api/search : keyword + vector search
+namespace_id = "41702"
+  [ratelimits.simple]
+  limit = 40
+  period = 60
+
+[[ratelimits]]
+name = "MCP"          # /mcp : all JSON-RPC calls (ask_larry is also counted in ASK)
+namespace_id = "41703"
+  [ratelimits.simple]
+  limit = 60
+  period = 60
+
+[[ratelimits]]
+name = "FLEET"        # /api/fleet/ask : 8 questions per minute per visitor, across every fleet site
+namespace_id = "41704"
+  [ratelimits.simple]
+  limit = 8
+  period = 60
+
+# the fleet chat's hard daily cap (ask/fleet.js capTake -> POST /cap): one counter per UTC day
+[[durable_objects.bindings]]
+name = "FLEET_CAP"
+class_name = "FleetCap"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["FleetCap"]
