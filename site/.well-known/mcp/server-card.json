@@ -1,0 +1,23 @@
+{
+  "serverInfo": {
+    "name": "how-nixfred",
+    "title": "Ask Larry: how.nixfred.com",
+    "version": "1.3.1"
+  },
+  "description": "Read-only MCP server for the how.nixfred.com guide: the ordered install plan, read-only step checks, site search, pages and cited answers.",
+  "websiteUrl": "https://how.nixfred.com/ask-larry",
+  "transport": {
+    "type": "streamable-http",
+    "endpoint": "https://how.nixfred.com/mcp"
+  },
+  "endpoint": "https://how.nixfred.com/mcp",
+  "capabilities": {
+    "tools": {
+      "listChanged": false
+    }
+  },
+  "authentication": {
+    "required": false
+  },
+  "toolsManifest": "https://how.nixfred.com/mcp-tools.json"
+}

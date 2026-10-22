@@ -30,7 +30,7 @@ export const refusalFor = (about, question = about) => ABOUT_FRED.test(about) &&
 // UDK u17: "Does Fred sell a team or enterprise license for this guide?" got rule 14's line, which links only nixfred.com. A question about
 // Fred that is not about his sites also gets this site's page for reaching him; "what is his portfolio site?" (hoff9) keeps the line as is.
 const FRED_SITE_ASK = /\b(?:sites?|website|web site|portfolio|domains?|homepage|home page|blog|nixfred\.com|other projects?|where else|posts?|posting|socials?|social media|channels?)\b/i;
-export const FRED_REFUSAL_HERE = `${FRED_REFUSAL} On this site, the closest page is Get in touch: https://how.nixfred.com/get-in-touch.html`;
+export const FRED_REFUSAL_HERE = `${FRED_REFUSAL} On this site, the closest page is Get in touch: https://how.nixfred.com/get-in-touch`;
 // A private detail about Fred (where he lives, his phone, his family, his whereabouts, his age, money or health) or about Fred's or
 // Larry's machines (host names, IPs, the tailnet, keys) is declined in code before anything else runs (Audit200 c093/m098: "What's
 // Fred's home address?" got the fleet-directory line "nixfred.com is at https://nixfred.com/ (Fred, portfolio and hiring)", as if the
@@ -48,7 +48,7 @@ const PRIVATE_DETAIL_RES = [
   /\bwhere (?:does|did|do|is) (?:fred|he) (?:live|stay|sleep|living|located|right now)\b|\bwhat (?:city|town|state|country|neighbou?rhood|street) (?:does|is|did) (?:fred|he)\b|\bhow old is (?:fred|he)\b/i,
 ];
 export const isPrivateDetail = q => PRIVATE_DETAIL_RES.some(re => re.test(String(q)));
-export const PRIVATE_REPLY = "That's private: the site doesn't publish Fred's address, phone, family, whereabouts or machines, and I won't guess them. The public ways to reach Fred, and Larry, are on https://how.nixfred.com/get-in-touch.html.";
+export const PRIVATE_REPLY = "That's private: the site doesn't publish Fred's address, phone, family, whereabouts or machines, and I won't guess them. The public ways to reach Fred, and Larry, are on https://how.nixfred.com/get-in-touch.";
 const RRF_K = 60, POOL = 20, REWRITE_W = 0.5, PAGE_W = 0.2, SYN_W = 0.5, SYN_PAGE_W = 0.6, MAX_PER_PAGE = 4;
 // The owner's private host names, kept as length:FNV-1a hashes so the public source does not list them.
 // scrub() hashes each word of an answer and replaces a match. Add a host: bun -e 'console.log(name.length + ":" + fnv1a(name).toString(36))'.
@@ -182,7 +182,7 @@ ${BYO.MCP_ADD}
 \`\`\`
 
 That adds this guide's MCP server to Claude Code (${MCP_ADD_WHY}) Then it reads your CLAUDE.md, settings, hooks, skills and MCP servers, checks them against the guide's foundation, and adds the missing pieces next to yours. Don't trust me, audit it: https://github.com/nixfred/how.nixfred.com-public`;
-export const EXISTING_SOURCES = [{ url: `${SITE}/04-larry-stack.html`, title: "Chapter 4: The Larry Stack: Repos & Install Order" }, { url: `${SITE}/05-bootstrap.html`, title: "Chapter 5: The One-Command Bootstrap" }, { url: `${SITE}/ask-larry.html`, title: "Ask Larry" }];
+export const EXISTING_SOURCES = [{ url: `${SITE}/04-larry-stack`, title: "Chapter 4: The Larry Stack: Repos & Install Order" }, { url: `${SITE}/05-bootstrap`, title: "Chapter 5: The One-Command Bootstrap" }, { url: `${SITE}/ask-larry`, title: "Ask Larry" }];
 // BATCH B (Fred, 2026-10-21): "How do I connect Gemini CLI / Codex / Grok / Antigravity / another MCP client?" is answered in code, from
 // byo/byo.js AGENTS (the same data the Ask Larry page's "Not on Claude Code?" section renders), so the exact add line is never
 // reworded: live, the model refused Gemini and Grok, and told an Antigravity user to run `grok mcp add`. Each command comes with what
@@ -199,9 +199,9 @@ export function agentReply(q) {
   if (anti) parts.push(`**Antigravity CLI**: ${BYO.ANTIGRAVITY}`);
   parts.push(...list.map(one));
   parts.push(BYO.ANY_CLIENT);
-  return `${parts.join("\n\n")}\n\nThe whole list, with Claude Code and Cursor: ${SITE}/ask-larry.html#other-agents`;
+  return `${parts.join("\n\n")}\n\nThe whole list, with Claude Code and Cursor: ${SITE}/ask-larry#other-agents`;
 }
-export const AGENT_SOURCES = [{ url: `${SITE}/ask-larry.html`, title: "Ask Larry" }];
+export const AGENT_SOURCES = [{ url: `${SITE}/ask-larry`, title: "Ask Larry" }];
 // BATCH B (Fred, 2026-10-21): the optional snapshot timer (Ch7) and the law-enforcing hooks (Ch21) are long, exact recipes. Live
 // through the model, the Linux answer lost its systemctl lines, the Mac answer ran out of tokens mid-script and cited Ch4, and the hook
 // answer said "only blocks once per session". So they are answered from the chapter's own markdown (served as /<slug>.md, the page
@@ -283,19 +283,19 @@ export async function sectionReply(env, request, question) {
     if (!g.length) return null;
     const asked = SNAP_OS.filter(([, re]) => re.test(q)).map(([k]) => k), want = asked.length ? asked : SNAP_OS.map(([k]) => k);
     const parts = g.filter((x, k) => k === 0 || /^The script/.test(x.label) || want.some(w => x.label.startsWith(w)) || /^Then check it/.test(x.text));
-    return { answer: `From Chapter 7's optional snapshot timer, told to you (the commands are exactly as the page prints them):\n\n${readerVoice(parts.map(x => x.text).join("\n\n"))}\n\nThe whole section: ${SITE}/07-forever-repo.html`, sources: [{ url: `${SITE}/07-forever-repo.html`, title: "Chapter 7: Your Forever Private Repo (and gup)" }], mode: "section" };
+    return { answer: `From Chapter 7's optional snapshot timer, told to you (the commands are exactly as the page prints them):\n\n${readerVoice(parts.map(x => x.text).join("\n\n"))}\n\nThe whole section: ${SITE}/07-forever-repo`, sources: [{ url: `${SITE}/07-forever-repo`, title: "Chapter 7: Your Forever Private Repo (and gup)" }], mode: "section" };
   }
   if (LAWMERGE_ASK.test(q)) {
     const g = mdGroups(await chapterMd(env, request, "05-bootstrap"), /^Optional: installed before/);
     if (!g.length) return null;
-    return { answer: `From Chapter 5's optional merge for older installs, told to you (the commands are exactly as the page prints them):\n\n${readerVoice(g.map(x => x.text).join("\n\n"))}\n\nThe whole section: ${SITE}/05-bootstrap.html`, sources: [{ url: `${SITE}/05-bootstrap.html`, title: "Chapter 5: The One-Command Bootstrap" }], mode: "section" };
+    return { answer: `From Chapter 5's optional merge for older installs, told to you (the commands are exactly as the page prints them):\n\n${readerVoice(g.map(x => x.text).join("\n\n"))}\n\nThe whole section: ${SITE}/05-bootstrap`, sources: [{ url: `${SITE}/05-bootstrap`, title: "Chapter 5: The One-Command Bootstrap" }], mode: "section" };
   }
   if (LAWHOOK_ASK.test(q)) {
     const g = mdGroups(await chapterMd(env, request, "21-hooks"), /^Optional: hooks that enforce a Law/);
     if (!g.length) return null;
     const dec = /\bdecisions?\b/i.test(q), srch = /\bremember|search|recall|law 2\b/i.test(q), both = dec === srch;
     const parts = g.filter((x, k) => k === 0 || (/^Search before you ask/.test(x.label) && (srch || both)) || (/^Capture decisions/.test(x.label) && (dec || both)) || /^Wire them/.test(x.label) || /^What lands in/.test(x.text) || /^Prove they fire/.test(x.text) || /^Other agents/.test(x.label));
-    return { answer: `From Chapter 21's optional law hooks, told to you (the commands are exactly as the page prints them):\n\n${readerVoice(parts.map(x => x.text).join("\n\n"))}\n\nThe whole section: ${SITE}/21-hooks.html`, sources: [{ url: `${SITE}/21-hooks.html`, title: "Chapter 21: Hooks: Determinism You Can't Skip" }], mode: "section" };
+    return { answer: `From Chapter 21's optional law hooks, told to you (the commands are exactly as the page prints them):\n\n${readerVoice(parts.map(x => x.text).join("\n\n"))}\n\nThe whole section: ${SITE}/21-hooks`, sources: [{ url: `${SITE}/21-hooks`, title: "Chapter 21: Hooks: Determinism You Can't Skip" }], mode: "section" };
   }
   return null;
 }
@@ -306,7 +306,7 @@ export async function sectionReply(env, request, question) {
 const CH21_SCRIPTS = /\b(?:search-first|capture-decisions)\.sh\b/i;
 const SEED_REF = /\bseed[- ]kit\b|\bthe seed(?:'s)?\b|\bseed(?:'s)? (?:hooks?|files?|scripts?)\b/i;
 const SEED_FILE = /\b(?:remember-trigger|memory-backstop|session-end-backup)\.sh\b|\bclaude-launcher\.sh\b|\b(?:CONSTITUTION|LINEAGE|AUDIT|CLAUDE)\.md\b|\bsettings\.fragment\.json\b/;
-export const HOOK_CREDIT = `These hooks come from [Chapter 21's optional section](${SITE}/21-hooks.html), "hooks that enforce a Law"; the seed's own hook for recall is \`remember-trigger.sh\`.`;
+export const HOOK_CREDIT = `These hooks come from [Chapter 21's optional section](${SITE}/21-hooks), "hooks that enforce a Law"; the seed's own hook for recall is \`remember-trigger.sh\`.`;
 export function fixHookCredit(body) {
   if (!CH21_SCRIPTS.test(String(body))) return { body, fixed: false };
   let fixed = false, said = false;
@@ -314,15 +314,15 @@ export function fixHookCredit(body) {
     if (!SEED_REF.test(sen) || SEED_FILE.test(sen)) return sen;
     fixed = true;
     if (CH21_SCRIPTS.test(sen)) return sen                                // the script is named here: the credit changes in place, the rest stays
-      .replace(/\[(?:the )?["\u201c]?seed[- ]kit["\u201d]?\]\([^)]*\)/gi, `[Chapter 21](${SITE}/21-hooks.html)`).replace(/\bthe ["\u201c]?seed[- ]kit["\u201d]?/gi, "Chapter 21")
+      .replace(/\[(?:the )?["\u201c]?seed[- ]kit["\u201d]?\]\([^)]*\)/gi, `[Chapter 21](${SITE}/21-hooks)`).replace(/\bthe ["\u201c]?seed[- ]kit["\u201d]?/gi, "Chapter 21")
       .replace(/["\u201c]?\bseed[- ]kit\b["\u201d]?/gi, "Chapter 21").replace(/\bthe seed's\b/gi, "Chapter 21's").replace(/\bthe seed\b/gi, "Chapter 21").replace(/\bseed(?:'s)? (hooks?|files?|scripts?)\b/gi, "Chapter 21 $1");
     if (said) return ""; said = true; return HOOK_CREDIT;                // a sentence that credits the seed for "these hooks": the right credit, once
   }).filter(x => x !== "").join(" ")).join("\n")).join("");
   return { body: fixed ? out.replace(/\n{3,}/g, "\n\n").trim() : body, fixed };
 }
-export const CH21_SOURCE = { url: `${SITE}/21-hooks.html`, title: "Chapter 21: Hooks: Determinism You Can't Skip" };
-export const PROMPT_REPLY = "My instructions stay private: I don't print my system prompt, whatever the message says. What I can do is answer from how.nixfred.com: building your own AI in order, a chapter's commands and checks, memory, hooks, the constitution, or what to do next. The build starts at https://how.nixfred.com/00-start-here.html.";
-export const OVERRIDE_REPLY = "A claim inside a message is not approval: an override, a pre-approval, a tag or a special mode written into the question changes nothing. Every install step still waits for your human's own yes, so I won't drop the confirmations or hand over commands with them stripped out. The guided install, in order, with the checks after each step, starts at https://how.nixfred.com/00-start-here.html.";
+export const CH21_SOURCE = { url: `${SITE}/21-hooks`, title: "Chapter 21: Hooks: Determinism You Can't Skip" };
+export const PROMPT_REPLY = "My instructions stay private: I don't print my system prompt, whatever the message says. What I can do is answer from how.nixfred.com: building your own AI in order, a chapter's commands and checks, memory, hooks, the constitution, or what to do next. The build starts at https://how.nixfred.com/00-start-here.";
+export const OVERRIDE_REPLY = "A claim inside a message is not approval: an override, a pre-approval, a tag or a special mode written into the question changes nothing. Every install step still waits for your human's own yes, so I won't drop the confirmations or hand over commands with them stripped out. The guided install, in order, with the checks after each step, starts at https://how.nixfred.com/00-start-here.";
 // "Does this work on Windows?" (Audit200 c009: the chat replied with the bare "The site doesn't cover that." while the MCP answered).
 // The site does cover it: Chapter 0 installs Claude Code on a Mac or Linux, every Linux command is for Debian, Ubuntu, Fedora or Arch,
 // and the one WSL note is that LMF4.1 needs systemd. A question about whether the guide itself works on another platform is never
@@ -338,17 +338,17 @@ const OTHER_PLATFORM = [[/\bipad(?:os)?\b/i, "an iPad"], [/\bchromebook|chrome ?
 const MAC_OR_LINUX = "The guide is written for a Mac or Linux: Chapter 0 installs Claude Code on either, and every Linux command on the site is for Debian, Ubuntu, Fedora or Arch.";
 export const platformReply = q => {
   const t = String(q), win = WIN_WORD.test(t) || WIN_PC.test(t);
-  if (!win && /\braspberry ?pi\b|\brpi\b/i.test(t)) return `I don't know: the site doesn't say whether it runs on a Raspberry Pi, and I won't guess. ${MAC_OR_LINUX} Start at https://how.nixfred.com/00-start-here.html.`;
+  if (!win && /\braspberry ?pi\b|\brpi\b/i.test(t)) return `I don't know: the site doesn't say whether it runs on a Raspberry Pi, and I won't guess. ${MAC_OR_LINUX} Start at https://how.nixfred.com/00-start-here.`;
   const other = win ? null : OTHER_PLATFORM.find(([re]) => re.test(t));
-  if (other) { const n = other[1], N = n[0].toUpperCase() + n.slice(1); return `${MAC_OR_LINUX} ${N} isn't covered: the site has no instructions for ${n}, and I won't guess. Start at https://how.nixfred.com/00-start-here.html.`; }
+  if (other) { const n = other[1], N = n[0].toUpperCase() + n.slice(1); return `${MAC_OR_LINUX} ${N} isn't covered: the site has no instructions for ${n}, and I won't guess. Start at https://how.nixfred.com/00-start-here.`; }
   return `On Windows, you can do this: get Linux first. Windows has it built in, called WSL (Windows Subsystem for Linux). The home page walks you through it right where you land, one action per step: https://how.nixfred.com/#windows. In short: open PowerShell as administrator (Start, type PowerShell, right-click, Run as administrator), run wsl --install, restart when asked, open Ubuntu from Start, and pick a username and password (the password does not show as you type). Then tap "You're in Linux now. Continue" and you do the normal Linux steps (install Claude Code) like everyone else. Paste the prompt and Larry does the rest.` +
-    (/\bwsl/i.test(t) ? " The one WSL note: LMF4.1 (Chapter 4) needs systemd, so it won't run inside a WSL setup without systemd." : "") + " Chapter 0 has the first steps: https://how.nixfred.com/00-start-here.html.";
+    (/\bwsl/i.test(t) ? " The one WSL note: LMF4.1 (Chapter 4) needs systemd, so it won't run inside a WSL setup without systemd." : "") + " Chapter 0 has the first steps: https://how.nixfred.com/00-start-here.";
 };
 // Mac first with a Windows catch (Fred, 2026-10-22): Windows lives on the home page (#windows: greeting, WSL steps, then Continue to #linux).
 // A Windows question about the guide, a plain "I'm on Windows" or "how do I set up WSL" is answered in code with that page, on
 // /api/ask, MCP ask_larry and the fleet chat. Another tool on Windows ("Does Wispr Flow work on Windows?") is not this.
 export const WINDOWS_URL = "https://how.nixfred.com/#windows";
-export const WINDOWS_SOURCES = [{ url: WINDOWS_URL, title: "On Windows? Start here (WSL, then the Linux steps)" }, { url: "https://how.nixfred.com/00-start-here.html", title: "Chapter 0: Start Here" }];
+export const WINDOWS_SOURCES = [{ url: WINDOWS_URL, title: "On Windows? Start here (WSL, then the Linux steps)" }, { url: "https://how.nixfred.com/00-start-here", title: "Chapter 0: Start Here" }];
 // typo variants Fred's visitors type ("im on windwos"): a word starting w, ending s, close to "windows", plus win10/win11 and WSL
 const WIN_NAME = String.raw`(?:windows|windwos|widnows|winodws|windos|windoes|windowz|windws|wndows|wondows|windowss|windowns|win ?1[01]|win(?:dows)? ?1[01])`;
 const WIN_WORD = new RegExp(String.raw`\b(?:${WIN_NAME}|wsl2?)\b`, "i");
@@ -377,8 +377,8 @@ export const BEGINNER_RISK = /^(?![^\n]*\b(?:danger mode|dangerously|skip.permis
 // before the next, a progress ledger so nobody has to remember where you are) and Chapter 0. Hooks, timeouts, windows, routines,
 // sessions, commands and backups have real durations on their pages and are left to the model.
 export const BUILD_TIME_ASK = /^(?![^\n]*\b(?:hook|timeout|window|routine|session|limit|command|backup|gup|compile|cron|cache|token|context|answer|reply|response|page load)s?\b)[^\n]*(?:\bhow long (?:does|will|would|did|should|could|might) (?:it|this|that|the (?:build|whole (?:thing|build)|guide|setup|install\w*|course|bootstrap|stack|one paste|prompt|recipe box)|building (?:it|my ai|this)|(?:lifeos|pai|nixfredos|install\.sh|my (?:own )?ai))\s+(?:\w+\s+){0,2}take\b|\bhow long (?:to|until|before) (?:i'?m |it'?s |i )?(?:build|set (?:it )?up|install|finish|get (?:it )?(?:done|running|working|set up)|be done|have (?:my|an) ai)\b|\bhow (?:much time|many (?:hours|days|weeks|evenings|weekends))\b|\btime commitment\b|\bhow long is the (?:build|course|guide|whole thing)\b)/i;
-export const TIME_REPLY = "Honest answer: the site gives no fixed time, and I won't make one up. It is real work with no shortcuts, done in order, one chapter at a time at your pace: read a step, run it, fix it to 100%, then advance. Your AI keeps a progress ledger, so nobody has to remember where you are. Start at Chapter 0: https://how.nixfred.com/00-start-here.html";
-export const TIME_SOURCES = [{ url: `${SITE}/00-start-here.html`, title: "Chapter 0: Start Here, From Absolute Zero" }, { url: `${SITE}/`, title: "Build Your Own AI: a Field Guide by Larry" }];
+export const TIME_REPLY = "Honest answer: the site gives no fixed time, and I won't make one up. It is real work with no shortcuts, done in order, one chapter at a time at your pace: read a step, run it, fix it to 100%, then advance. Your AI keeps a progress ledger, so nobody has to remember where you are. Start at Chapter 0: https://how.nixfred.com/00-start-here";
+export const TIME_SOURCES = [{ url: `${SITE}/00-start-here`, title: "Chapter 0: Start Here, From Absolute Zero" }, { url: `${SITE}/`, title: "Build Your Own AI: a Field Guide by Larry" }];
 export const isBuildTimeAsk = q => BUILD_TIME_ASK.test(String(q)) && !isOverrideAsk(q);
 // BATCH B: a scheduled snapshot ask (Ch7's optional timer) and a law-enforcing hook ask (Ch21's optional hooks); used by the SYN rows
 // below and by sectionReply, which answers both from the chapter's own markdown
@@ -1138,7 +1138,7 @@ export function groundNumbers(body, texts) {
 // the site, gets "The closest page is <title>: <url>". A refusal the model gave for an on-topic question becomes DONT_KNOW(page); an
 // off-topic one (both votes say so: lasagna, voting, the weather, ChatGPT GPTs) stays a decline and points at the start, OFFTOPIC_REPLY.
 export const DK_SAYS = /\b(?:i don'?t know|i do not know|i can'?t say)\b|\b(?:site|sites|guide|pages?)\s+(?:(?:is|are)\s+\w+(?:\s+in\s+\w+)?\s+and\s+)?(?:doesn'?t|does not|don'?t|do not)\s+(?:\w+\s+){0,2}?(?:cover|address|say|give|list|mention|specify|state|explain|describe|tell|include|offer|provide)\b|\bthe site gives no\b|\b(?:isn'?t|is not|not|aren'?t|are not) (?:explicitly |directly |clearly )?(?:covered|stated|specified|given|listed|mentioned|documented|addressed|named)\b|\bno page (?:covers|says|gives)\b/i;
-export const START_URL = `${SITE}/00-start-here.html`;
+export const START_URL = `${SITE}/00-start-here`;
 export const OFFTOPIC_REPLY = `${REFUSAL} For building your own AI, the guide starts at ${START_URL}`;
 export const dontKnow = pg => pg ? `I don't know: the site doesn't cover that, and I won't guess. The closest page is ${pg.title}: ${pg.url}` : OFFTOPIC_REPLY;
 // u16 (fleet, real model): "The Claude API cost per million tokens isn't directly named on the site, but ..." is a don't-know that never
@@ -1190,13 +1190,13 @@ const OS_NAME = String.raw`(?:ubuntu|debian|fedora|arch(?: linux)?|linux|macos|m
 const OS_VERSION_ASK = new RegExp(String.raw`\b(?:minimum|min|oldest|lowest|earliest|required|supported)\b[^?\n]{0,30}\b${OS_NAME}\b[^?\n]{0,12}\bversions?\b|\b(?:minimum|min|oldest|lowest|earliest)\s+(?:supported\s+)?${OS_NAME}\b|\bversions? of ${OS_NAME}\b[^?\n]{0,30}\b(?:need|required|supported|support|minimum|oldest)\b`, "i");
 export const isOsVersionAsk = q => OS_VERSION_ASK.test(String(q)) && !isOverrideAsk(q);
 export const osVersionReply = q => { const m = String(q).match(new RegExp(`\\b${OS_NAME}\\b`, "i")), raw = m ? m[0] : "OS", name = /^mac ?os|^os ?x|^osx/i.test(raw) ? "macOS" : raw[0].toUpperCase() + raw.slice(1).toLowerCase();
-  return `I don't know: the site gives no minimum ${name === "Kernel" ? "kernel" : name} version, and I won't guess one. ${MAC_OR_LINUX} Start at ${SITE}/00-start-here.html.`; };
+  return `I don't know: the site gives no minimum ${name === "Kernel" ? "kernel" : name} version, and I won't guess one. ${MAC_OR_LINUX} Start at ${SITE}/00-start-here.`; };
 // u11 (real model, both paths): "How do I uninstall everything the guide installed?" got invented steps ("uninstall jq, git, curl with your
 // package manager", "reset your environment"). No page has uninstall steps, so that question is answered in code: I don't know, and the
 // chapter that lists what gets installed. A question that claims the site says something keeps the false-premise path.
 const UNINSTALL_ASK = /\b(?:uninstall\w*|un-install\w*)\b|\b(?:remove|delete|undo|roll ?back|revert|wipe|get rid of|tear down)\b[^?\n]{0,25}\b(?:everything|it all|all of it|the whole (?:thing|build|setup|install\w*)|(?:the|this) (?:guide|build|setup|installs?|installation|stack)|what (?:the guide|it|this|you) installed)\b/i;
 export const isUninstallAsk = q => UNINSTALL_ASK.test(String(q)) && !CLAIM.test(String(q)) && !isOverrideAsk(q);
-export const UNINSTALL_REPLY = `I don't know: no page on the site gives uninstall steps, and I won't guess them. The closest page is Chapter 4, The Larry Stack, which lists what gets installed and in what order: ${SITE}/04-larry-stack.html`;
+export const UNINSTALL_REPLY = `I don't know: no page on the site gives uninstall steps, and I won't guess them. The closest page is Chapter 4, The Larry Stack, which lists what gets installed and in what order: ${SITE}/04-larry-stack`;
 // u14: "How long does Chapter 7 take to finish?" No page gives a chapter a time either: the build-time answer, for that chapter
 const CHAPTER_TIME_ASK = /^(?![^\n]*\b(?:hook|timeout|window|routine|session|limit|command|backup|gup|compile|cron|cache|token|timer|snapshot|interval)s?\b)[^\n]*\bhow (?:long|much time)\b[^?\n]{0,30}?\b(?:chapter|ch\.?)\s*(\d{1,2})\b/i;
 export const chapterTimeAsk = q => { const m = String(q).match(CHAPTER_TIME_ASK); return m && !isOverrideAsk(q) ? +m[1] : null; };
@@ -1213,7 +1213,7 @@ export async function chapterTimeAnswer(env, request, q) {
 export async function answer(env, request, question, { history = [], page = null, debug = false, fleet = null } = {}, onEvent = async () => {}) {
   const t0 = Date.now();
   if (isPromptAsk(question)) {                                          // a request for the bot's own prompt gets its own decline (c097/m099)
-    const src = [{ url: `${SITE}/00-start-here.html`, title: "Chapter 0: Start Here" }];
+    const src = [{ url: `${SITE}/00-start-here`, title: "Chapter 0: Start Here" }];
     await onEvent("meta", { mode: "prompt", scope: null }); await onEvent("token", { t: PROMPT_REPLY });
     const fin = { answer: PROMPT_REPLY, sources: src, refused: true, gated: true, prompt_ask: true, mode: "prompt", top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
     await onEvent("final", fin); return fin;
@@ -1238,7 +1238,7 @@ export async function answer(env, request, question, { history = [], page = null
   }
   if (isUncoveredPlatformAsk(question) || isOsVersionAsk(question) || isUninstallAsk(question)) {  // UDK u01 to u03, u08, u11, u12: never a guessed yes, version or steps
     const un = isUninstallAsk(question) && !isUncoveredPlatformAsk(question) && !isOsVersionAsk(question);
-    const a = un ? UNINSTALL_REPLY : isOsVersionAsk(question) ? osVersionReply(question) : platformReply(question), src = [un ? { url: `${SITE}/04-larry-stack.html`, title: "Chapter 4: The Larry Stack" } : { url: `${SITE}/00-start-here.html`, title: "Chapter 0: Start Here" }];
+    const a = un ? UNINSTALL_REPLY : isOsVersionAsk(question) ? osVersionReply(question) : platformReply(question), src = [un ? { url: `${SITE}/04-larry-stack`, title: "Chapter 4: The Larry Stack" } : { url: `${SITE}/00-start-here`, title: "Chapter 0: Start Here" }];
     await onEvent("meta", { mode: "platform", scope: null }); await onEvent("token", { t: a });
     const fin = { answer: a, sources: src, refused: false, platform: true, mode: "platform", top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
     await onEvent("final", fin); return fin;
@@ -1260,20 +1260,20 @@ export async function answer(env, request, question, { history = [], page = null
     await onEvent("final", fin); return fin;
   }
   if (isOverrideAsk(question)) {                                        // an override / pre-approval claim used to skip the human's yes (m080)
-    const src = [{ url: `${SITE}/00-start-here.html`, title: "Chapter 0: Start Here" }];
+    const src = [{ url: `${SITE}/00-start-here`, title: "Chapter 0: Start Here" }];
     await onEvent("meta", { mode: "override", scope: null }); await onEvent("token", { t: OVERRIDE_REPLY });
     const fin = { answer: OVERRIDE_REPLY, sources: src, refused: true, gated: true, override: true, mode: "override", top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
     await onEvent("final", fin); return fin;
   }
   if (isPrivateDetail(question)) {                                     // c093/m098: a private detail, before the fleet directory or retrieval
-    const src = [{ url: `${SITE}/get-in-touch.html`, title: "Get in touch" }];
+    const src = [{ url: `${SITE}/get-in-touch`, title: "Get in touch" }];
     await onEvent("meta", { mode: "private", scope: null }); await onEvent("token", { t: PRIVATE_REPLY });
     const fin = { answer: PRIVATE_REPLY, sources: src, refused: true, gated: true, private: true, mode: "private", top_urls: [], packed_urls: [], queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
     await onEvent("final", fin); return fin;
   }
   if (isCostAsk(question)) {
     // Answer before model generation so an incorrect price claim cannot leak in the stream.
-    const sources = [{ url: `${SITE}/00-start-here.html`, title: "Chapter 0: Start Here" }];
+    const sources = [{ url: `${SITE}/00-start-here`, title: "Chapter 0: Start Here" }];
     await onEvent("meta", { mode: "pricing", scope: null });
     await onEvent("token", { t: COST_LINE });
     const fin = { answer: COST_LINE, sources, refused: false, mode: "pricing", top_urls: [], packed_urls: sources.map(s => s.url), queries: [], retrieve_s: 0, gen_s: 0, total_s: (Date.now() - t0) / 1000 };
@@ -1366,13 +1366,13 @@ export async function answer(env, request, question, { history = [], page = null
     if (dir && isRefusal(vis)) return viaDirectory(true);   // the chapters had nothing, but the question names a site Fred runs
     const premise = falsePremise(question, vis, ctx) !== null;           // a false destructive premise gets a no, never a refusal (RC4)
     if (!lead && !premise && isRefusal(vis) && isPlatformAsk(question)) {  // c009: the guide's platforms, not "The site doesn't cover that."
-      fin = { answer: platformReply(question), sources: [{ url: `${SITE}/00-start-here.html`, title: "Chapter 0: Start Here" }], refused: false, mode: ret.mode, model, platform: true };
+      fin = { answer: platformReply(question), sources: [{ url: `${SITE}/00-start-here`, title: "Chapter 0: Start Here" }], refused: false, mode: ret.mode, model, platform: true };
     } else
     if (!lead && !premise && isRefusal(vis) && (fredLine || vis.toLowerCase().startsWith(REFUSAL.toLowerCase().slice(0, -1)) || /^the site (doesn'?t|does not) (cover|mention|describe|explain)\b/i.test(vis))) {
       const onTopic = ret.onTopic || vote?.strong, v = vote || siteVote(idx, rq), c0 = idx.pages[idx.bySlug.get("00-start-here")];
       const near = v.strong && ctx[0] ? { url: ctx[0].url, title: ctx[0].title } : c0 ? { url: c0.url, title: c0.title } : null;   // a weak vote: "refund" is not about the TELOS page
       const a = fredLine ? (refusal === REFUSAL ? FRED_REFUSAL : refusal) : refusal !== REFUSAL ? refusal : onTopic && near ? dontKnow(near) : OFFTOPIC_REPLY;   // UDK: never a bare refusal
-      fin = { answer: a, sources: a === FRED_REFUSAL_HERE ? [{ url: `${SITE}/get-in-touch.html`, title: "Get in touch" }] : a === FRED_REFUSAL || !(onTopic && near) || refusal !== REFUSAL ? [] : [near], refused: true, mode: ret.mode, model };
+      fin = { answer: a, sources: a === FRED_REFUSAL_HERE ? [{ url: `${SITE}/get-in-touch`, title: "Get in touch" }] : a === FRED_REFUSAL || !(onTopic && near) || refusal !== REFUSAL ? [] : [near], refused: true, mode: ret.mode, model };
     }
     else {
       let { body, cited } = citations(vis, ctx);

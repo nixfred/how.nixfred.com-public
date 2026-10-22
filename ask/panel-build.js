@@ -18,7 +18,7 @@ const SUB = subtitles(COVERS_ALL);
 export function panelHtml(o = {}) {
   const sub = o.sub ?? SUB.main;
   const ph = o.placeholder ?? "Ask Larry about building your own AI…";
-  const foot = o.footHtml ?? `Grounded in how.nixfred.com, 500 characters max. <a href="ask-larry.html">Let your AI install this with you →</a>`;
+  const foot = o.footHtml ?? `Grounded in how.nixfred.com, 500 characters max. <a href="/ask-larry">Let your AI install this with you →</a>`;
   return `<button type="button" class="al-pill" id="al-pill" aria-controls="al-panel" aria-expanded="true" title="Open Ask Larry"><span class="al-dot"></span>💬 Ask Larry</button>
 <aside class="al-panel" id="al-panel" aria-label="Ask Larry">
   <header class="al-head"><div><b>Ask Larry</b><span>${esc(sub)}</span></div><button type="button" class="al-clear" title="Clear this conversation">clear</button><button type="button" class="al-close" aria-label="Minimize Ask Larry" title="Minimize">▾</button></header>

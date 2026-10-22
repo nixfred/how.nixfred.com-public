@@ -1,0 +1,29 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://how.nixfred.com/mcp",
+      "service-desc": [
+        {
+          "href": "https://how.nixfred.com/.well-known/mcp/server-card.json",
+          "type": "application/json"
+        },
+        {
+          "href": "https://how.nixfred.com/mcp-tools.json",
+          "type": "application/json"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://how.nixfred.com/install.md",
+          "type": "text/markdown"
+        }
+      ],
+      "status": [
+        {
+          "href": "https://how.nixfred.com/api/health",
+          "type": "application/json"
+        }
+      ]
+    }
+  ]
+}

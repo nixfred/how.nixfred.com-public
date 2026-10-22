@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "how-nixfred-guide",
+      "type": "skill-md",
+      "description": "Build a vanilla Claude Code install into a persistent AI teammate with the how.nixfred.com guide and its MCP server.",
+      "url": "/.well-known/agent-skills/how-nixfred-guide/SKILL.md",
+      "digest": "sha256:e317127150786cd8f81dd26a0e67fadc6e7d71fd9f856582a8dac2d4dc7812d7"
+    }
+  ]
+}

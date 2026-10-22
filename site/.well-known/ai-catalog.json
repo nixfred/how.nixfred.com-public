@@ -1,0 +1,32 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "how.nixfred.com",
+    "identifier": "did:web:how.nixfred.com"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:how.nixfred.com:server:how-nixfred",
+      "displayName": "Ask Larry MCP server",
+      "type": "application/mcp-server-card+json",
+      "url": "https://how.nixfred.com/.well-known/mcp/server-card.json",
+      "representativeQueries": [
+        "how do I build my own AI teammate with Claude Code",
+        "what is the next install step",
+        "how do I verify a Claude Code install step",
+        "search the how.nixfred.com guide"
+      ]
+    },
+    {
+      "identifier": "urn:air:how.nixfred.com:skill:how-nixfred-guide",
+      "displayName": "how.nixfred.com guide skill",
+      "type": "text/markdown",
+      "url": "https://how.nixfred.com/.well-known/agent-skills/how-nixfred-guide/SKILL.md",
+      "representativeQueries": [
+        "set up a persistent Claude Code assistant",
+        "connect the how.nixfred.com MCP server",
+        "follow the how.nixfred.com install plan"
+      ]
+    }
+  ]
+}

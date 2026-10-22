@@ -19,7 +19,7 @@
         hits.sort(function(a,b){return b.sc-a.sc;});
         if(!hits.length){sr.innerHTML='<div class="sr-none">no matches for "'+esc(q)+'"</div>';sr.hidden=false;return;}
         sr.innerHTML=hits.slice(0,12).map(function(h){
-          return '<a href="'+(/^(/|https?:)/.test(h.e.u)?'':'/')+h.e.u+'"><b>'+esc(h.e.t)+'</b><span class="sr-p">'+esc(h.e.p)+'</span>'+(h.snip?'<em>'+esc(h.snip)+'</em>':'')+'</a>';
+          return '<a href="'+(h.e.u.charAt(0)==='/'||/^https?:/.test(h.e.u)?'':'/')+h.e.u+'"><b>'+esc(h.e.t)+'</b><span class="sr-p">'+esc(h.e.p)+'</span>'+(h.snip?'<em>'+esc(h.snip)+'</em>':'')+'</a>';
         }).join('');
         sr.hidden=false;
       }
@@ -226,7 +226,7 @@ AskLarryPanel.citeText=function(s,here){
     function go(){
       var ql=q.toLowerCase(), words=ql.split(/\W+/).filter(function(w){return w.length>3;});
       var hits=sidx.map(function(e){var t=(e.t+' '+e.x).toLowerCase(),sc=0;words.forEach(function(w){if(t.indexOf(w)>=0)sc++;});return {e:e,sc:sc};}).filter(function(h){return h.sc;}).sort(function(a,b){return b.sc-a.sc;}).slice(0,4);
-      el.innerHTML='<p>'+esc(msg)+'</p>'+(hits.length?'<p>Meanwhile, the pages that match your words:</p><ul>'+hits.map(function(h){return '<li><a href="'+esc(h.e.u)+'">'+esc(h.e.t)+'</a></li>';}).join('')+'</ul>':'<p>Try the search box, or start at <a href="00-start-here.html">Chapter 0</a>.</p>');
+      el.innerHTML='<p>'+esc(msg)+'</p>'+(hits.length?'<p>Meanwhile, the pages that match your words:</p><ul>'+hits.map(function(h){return '<li><a href="'+esc(h.e.u)+'">'+esc(h.e.t)+'</a></li>';}).join('')+'</ul>':'<p>Try the search box, or start at <a href="/00-start-here">Chapter 0</a>.</p>');
     }
     if(sidx)go();else fetch('/search-index.json').then(function(r){return r.json();}).then(function(d){sidx=d;go();}).catch(function(){el.innerHTML='<p>'+esc(msg)+'</p>';});
   }
@@ -282,6 +282,22 @@ AskLarryPanel.citeText=function(s,here){
     }
     new MutationObserver(function(){if(!sr.querySelector('.sr-ask'))askRow();}).observe(sr,{childList:true});
     si.addEventListener('keydown',function(e){if(e.key==='Enter'&&si.value.trim().length>1){e.preventDefault();var q=si.value.trim();sr.hidden=true;si.value='';open(null);ask(q);}});
+  }
+  // 3.5 WebMCP: a browser agent on this page can ask Larry or search the guide directly (same /api/ask and search index the visitor uses).
+  var mc=document.modelContext||navigator.modelContext;
+  if(mc&&typeof mc.registerTool==='function'){
+    try{
+      mc.registerTool({name:'ask_larry',description:'Ask a question about building your own AI teammate with Claude Code. Answers come only from how.nixfred.com, with links to the pages used.',
+        inputSchema:{type:'object',properties:{question:{type:'string',description:'The question, in plain words (max 500 characters).'}},required:['question']},
+        execute:function(a){var q=String(a&&a.question||'').trim().slice(0,500);if(!q)return Promise.resolve({content:[{type:'text',text:'Ask a question.'}]});
+          return send(q,[],function(){}).then(function(r){var src=(r.sources||[]).map(function(s){return '- '+(s.title||s.url)+': '+s.url;}).join('\n');return {content:[{type:'text',text:r.text+(src?'\n\nSources:\n'+src:'')}]};});}});
+      mc.registerTool({name:'search_guide',description:'Keyword search over the how.nixfred.com pages. Returns page titles and URLs.',
+        inputSchema:{type:'object',properties:{query:{type:'string',description:'Words to look for.'}},required:['query']},
+        execute:function(a){var words=String(a&&a.query||'').toLowerCase().split(/\W+/).filter(function(w){return w.length>2;});
+          return (sidx?Promise.resolve(sidx):fetch('/search-index.json').then(function(r){return r.json();}).then(function(d){sidx=d;return d;})).then(function(d){
+            var hits=d.map(function(e){var t=(e.t+' '+e.x).toLowerCase(),sc=0;words.forEach(function(w){if(t.indexOf(w)>=0)sc++;});return {e:e,sc:sc};}).filter(function(h){return h.sc;}).sort(function(x,y){return y.sc-x.sc;}).slice(0,8);
+            return {content:[{type:'text',text:hits.length?hits.map(function(h){return '- '+h.e.t+': '+new URL(h.e.u,location.origin).href;}).join('\n'):'No pages matched.'}]};});}});
+    }catch(e){console.error('WebMCP registerTool failed',e);}
   }
   if(location.hash==='#ask')open(null);
 })();

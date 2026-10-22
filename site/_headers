@@ -1,0 +1,39 @@
+# Cloudflare Pages response headers for static files (Functions set their own).
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Content-Type-Options: nosniff
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; font-src 'self' data:; frame-ancestors 'self'; base-uri 'self'; form-action 'self'
+  ! Access-Control-Allow-Origin
+
+# CORS only on files other sites and agents fetch from a browser.
+/embed.js
+  Access-Control-Allow-Origin: *
+/llms.txt
+  Access-Control-Allow-Origin: *
+/mcp-tools.json
+  Access-Control-Allow-Origin: *
+/install.md
+  Access-Control-Allow-Origin: *
+/install.sh
+  Access-Control-Allow-Origin: *
+/one-paste-prompt.txt
+  Access-Control-Allow-Origin: *
+/seed/*
+  Access-Control-Allow-Origin: *
+/.well-known/*
+  Access-Control-Allow-Origin: *
+
+# Versioned by ?v=<hash> in every page, so a new build is a new URL.
+/assets/style.css
+  Cache-Control: public, max-age=31536000, immutable
+/assets/app.js
+  Cache-Control: public, max-age=31536000, immutable
+
+# 3.5 agent discovery
+/
+  Link: </.well-known/api-catalog>; rel="api-catalog", </.well-known/mcp/server-card.json>; rel="service-desc"; type="application/json", </install.md>; rel="service-doc"; type="text/markdown", </llms.txt>; rel="describedby"; type="text/plain"
+/.well-known/api-catalog
+  Content-Type: application/linkset+json
