@@ -65,6 +65,7 @@ A Lab Machine: Omarchy Linux for AI Experiments · https://how.nixfred.com/omarc
 Teach Your AI OSINT: Know Who You're Walking In To · https://how.nixfred.com/osint.md · turn a name into a clean, cited, one-page dossier from public sources, before the call, the meeting, the hire
 Give Your AI Eyes & Ears: Transcribe X, Video & Audio · https://how.nixfred.com/transcribe-video.md · the yt-dlp + whisper pipeline that lets any AI watch and transcribe X/YouTube
 Talk, Don't Type: Voice Dictation Into Your AI (and Everything Else) · https://how.nixfred.com/voice-dictation.md · a hotkey that turns speech into text in any app, so your prompts carry the context typing leaves out
+When "Fix This" Isn't Working: Measure, Then Get Fresh Eyes · https://how.nixfred.com/stop-rule.md · Law 3 in practice: after two failed fixes, reproduce and trace before guessing again; after three, a cold second opinion, ideally from a different model
 
 ## Seed kit (what the scaffolder lays down; read before installing, every file is plain text)
 - seed/CONSTITUTION.md: the laws, loaded into the system prompt every launch: https://how.nixfred.com/seed/CONSTITUTION.md
