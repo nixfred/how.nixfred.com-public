@@ -59,6 +59,7 @@ Ch36: Your Operating Manual + Larry's Field Notes · https://how.nixfred.com/36-
 ## Modules (optional bolt-ons, after the core build)
 Build & Deploy a Real Website (the Proper Way) · https://how.nixfred.com/build-website.md · now that your AI works, point it at the PLAYBOOK and ship a real site (a friend's resume.pdf becomes a live domain)
 Centralize Your Memory Across a Fleet · https://how.nixfred.com/fleet-memory.md · once you run more than one machine, host the memory on ONE and let the others tunnel in, so the whole fleet shares one mind
+Pick Up Where You Left Off: The Handoff Note · https://how.nixfred.com/handoff.md · a one-screen note your AI writes before every stop and a hook loads at every start, so /clear, a compaction or a new day never loses the thread
 One Space Per Project: Persistent Agent Sessions With herdr · https://how.nixfred.com/herdr-sessions.md · a workspace per project that never closes, with the agent already running in the right folder
 Your Rules, Your Models: Local LLMs and a Local or Cloud Router · https://how.nixfred.com/local-models-router.md · run an open model on your own machine and route sensitive folders to it, everything else to Claude
 A Lab Machine: Omarchy Linux for AI Experiments · https://how.nixfred.com/omarchy-linux-rd.md · turn an older laptop into a keyboard driven Linux lab for your AI, and keep your main machine clean
