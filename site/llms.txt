@@ -63,6 +63,7 @@ One Space Per Project: Persistent Agent Sessions With herdr · https://how.nixfr
 Your Rules, Your Models: Local LLMs and a Local or Cloud Router · https://how.nixfred.com/local-models-router.md · run an open model on your own machine and route sensitive folders to it, everything else to Claude
 A Lab Machine: Omarchy Linux for AI Experiments · https://how.nixfred.com/omarchy-linux-rd.md · turn an older laptop into a keyboard driven Linux lab for your AI, and keep your main machine clean
 Teach Your AI OSINT: Know Who You're Walking In To · https://how.nixfred.com/osint.md · turn a name into a clean, cited, one-page dossier from public sources, before the call, the meeting, the hire
+Secrets in the Transcript: Keep Keys Out of the Conversation, Not Just Out of Git · https://how.nixfred.com/secrets-in-transcript.md · your .env stays out of git, but one cat .env puts every key in the conversation, which is saved to disk; read names not values, and a hook that blocks the leak
 Give Your AI Eyes & Ears: Transcribe X, Video & Audio · https://how.nixfred.com/transcribe-video.md · the yt-dlp + whisper pipeline that lets any AI watch and transcribe X/YouTube
 Talk, Don't Type: Voice Dictation Into Your AI (and Everything Else) · https://how.nixfred.com/voice-dictation.md · a hotkey that turns speech into text in any app, so your prompts carry the context typing leaves out
 
