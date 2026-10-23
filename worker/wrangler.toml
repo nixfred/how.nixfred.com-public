@@ -67,6 +67,14 @@ class_name = "FleetCap"
 tag = "v1"
 new_sqlite_classes = ["FleetCap"]
 
+[[durable_objects.bindings]]
+name = "RATE_WINDOW"
+class_name = "RateWindow"
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["RateWindow"]
+
 [vars]
 FLEET_PROVIDER = "workers-ai"
 FLEET_DAILY_REQUEST_CAP = "500"

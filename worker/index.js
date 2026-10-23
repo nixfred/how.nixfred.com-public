@@ -8,7 +8,7 @@ import * as health from "../functions/api/health.js";
 import * as search from "../functions/api/search.js";
 import * as fleetAsk from "../functions/api/fleet/ask.js";
 import limiter from "../ratelimit-worker/index.js";
-export { FleetCap } from "../ratelimit-worker/index.js";
+export { FleetCap, RateWindow } from "../ratelimit-worker/index.js";
 
 const ROUTES = { "/mcp": mcp, "/api/ask": ask, "/api/health": health, "/api/search": search, "/api/fleet/ask": fleetAsk };
 const METHOD = m => "onRequest" + m.charAt(0) + m.slice(1).toLowerCase();

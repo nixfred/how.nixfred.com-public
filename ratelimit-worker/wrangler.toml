@@ -44,3 +44,11 @@ class_name = "FleetCap"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["FleetCap"]
+[[durable_objects.bindings]]
+name = "RATE_WINDOW"
+class_name = "RateWindow"
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["RateWindow"]
+
