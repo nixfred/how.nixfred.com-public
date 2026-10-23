@@ -49,7 +49,7 @@ if (import.meta.main) {
     .replaceAll("{{BADGE_SYNC}}", badge("last sync", `${date} · ${sha}`, "8893a3"))
     .replaceAll("{{HELD}}", held.length ? held.map(([f, w]) => `- \`${f}\`: ${w}`).join("\n") : "- nothing right now");
   writeFileSync(join(OUT, "README.md"), readme);
-  mkdirSync(join(OUT, ".github"), { recursive: true }); cpSync(join(ROOT, "public/banner.svg"), join(OUT, ".github/banner.svg"));
+  mkdirSync(join(OUT, ".github"), { recursive: true }); cpSync(join(ROOT, "public/banner.svg"), join(OUT, ".github/banner.svg")); cpSync(join(ROOT, "public/CONTRIBUTING.md"), join(OUT, "CONTRIBUTING.md"));
   const bad: string[] = [];
   for (const p of walk(OUT)) { if (/\.(png|jpe?g|gif|webp|ico|woff2?)$/i.test(p)) continue; const h = scanText(readFileSync(p, "utf8")); if (h.length) bad.push(`${relative(OUT, p)}: ${[...new Set(h)].join(", ")}`); }
   if (bad.length) { console.error("✗ public export is not clean (nothing pushed):\n" + bad.map(b => "  " + b).join("\n")); process.exit(1); }

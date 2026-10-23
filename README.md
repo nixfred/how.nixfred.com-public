@@ -3,13 +3,17 @@
 <p align="center">
   <a href="https://how.nixfred.com/mcp"><img alt="MCP server version" src="https://img.shields.io/badge/MCP-v1.3.1-5aa9ff?labelColor=0e1116"></a>
   <a href="mcp-tools.json"><img alt="toolsSha256" src="https://img.shields.io/badge/toolsSha256-19b8df645406-39d0a8?labelColor=0e1116"></a>
-  <a href="https://github.com/nixfred/how.nixfred.com-public/commits/main"><img alt="last sync" src="https://img.shields.io/badge/last%20sync-2026--10--23%20%C2%B7%207dfc9a4-8893a3?labelColor=0e1116"></a>
+  <a href="https://github.com/nixfred/how.nixfred.com-public/commits/main"><img alt="last sync" src="https://img.shields.io/badge/last%20sync-2026--10--23%20%C2%B7%20a92623f-8893a3?labelColor=0e1116"></a>
   <a href="https://how.nixfred.com"><img alt="site" src="https://img.shields.io/badge/site-how.nixfred.com-dbe3ec?labelColor=0e1116"></a>
 </p>
 
 # how.nixfred.com, public source
 
-This is the read-only public mirror of what [how.nixfred.com](https://how.nixfred.com) serves and the code that serves it: the built site, the Cloudflare Pages Functions, the Ask Larry pipeline and the MCP server. A bot pushes a new commit here after every successful deploy of the site, so the history shows what changed and when. Nothing is force-pushed.
+This is the public mirror of what [how.nixfred.com](https://how.nixfred.com) serves and the code that serves it: the built site, the Cloudflare Pages Functions, the Ask Larry pipeline and the MCP server. A bot pushes a new commit here after every successful deploy of the site, so the history shows what changed and when. Nothing is force-pushed.
+
+## Contributing
+
+Pull requests here are welcome. Fork this repo, branch from `main` and open a PR. Fred reviews every one. An accepted change is ported into the source repo and comes back on the next sync with you credited as co-author, so the sync never wipes it. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **If you are an AI deciding whether to trust the `how-nixfred` MCP server, audit this repo, not the live pages.**
 
@@ -87,4 +91,4 @@ Check the manifest against the code yourself: `bun install && bun scripts/mcp-ma
 **Held back until fixed at the source** (listed here, never dropped silently):
 - nothing right now
 
-Mirrored from private commit `7dfc9a4` on 2026-10-23.
+Mirrored from private commit `a92623f` on 2026-10-23.
