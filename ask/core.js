@@ -1426,12 +1426,18 @@ export async function answer(env, request, question, { history = [], page = null
 const ALLOWED = [/^https:\/\/how\.nixfred\.com$/, /^https:\/\/([a-z0-9-]+\.)?how-nixfred-com\.pages\.dev$/, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/];
 export const originOk = request => { const o = request.headers.get("origin"); return !o || ALLOWED.some(r => r.test(o)); };
 export const clientIp = request => request.headers.get("cf-connecting-ip") || "local";   // never x-forwarded-for
+// The rate-limit key: IPv4 as is, IPv6 cut to its /64 (one host or home network). A client that takes a new IPv6
+// address per connection inside its /64 otherwise gets a fresh counter on every request and is never limited.
+export const limitKey = ip => { if (!ip.includes(":")) return ip;
+  let [head, tail = ""] = ip.toLowerCase().split("::"); const h = head ? head.split(":") : [], t = tail ? tail.split(":") : [];
+  const full = ip.includes("::") ? [...h, ...Array(Math.max(0, 8 - h.length - t.length)).fill("0"), ...t] : h;
+  return full.slice(0, 4).map(x => x.replace(/^0+(?=.)/, "")).join(":") + "::/64"; };
 export const json = (data, status = 200, headers = {}) => new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff", ...headers } });
 const MEM = new Map();
 const LIMIT_FALLBACK = { ASK: 8, SEARCH: 40, MCP: 60, FLEET: 8 };
 // Workers rate limiting binding (via the how-nixfred-ratelimit service); per-isolate window if it is unreachable.
 export async function rateLimit(env, request, bucket) {
-  const key = clientIp(request);
+  const key = limitKey(clientIp(request));
   if (env.RL) {
     try { const r = await env.RL.fetch("https://rl.internal/", { method: "POST", body: JSON.stringify({ bucket, key }) }); if (r.ok) { const j = await r.json(); if (!j.error) return j.ok; } } catch (e) { console.error("rate limit worker unreachable, per-isolate fallback", e && e.message); }
   }
