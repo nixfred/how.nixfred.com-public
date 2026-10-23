@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://how.nixfred.com/mcp"><img alt="MCP server version" src="https://img.shields.io/badge/MCP-v1.3.1-5aa9ff?labelColor=0e1116"></a>
   <a href="mcp-tools.json"><img alt="toolsSha256" src="https://img.shields.io/badge/toolsSha256-19b8df645406-39d0a8?labelColor=0e1116"></a>
-  <a href="https://github.com/nixfred/how.nixfred.com-public/commits/main"><img alt="last sync" src="https://img.shields.io/badge/last%20sync-2026--10--23%20%C2%B7%2016163ab-8893a3?labelColor=0e1116"></a>
+  <a href="https://github.com/nixfred/how.nixfred.com-public/commits/main"><img alt="last sync" src="https://img.shields.io/badge/last%20sync-2026--10--23%20%C2%B7%20fc9cde1-8893a3?labelColor=0e1116"></a>
   <a href="https://how.nixfred.com"><img alt="site" src="https://img.shields.io/badge/site-how.nixfred.com-dbe3ec?labelColor=0e1116"></a>
 </p>
 
@@ -87,4 +87,4 @@ Check the manifest against the code yourself: `bun install && bun scripts/mcp-ma
 **Held back until fixed at the source** (listed here, never dropped silently):
 - nothing right now
 
-Mirrored from private commit `16163ab` on 2026-10-23.
+Mirrored from private commit `fc9cde1` on 2026-10-23.
