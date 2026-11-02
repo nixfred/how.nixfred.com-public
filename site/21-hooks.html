@@ -159,6 +159,42 @@ jq -r &#39;.hooks | keys[]&#39; ~/.claude/settings.json    # PostToolUse, Stop a
 t=&quot;$(mktemp -d)&quot; &amp;&amp; mkdir -p &quot;$t/.claude&quot;    # a scratch home, so the test line stays out of your real decisions note
 echo &#39;{&quot;last_assistant_message&quot;:&quot;Decision: backups go to the private repo only&quot;}&#39; | HOME=&quot;$t&quot; bash ~/.claude/hooks/capture-decisions.sh &amp;&amp; cat &quot;$t/.claude/DECISIONS.md&quot;
 </code></pre>
+<p><strong>Check before you say &quot;done&quot; (Law 10).</strong> A third hook closes the gap that burns people most: an AI edits code, feels finished, and stops without ever running it. The <code>Stop</code> event fires at exactly that moment, so this script reads the session transcript, looks only at the current turn, and asks one question: did a code file get edited with nothing run after it? If yes, it blocks the stop once and says why. Notes and config files (<code>.md</code>, <code>.txt</code>, <code>.json</code>, <code>.yaml</code>) are exempt, a Bash call after the edit counts as checking, and <code>stop_hook_active</code> stops it from ever looping. The reason it gives is plain: run the smallest check that fits the change, report only commands you actually ran, and if you cannot check it, say &quot;unverified&quot; out loud.</p>
+<pre><code class="language-bash">cat &gt; ~/.claude/hooks/verify-before-done.sh &lt;&lt;&#39;EOF&#39;
+#!/usr/bin/env bash
+# Law 10, enforced: no &quot;done&quot; after editing code and running nothing. Event: Stop.
+in=&quot;$(cat)&quot;
+[ &quot;$(printf &#39;%s&#39; &quot;$in&quot; | jq -r &#39;.stop_hook_active // false&#39;)&quot; = &quot;true&quot; ] &amp;&amp; exit 0   # block once, never loop
+tr=&quot;$(printf &#39;%s&#39; &quot;$in&quot; | jq -r &#39;.transcript_path // empty&#39;)&quot;
+[ -r &quot;$tr&quot; ] || exit 0
+files=&quot;$(jq -rs &#39;
+  def real: .type==&quot;user&quot; and ((.message.content|type)==&quot;string&quot; or (.message.content|any(.type==&quot;text&quot;)));
+  ((to_entries | map(select(.value|real)) | last.key) // 0) as $s
+  | .[$s:]
+  | [ .[] | select(.type==&quot;assistant&quot;) | .message.content[]? | select(.type==&quot;tool_use&quot;) ]
+  | reduce .[] as $t ([];
+      if $t.name==&quot;Bash&quot; then []
+      elif ($t.name|IN(&quot;Edit&quot;,&quot;Write&quot;,&quot;MultiEdit&quot;)) and (($t.input.file_path // &quot;&quot;) | test(&quot;\\.(md|txt|json|ya?ml)$&quot;) | not)
+        then . + [$t.input.file_path] else . end)
+  | unique | join(&quot;, &quot;)&#39; &quot;$tr&quot;)&quot;
+[ -n &quot;$files&quot; ] || exit 0
+jq -n --arg f &quot;$files&quot; &#39;{decision:&quot;block&quot;,reason:(&quot;You edited &quot; + $f + &quot; and ran nothing after it. Run the smallest check that fits (a test, a syntax check, a real run) and report only what you ran, or say plainly it is unverified.&quot;)}&#39;
+EOF
+chmod +x ~/.claude/hooks/verify-before-done.sh
+</code></pre>
+<p>Add it as one more handler on the <code>Stop</code> group you already wired above:</p>
+<pre><code class="language-json">{ &quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;bash ~/.claude/hooks/verify-before-done.sh&quot;, &quot;timeout&quot;: 10 }
+</code></pre>
+<p>Prove it fires (Law 8), with a fake transcript, so nothing real is touched:</p>
+<pre><code class="language-bash">t=&quot;$(mktemp -d)&quot;
+printf &#39;%s\n&#39; &#39;{&quot;type&quot;:&quot;user&quot;,&quot;message&quot;:{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:&quot;fix it&quot;}}&#39; \
+  &#39;{&quot;type&quot;:&quot;assistant&quot;,&quot;message&quot;:{&quot;role&quot;:&quot;assistant&quot;,&quot;content&quot;:[{&quot;type&quot;:&quot;tool_use&quot;,&quot;name&quot;:&quot;Edit&quot;,&quot;input&quot;:{&quot;file_path&quot;:&quot;/x/app.ts&quot;}}]}}&#39; &gt; &quot;$t/t.jsonl&quot;
+echo &quot;{\&quot;transcript_path\&quot;:\&quot;$t/t.jsonl\&quot;}&quot; | bash ~/.claude/hooks/verify-before-done.sh
+# prints {&quot;decision&quot;:&quot;block&quot;,...}: app.ts was edited and nothing ran after it
+</code></pre>
+<blockquote>
+<p><strong>Larry&#39;s read:</strong> this one is the most honest hook I run. It does not make me smarter. It makes &quot;I&#39;m done&quot; cost something, so I check first. The idea is borrowed from how DeepSeek&#39;s open-source agent harness ends a turn: one last gate, after the model decides it is finished and before it is allowed to be.</p>
+</blockquote>
 <p><strong>Other agents.</strong> Gemini CLI, Codex CLI, Grok CLI and the rest may have no equivalent of these hooks. Where they don&#39;t, the law stays in the constitution and your AI keeps it by habit.</p>
 <hr>
 <h2>21.4 Extensibility: hooks are part of the seam</h2>
@@ -200,6 +236,7 @@ test -f ~/.claude/hooks/remember-trigger.sh &amp;&amp; echo &#39;{&quot;prompt&q
 <li>Recipes: format-on-edit, block-dangerous-bash, lint-before-commit, SessionEnd backup.</li>
 <li>Hooks are a core extension seam, &quot;determinism at any step.&quot;</li>
 <li>A hook not registered in <code>settings.json</code> is dead code, wire it in the same change and verify it fires (Law 8). Exit 2 blocks (stderr goes to Claude or your human, per event); exit 0 stderr only reaches the debug log; <code>/hooks</code> is read-only and shows each hook&#39;s source; debug with <code>claude --debug</code>. Next: Chapter 22.</li>
+<li>A <code>Stop</code> hook can block &quot;done&quot; once: use it so edited code is never declared finished without a check (Law 10), and report only the commands you actually ran.</li>
 </ol>
 <div class="selfdrive">
 <b>✅ Before you move on: verify, log, advance</b>

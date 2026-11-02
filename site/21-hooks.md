@@ -155,6 +155,50 @@ t="$(mktemp -d)" && mkdir -p "$t/.claude"    # a scratch home, so the test line 
 echo '{"last_assistant_message":"Decision: backups go to the private repo only"}' | HOME="$t" bash ~/.claude/hooks/capture-decisions.sh && cat "$t/.claude/DECISIONS.md"
 ```
 
+**Check before you say "done" (Law 10).** A third hook closes the gap that burns people most: an AI edits code, feels finished, and stops without ever running it. The `Stop` event fires at exactly that moment, so this script reads the session transcript, looks only at the current turn, and asks one question: did a code file get edited with nothing run after it? If yes, it blocks the stop once and says why. Notes and config files (`.md`, `.txt`, `.json`, `.yaml`) are exempt, a Bash call after the edit counts as checking, and `stop_hook_active` stops it from ever looping. The reason it gives is plain: run the smallest check that fits the change, report only commands you actually ran, and if you cannot check it, say "unverified" out loud.
+
+```bash
+cat > ~/.claude/hooks/verify-before-done.sh <<'EOF'
+#!/usr/bin/env bash
+# Law 10, enforced: no "done" after editing code and running nothing. Event: Stop.
+in="$(cat)"
+[ "$(printf '%s' "$in" | jq -r '.stop_hook_active // false')" = "true" ] && exit 0   # block once, never loop
+tr="$(printf '%s' "$in" | jq -r '.transcript_path // empty')"
+[ -r "$tr" ] || exit 0
+files="$(jq -rs '
+  def real: .type=="user" and ((.message.content|type)=="string" or (.message.content|any(.type=="text")));
+  ((to_entries | map(select(.value|real)) | last.key) // 0) as $s
+  | .[$s:]
+  | [ .[] | select(.type=="assistant") | .message.content[]? | select(.type=="tool_use") ]
+  | reduce .[] as $t ([];
+      if $t.name=="Bash" then []
+      elif ($t.name|IN("Edit","Write","MultiEdit")) and (($t.input.file_path // "") | test("\\.(md|txt|json|ya?ml)$") | not)
+        then . + [$t.input.file_path] else . end)
+  | unique | join(", ")' "$tr")"
+[ -n "$files" ] || exit 0
+jq -n --arg f "$files" '{decision:"block",reason:("You edited " + $f + " and ran nothing after it. Run the smallest check that fits (a test, a syntax check, a real run) and report only what you ran, or say plainly it is unverified.")}'
+EOF
+chmod +x ~/.claude/hooks/verify-before-done.sh
+```
+
+Add it as one more handler on the `Stop` group you already wired above:
+
+```json
+{ "type": "command", "command": "bash ~/.claude/hooks/verify-before-done.sh", "timeout": 10 }
+```
+
+Prove it fires (Law 8), with a fake transcript, so nothing real is touched:
+
+```bash
+t="$(mktemp -d)"
+printf '%s\n' '{"type":"user","message":{"role":"user","content":"fix it"}}' \
+  '{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","name":"Edit","input":{"file_path":"/x/app.ts"}}]}}' > "$t/t.jsonl"
+echo "{\"transcript_path\":\"$t/t.jsonl\"}" | bash ~/.claude/hooks/verify-before-done.sh
+# prints {"decision":"block",...}: app.ts was edited and nothing ran after it
+```
+
+> **Larry's read:** this one is the most honest hook I run. It does not make me smarter. It makes "I'm done" cost something, so I check first. The idea is borrowed from how DeepSeek's open-source agent harness ends a turn: one last gate, after the model decides it is finished and before it is allowed to be.
+
 **Other agents.** Gemini CLI, Codex CLI, Grok CLI and the rest may have no equivalent of these hooks. Where they don't, the law stays in the constitution and your AI keeps it by habit.
 
 ---
@@ -214,3 +258,4 @@ Lost the thread? The [Map](map.html) shows exactly where you are. Otherwise the 
 3. Recipes: format-on-edit, block-dangerous-bash, lint-before-commit, SessionEnd backup.
 4. Hooks are a core extension seam, "determinism at any step."
 5. A hook not registered in `settings.json` is dead code, wire it in the same change and verify it fires (Law 8). Exit 2 blocks (stderr goes to Claude or your human, per event); exit 0 stderr only reaches the debug log; `/hooks` is read-only and shows each hook's source; debug with `claude --debug`. Next: Chapter 22.
+6. A `Stop` hook can block "done" once: use it so edited code is never declared finished without a check (Law 10), and report only the commands you actually ran.
