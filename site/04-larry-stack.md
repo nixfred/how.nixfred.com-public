@@ -424,6 +424,24 @@ LifeOS also turns off Claude Code's built-in auto memory on purpose (`"autoMemor
 
 **On Linux, LMF4.1 and Cortex sit side by side, with different jobs.** LifeOS's MEMORY tree is the system of record for the curated notes (what is true *now*); LMF4.1's `memory.db` is the searchable history behind them (what was said, and when, the receipts). Two layers with two jobs is correct (Chapter 11 is the whole idea); two places that both take new facts is the bug. That's the whole story on one machine, which is all the basics need. (Running a fleet later? You can host one shared memory that every machine tunnels into, but that's an advanced capability module, not part of the core build: [Centralize Your Memory Across a Fleet](fleet-memory.html).)
 
+### Memory notes that point at a conversation
+Some of your notes will say "see the session where we decided this". That only works while the session file still exists, and Claude Code throws old ones away on its own: the default is 30 days (`cleanupPeriodDays` in `settings.json`). The day a file ages out, the note points at nothing, and a memory that points at a deleted conversation is just a story about one. Raise the window, and keep your human's own number if they already set one:
+
+```bash
+cp ~/.claude/settings.json ~/.claude/settings.json.bak && jq '.cleanupPeriodDays //= 90' ~/.claude/settings.json.bak > ~/.claude/settings.json
+jq '.cleanupPeriodDays' ~/.claude/settings.json    # 90, or the number your human already had
+```
+
+That is a safety net, not an archive. Session files are plain text with every pasted secret still in them, so a longer window is a longer exposure. For a conversation a note truly depends on, let the SessionEnd checkpoint in the next section copy it into your private repo before the window closes, and let the rest age out.
+
+**Point at the session id, never the path.** The hook input hands you both `session_id` and `transcript_path`. Store the id. The folder a transcript sits in is named after the working directory the session started in, so renaming or moving a project strands every stored path while the file itself is fine. Look the file up when you need it:
+
+```bash
+find ~/.claude/projects -name "<session_id>.jsonl"
+```
+
+**Keep the machine next to the id.** Each machine keeps its own session files, so a pointer written on one box does not resolve on another. If your human runs more than one machine, or throwaway containers that vanish with their files, write the host name beside the session id, and archive the conversations that matter before the machine goes. A pointer that names the machine beats one that makes you guess.
+
 ### Keep your raw transcripts, but keep them PRIVATE
 Your raw conversations are the history layer of your memory: the record of what was actually said and decided, at the time. They are worth preserving. The pattern is to checkpoint Claude Code's per-project session files (`~/.claude/projects/...`) into git so they survive a compaction, an `--resume`, or a move to a new machine. LMF already captures and distills your sessions for recall (above); if you also want the full raw transcripts versioned, point a small pre-compact or SessionEnd hook at those session files and commit them into your forever repo (below).
 
