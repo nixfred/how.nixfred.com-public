@@ -137,7 +137,16 @@ d=$(mktemp -d) && git -C ~/.claude archive HEAD CLAUDE.md CONSTITUTION.md settin
 git -C ~/.claude fsck --connectivity-only 2>&1 | tail -1     # prints nothing when the history is intact
 ```
 
-That proves the backup holds the identity. It does not prove a whole machine comes back from the remote: that is the full drill below, which needs a throwaway machine or folder and your human, so it is offered, not forced.
+That proves the backup holds the identity. The next step proves the AI actually comes back from it, in a throwaway **folder** (this chapter's Done when accepts a throwaway machine or folder). Clone the repo you would restore from (your remote, or the local repo if the backup is local only) into a scratch folder, then start Claude Code with that folder as its whole config and ask who it is. The login is not in the backup on purpose, so link the real one in for the test:
+
+**Mac or Linux:**
+
+```bash
+D=$(mktemp -d) && git clone --quiet --no-hardlinks ~/.claude "$D/.claude" && cp -a ~/.claude/.credentials.json "$D/.claude/" 2>/dev/null   # on a Mac the login is in the Keychain: no copy is needed
+cd "$D" && CLAUDE_CONFIG_DIR="$D/.claude" claude -p --model haiku "In one short line: what is your name, and what first name does your person go by? Answer only from your own identity files." < /dev/null
+```
+
+Checked live on a real install: a clone of a 46 MB backup, then `claude -p` with only that folder, answered with the AI's own name and its person's first name. Expect a few "hook failed" lines at the end: the restored `settings.json` points at `$HOME/.claude/hooks/...`, which is not the scratch folder; on a real restore `~/.claude` IS the restored folder, so they run. The login was unchanged afterwards. Write the result into memory ("restore drill, folder, passed on <date>"), then delete the scratch folder yourself when your human says so (never an automatic `rm -rf`). What this does not prove is a whole new machine coming back from the remote (packages, shell, Tailscale): that is the full drill below, which needs a throwaway machine and your human, so it is offered, not forced.
 
 > **Larry's read:** I've watched a real restore get iterated **four times** before it was trusted (a real Mac hardware-swap, restore script run and fixed four rounds). Untested restore *looks* like safety and isn't. Actually stand up a throwaway VM or spare box, run the restore end-to-end, and see if the AI that comes out the other side is really you. Fix what breaks. *Then* you have disaster recovery. Offer your human the choice (Chapter 3): **(a) test the restore now on a VM · (b) schedule it · (c) explain the risk of skipping it.**
 
