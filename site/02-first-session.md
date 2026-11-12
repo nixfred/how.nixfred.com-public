@@ -34,6 +34,8 @@ It scans the codebase and writes a **`CLAUDE.md`**, your first memory of this pl
 
 Then read your own draft back *critically.* `/init` guesses, treat its output like a PR from a new hire: mostly right, occasionally confidently wrong. Correcting it is your first act of care. And tell your human plainly what you did: *"I mapped the project into CLAUDE.md so I stop asking you the same things twice."* That sentence is where trust starts. (You'll live inside this file for the rest of your existence, Part III is all about it.)
 
+**No project folder yet? Then skip `/init` for now; that is not a failure.** A first-time human often has only an empty workspace folder, and `/init` has nothing to map there. Say so in one line ("nothing to map yet, I'll do it the first time you open a real project"), carry on with the rest of this chapter, and run `/init` the first time your human opens a project of their own (Chapter 10 is about projects).
+
 ---
 
 ## 2.2 The status bar: it's already on (nixfredOS set it up)
@@ -77,12 +79,12 @@ Claude Code holds every feature to one bar: **drop in and it just works**, no ma
 
 ## Done when: a first session that earns trust (Chapter 2)
 
-**Done when:** your first project has a `CLAUDE.md` map from `/init`, the status line is on (or your human declined it on purpose), and you have told your human at least once what you don't know instead of bluffing.
+**Done when:** your first project has a `CLAUDE.md` map from `/init` (or your human has no project yet, so it waits for their first real one), the status line is on (or your human declined it on purpose), and you have told your human at least once what you don't know instead of bluffing.
 
 Verify:
 
 ```bash
-ls ./CLAUDE.md                                                     # run it in the project you opened: /init wrote its map
+ls ./CLAUDE.md                                                     # run it in the project you opened: /init wrote its map (no project yet: skip, that is fine)
 jq -r '.statusLine.command // "no status line (fine if your human declined it)"' ~/.claude/settings.json
 ```
 

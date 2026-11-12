@@ -42,7 +42,7 @@ Two rules before you start:
 
 **No GitHub account yet? That is a choice to put to your human, not a wall** (Chapter 3, lead with choices):
 
-- **(a) Make one now, free, quick.** Your human signs up at [github.com/signup](https://github.com/signup) (an email, a password, a verification code; that part is theirs, in a browser). Then install `gh` below and have them run `gh auth login`.
+- **(a) Make one now, free, quick.** Your human signs up at [github.com/signup](https://github.com/signup) (an email, a password, a verification code; that part is theirs, in a browser). Then install `gh` below and sign in with the command in "Sign in" (you run it and read the code to them; they only click in the browser).
 - **(b) Stay local for now.** Skip the remote. Since Chapter 5, `~/.claude` is a local git repo that commits every session, so you already survive a bad edit or a bad merge, just not a dead disk. Write the choice into memory ("forever repo: local only, no GitHub account yet, decided on <date>"), install `gup` (7.3) anyway, and come back to this section the day there is an account. This chapter's Done when waits for that day; say so out loud rather than calling it done.
 - **Or type your own.** Another git host works the same way; the commands below are GitHub's.
 
@@ -94,13 +94,15 @@ F="gitleaks_${GL#v}_linux_${A}.tar.gz"
 	&& sudo install -m 755 gitleaks /usr/local/bin/gitleaks) && gitleaks version
 ```
 
-Then your human signs in, once (it opens a browser; pick GitHub.com, then HTTPS or SSH):
+**Sign in: you run it, your human only clicks in the browser.** Never ask them to type `gh auth login` in a terminal. Start this one yourself, in the background (it prints a one-time code and an address, then waits for the browser):
 
 **Mac or Linux:**
 
 ```bash
-gh auth login
+gh auth login --hostname github.com --git-protocol https --web
 ```
+
+Read its first lines, tell your human the code and the address in one line, and use AskUserQuestion with a single option, "I have signed in", so your turn stays open while they do it (a typed "tell me when you are done" ends your turn, and under a /goal that makes the stop hook loop). Then run `gh auth status` and show them the result. Do not ask them to paste a token.
 
 **Done when:** `gh` and `gitleaks` both answer in a new terminal, and `gh auth status` shows your human signed in to github.com. On the local-only path (no account yet) the sign-in line waits for the day there is one.
 
@@ -118,7 +120,7 @@ gh auth status             # signed in to github.com (local-only path: skip this
 # 1. ~/.claude should already be a git repo (the bootstrap, Chapter 5, did this).
 #    Installed by hand and it is NOT a repo yet? Initialize it first, with the bootstrap's
 #    default-safe ignores (the Linux login token and .env files stay out until your human picks (a) below):
-git -C ~/.claude rev-parse --is-inside-work-tree >/dev/null 2>&1 || { git -C ~/.claude init && printf '%s\n' node_modules/ '*.log' .DS_Store .credentials.json .env '.env.*' >> ~/.claude/.gitignore; }
+git -C ~/.claude rev-parse --is-inside-work-tree >/dev/null 2>&1 || { git -C ~/.claude init && printf '%s\n' node_modules/ '*.log' .DS_Store .credentials.json .env '.env.*' sessions/ session-env/ shell-snapshots/ paste-cache/ cache/ downloads/ backups/ state/ plugins/ history.jsonl mcp-needs-auth-cache.json '*.key' 'projects/**/*.jsonl' '*.bak' 'settings.json.*' '**/MEMORY/OBSERVABILITY/' '**/MEMORY/STATE/*.jsonl' >> ~/.claude/.gitignore; }
 git -C ~/.claude log --oneline | head    # may be empty right after init, that is fine
 
 # 2. THE SECRETS GATE, look before anything leaves the machine. Know exactly
@@ -214,7 +216,7 @@ mkdir -p ~/bin
 curl -fsSL https://how.nixfred.com/gup -o ~/bin/gup && chmod +x ~/bin/gup
 ```
 
-Then make sure `~/bin` is on the PATH, in the file your terminal actually reads, and open a new terminal:
+Then make sure `~/bin` is on the PATH, in the file your terminal actually reads. You do not need a new terminal to check it: `bash -lic 'command -v gup'` prints the path when it worked.
 
 **Mac** (terminals open login shells: bash reads `~/.bash_profile` if it exists, else `~/.bash_login`, else `~/.profile`, which is where the bootstrap put the constitution launcher when it found no other. Append to the one you already have. Never create a new `~/.bash_profile`: it would hide `~/.profile`, and the launcher with it. On zsh, use `~/.zshrc`):
 

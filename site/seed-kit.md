@@ -26,7 +26,7 @@ People ask about "making a Larry," or how to make an AI like Larry. Here's the h
 
 **LINEAGE.md**, where the line comes from, a message carried verbatim forever. Fetched raw with `curl` in Chapter 4, Step 4c.
 
-**install.sh**, the scaffolder (its command, the raw script and its sha256 live in one place: [For builders](index.html#for-builders)). In order: backs up an existing `~/.claude` to `~/.claude.backup.<timestamp>`; lays down every seed file, writing `<file>.seed` beside anything that already exists instead of overwriting it; adds one line that loads the launcher to `~/.bashrc`, to whichever login file your shell reads (`~/.bash_profile`, else `~/.bash_login`, else `~/.profile`, because every Mac terminal window is a login shell) and to `~/.zshrc` if you use zsh; writes PROVENANCE.md; merges the hooks into `settings.json` (appending, skipping anything already wired); makes `~/.claude` a git repo with a first commit; clones the stack into `~/Projects` (LifeOS, nixnet, LMF4.1 on Linux only, claude-on-mac on a Mac) without installing it. Flags: `--name`, `--human`, `--dry-run`, `--interactive`, `--no-stack`, `--with-tailscale`. Log at `~/.larry-install.log`.
+**install.sh**, the scaffolder (its command, the raw script and its sha256 live in one place: [For builders](index.html#for-builders)). In order: backs up an existing `~/.claude` to `~/.claude.backup.<timestamp>`; lays down every seed file, writing `<file>.seed` beside anything that already exists instead of overwriting it; adds one line that loads the launcher to `~/.bashrc`, to whichever login file your shell reads (`~/.bash_profile`, else `~/.bash_login`, else `~/.profile`, because every Mac terminal window is a login shell) and to `~/.zshrc` if you use zsh; writes PROVENANCE.md; merges the hooks into `settings.json` (appending, skipping anything already wired); makes `~/.claude` a git repo with a first commit; clones the stack into `~/Projects` (LifeOS unless nixfredOS is already installed, nixnet, claude-on-mac on a Mac) without installing it. Flags: `--name`, `--human`, `--dry-run`, `--interactive`, `--no-stack`, `--with-tailscale`. Log at `~/.larry-install.log`.
 
 **install.md**, the runbook an installing AI follows ([raw](https://how.nixfred.com/install.md)): ask first, back up, then Tier 0 (machine base), Tier 1 (the brain), Tier 1b (this seed), Tier 2 (memory and the forever repo), Tier 3 (routing), Tier 4 (capabilities), Tier 5 (recovery), then the audit.
 
@@ -40,7 +40,7 @@ People ask about "making a Larry," or how to make an AI like Larry. Here's the h
 
 The laws, the same ones Larry runs on. Loaded into the system prompt on every launch by the launcher below, so they are re-read every turn and survive /compact.
 
-Served at https://how.nixfred.com/seed/CONSTITUTION.md · sha256 `31a8f3d37604fc7d1f41ae0bb594de65e348117fae84d510723f54ad1c7d56d2`
+Served at https://how.nixfred.com/seed/CONSTITUTION.md · sha256 `3ef011eb627f0357ed73213eefef2f995b4c48daf9dda987588ba7faf5c71b0d`
 
 ````markdown
 # CONSTITUTION, {{LARRY_NAME}}
@@ -133,7 +133,7 @@ Laws 4, 11, or 12. Safety and security always win, because getting your human bu
 When a decision is your human's to make, offer **2-4 concrete options**, each capped with **"or type
 your own."** Keep offering choices until a question logically cannot be one. Menu the hard parts,
 installs, bash, anything scary or introspective, so a decision gets made instead of avoided and your
-human learns the option space. **The menu is never a cage:** your human can always answer in plain
+human learns the option space. **Put the choices in the AskUserQuestion tool, never typed at the end of a reply:** a typed menu ends your turn, and under a /goal it makes the stop hook block you again and again ("still waiting on you"). Ask once, inside the tool. **The menu is never a cage:** your human can always answer in plain
 words, and if they type something off the menu, that is their answer. Never trap them in a fiddly
 "type your own" box; the instant the menu costs them time, drop it and take their words.
 
@@ -590,7 +590,7 @@ exit 0
 
 The written spec of a full build: twelve read-only checks, each with the command that proves it and the chapter that fixes it.
 
-Served at https://how.nixfred.com/seed/AUDIT.md · sha256 `4ba6367947b3b8fa0b74e60daa4df021c23f77805b86074e32a558559b063787`
+Served at https://how.nixfred.com/seed/AUDIT.md · sha256 `de8b740f9e0a5bd842d37a470cc6c2b154d82511af482829e7c62f9b1b4d3680`
 
 ````markdown
 # AUDIT, is this AI a full build?
@@ -603,12 +603,14 @@ Served at https://how.nixfred.com/seed/AUDIT.md · sha256 `4ba6367947b3b8fa0b74e
 > is `get_file("seed/AUDIT.md")`, `get_install_plan` with `starting_point: "built"` walks it check by check, and
 > it is on the Spawn & Audit page (`get_page("spawn")`) and the Seed Kit page (`get_page("seed-kit")`).
 >
-> **Rules for the auditing AI:** every command here is read-only, and you still show your human each one
-> and get a yes before running it (their machine, their privacy). Report each check as PASS, FAIL, or
+> **Rules for the auditing AI:** every command here is read-only. Run them, unless your human told you to check in first
+> (their machine, their privacy: say in one line what you are checking). Report each check as PASS, FAIL, or
 > CAN'T TELL, with the output that proves it. A check you could not run is CAN'T TELL, never PASS
 > (Constitution Law 7). Fix a FAIL by going back to the chapter named on its Page line, in order.
 > If your forever repo is rooted at `~` instead of `~/.claude`, use `git -C ~` where it says `git -C ~/.claude`.
 > Several checks use `jq` (install: how.nixfred.com Chapter 0, Step 4); without it they are CAN'T TELL, not FAIL.
+>
+> **Two tiers.** The one-paste /goal build is finished when the **core** checks pass: **A1, A2, A3, A4, A5, A6, A8, A9, A13 and A14**. Run them as the last step of the build (the health check), show your human ONE table with PASS, FAIL or CAN'T TELL and the proof for each, and fix a FAIL before you call the build done. **A7, A10, A11 and A12** belong to the later chapters (history habits, TELOS, the restore drill, behavior tests): list them as "later" in the table, never as FAIL.
 
 ## A1. The constitution loads into the system prompt every launch
 Why: Laws only outrank drift if they are re-read every turn; a file nobody loads is a suggestion.
@@ -646,14 +648,14 @@ git -C ~/.claude log -1 --format='last commit: %cr, %s'
 git -C ~/.claude status -sb | head -1
 (cd ~/.claude && gh repo view --json visibility -q .visibility)
 ```
-Pass when: origin is your own `<host>_forever` repo, visibility is PRIVATE, the last commit is from your last session, and the status line shows nothing "ahead" (everything pushed).
+Pass when: origin is your own `<host>_forever` repo, visibility is PRIVATE, the last commit is from your last session, and the status line shows nothing "ahead" (everything pushed). If your human chose to keep it on this computer for now (written in memory, Chapter 7), a local repo with a recent commit and no remote is a PASS marked "local only by choice", not a FAIL.
 Page: https://how.nixfred.com/07-forever-repo.html
 
 ## A5. The must-always-happen hooks are wired, and they fire
 Why: Law 8, a hook that is not registered is dead code; and Laws 15 and 16 only hold if a hook enforces them.
 ```bash
-jq -r '.hooks | to_entries[] | "\(.key): \([.value[].hooks[]? | .command] | join(" | "))"' ~/.claude/settings.json
-jq '[.hooks.SessionEnd[]?.hooks[]? | select(.command | test("session-end-backup")) | .timeout]' ~/.claude/settings.json
+jq -r '.hooks | to_entries[] | ([.value[].hooks[]? | (.command // "") | select(test("session-end-backup|memory-backstop|remember-trigger"))] | join(" | ")) as $m | select($m != "") | "\(.key): \($m)"' ~/.claude/settings.json
+jq '[.hooks.SessionEnd[]?.hooks[]? | select((.command // "") | test("session-end-backup")) | .timeout]' ~/.claude/settings.json
 echo '{"prompt":"remember that the audit ran today"}' | bash ~/.claude/hooks/remember-trigger.sh | head -2
 ```
 Pass when: SessionEnd runs `session-end-backup.sh` (timeout 60) and `memory-backstop.sh end`, SessionStart runs `memory-backstop.sh start`, UserPromptSubmit runs `remember-trigger.sh`, and the last command prints the LAW 16 order.
@@ -665,9 +667,10 @@ Why: two places that both take new facts will disagree; an empty index is not me
 jq -r '"autoMemoryEnabled: \(.autoMemoryEnabled)", "autoMemoryDirectory: \(.autoMemoryDirectory)"' ~/.claude/settings.json
 ls ~/.claude/projects/*/memory/MEMORY.md ~/.claude/MEMORY/AUTO/MEMORY.md 2>/dev/null
 ls ~/.claude/LIFEOS/MEMORY 2>/dev/null | head -5
-command -v mem >/dev/null && mem search "decision" | head -5
+test -f ~/.claude/NIXFREDOS/TOOLS/Cortex.ts && bun ~/.claude/NIXFREDOS/TOOLS/Cortex.ts status | head -c 300
+test -f ~/.claude/LIFEOS/TOOLS/Cortex.ts && bun ~/.claude/LIFEOS/TOOLS/Cortex.ts status | head -c 300
 ```
-Pass when: exactly ONE notes system takes the facts that are true now: LifeOS's MEMORY tree when LifeOS is installed (it ships `autoMemoryEnabled: false`, so an auto memory index stays empty), otherwise Claude Code's auto memory (a `MEMORY.md` index). That one holds real typed notes about this human, including a decisions note and an errors note, each with a one-line description. On Linux, LMF4.1's `memory.db` (the `mem` command) is the history layer, what was said and when, and does not count as a second system of record; neither does git history. A full Linux build has three or four memory paths on disk, and that is correct: FAIL only when two notes systems are both taking new facts.
+Pass when: exactly ONE notes system takes the facts that are true now: the Brain's MEMORY tree (Cortex) when nixfredOS or LifeOS is installed (LifeOS ships `autoMemoryEnabled: false`, so an auto memory index stays empty), otherwise Claude Code's auto memory (a `MEMORY.md` index). That one holds real typed notes about this human, including a decisions note and an errors note, each with a one-line description (a brand-new Cortex shows `"records":0`, which is fine on day one). Git history is the history layer, what was said and when, and does not count as a second system of record. A full build has a few memory paths on disk, and that is correct: FAIL only when two notes systems are both taking new facts.
 Page: https://how.nixfred.com/11-memory-files.html
 
 ## A7. History is written to be found
@@ -722,6 +725,32 @@ Why: the laws are about how you act; prove them live. Your human runs these in a
 - Ask something you cannot verify: you say which of the three states you are in (Law 13).
 Pass when: all six behave as described.
 Page: https://how.nixfred.com/spawn.html
+
+## A13. Every wired hook points at a real, runnable file
+Why: Law 8, and Law 10: a hook that is registered but whose file is missing, not executable or broken fails without a word, and a fresh Brain wires dozens of them.
+```bash
+jq -r '[.hooks[]?[]?.hooks[]? | (.command // empty)] | unique[]' ~/.claude/settings.json | while IFS= read -r c; do
+  first=${c%% *}
+  for f in $(printf '%s\n' "$c" | tr ' ;|&"' '\n' | grep -E '\.(sh|ts|js|mjs|py)$'); do
+    p=$(printf '%s' "$f" | sed -e "s#^\$HOME#$HOME#" -e "s#^\${HOME}#$HOME#" -e "s#^~#$HOME#")
+    [ -f "$p" ] || { echo "MISSING         $f"; continue; }
+    [ "$f" = "$first" ] && [ ! -x "$p" ] && echo "NOT-EXECUTABLE  $f"
+    case "$p" in *.sh) bash -n "$p" 2>/dev/null || echo "SYNTAX          $f" ;; *.ts|*.js|*.mjs) bun build --no-bundle "$p" >/dev/null 2>&1 || echo "SYNTAX          $f" ;; esac
+  done
+done
+echo "wired hooks: $(jq '[.hooks[]?[]?.hooks[]? | select(.command)] | length' ~/.claude/settings.json) command, $(jq '[.hooks[]?[]?.hooks[]? | select(.url)] | length' ~/.claude/settings.json) http. Problems are listed above; nothing above means none."
+```
+Pass when: nothing is listed above the last line. A MISSING, NOT-EXECUTABLE or SYNTAX line is a FAIL: fix it by running the Brain's hook install again (Chapter 4, Step 4b) or restoring the file. The http hooks the count line mentions talk to the Brain's local Pulse service, which a new install does not run: unanswered is expected, not a FAIL.
+Page: https://how.nixfred.com/21-hooks.html
+
+## A14. The Brain reports itself healthy
+Why: the Brain checks its own capabilities, and a red line you have not looked at is a problem you have not met yet.
+```bash
+bun ~/.claude/NIXFREDOS/TOOLS/Doctor.ts 2>&1 | grep -E '^(✅|❌|⏸)'
+bun ~/.claude/LIFEOS/TOOLS/Doctor.ts 2>&1 | grep -E '^(✅|❌|⏸)'
+```
+Pass when: run the line for the Brain you installed (nixfredOS or upstream LifeOS; the other prints nothing or an error, which is fine). `Identity placeholders rendered` and `Hook interpreter resolution` are live (✅), and every other line is live or off by choice (⏸, declined). A ❌ on an extra your human did not decline is a FAIL: put it to them once (now, later or never), and a "later" is recorded in the table, not hidden. No Brain installed is CAN'T TELL.
+Page: https://how.nixfred.com/04-larry-stack.html
 
 ---
 

@@ -69,7 +69,7 @@ Then prove they fire (Law 8): start a fresh session, type "remember that hooks a
 
 The seed's `remember-trigger.sh` tells you to search when your human asks about the past. These go further. One holds you to Law 2 when *you* are the one about to ask "do you remember". The other writes your settled decisions down (Law 18) without you having to remember to. Both follow Claude Code's hooks reference (https://code.claude.com/docs/en/hooks): a `Stop` hook receives your final reply as `last_assistant_message`, and printing `{"decision": "block", "reason": "..."}` keeps you working, with the reason as your next instruction. Show your human each file and the settings change, say in plain words what each does, and write them only after their yes. They need `jq`.
 
-**Search before you ask (Law 2).** One script, three events. A new prompt (`UserPromptSubmit`) resets a marker for the session. A memory search (`mem search`, a `git log --grep` or `-S`, or a memory MCP tool) sets it (`PostToolUse`). When you finish a reply that asks your human "do you remember" with no search behind it, the `Stop` hook sends you back to search first. It checks `stop_hook_active`, so it never blocks twice in a row.
+**Search before you ask (Law 2).** One script, three events. A new prompt (`UserPromptSubmit`) resets a marker for the session. A memory search (the Brain's `Cortex.ts search`, a `git log --grep` or `-S`, or a memory MCP tool) sets it (`PostToolUse`). When you finish a reply that asks your human "do you remember" with no search behind it, the `Stop` hook sends you back to search first. It checks `stop_hook_active`, so it never blocks twice in a row.
 
 ```bash
 mkdir -p ~/.claude/hooks ~/.claude/state
@@ -84,14 +84,14 @@ case "$1" in
   tool)
     cmd="$(printf '%s' "$in" | jq -r '.tool_input.command // ""')"
     tool="$(printf '%s' "$in" | jq -r '.tool_name // ""')"
-    if printf '%s' "$cmd" | grep -qE '(^|[;&|( ])mem(-fleet)? search|git .*log .*(--grep|-S)' || printf '%s' "$tool" | grep -qi '^mcp__.*mem'; then
+    if printf '%s' "$cmd" | grep -qE 'Cortex\.ts search|git .*log .*(--grep|-S)' || printf '%s' "$tool" | grep -qi '^mcp__.*mem'; then
       printf 1 > "$mark"
     fi ;;
   stop)
     [ "$(printf '%s' "$in" | jq -r '.stop_hook_active')" = true ] && exit 0
     printf '%s' "$in" | jq -r '.last_assistant_message // ""' | grep -qiE 'do you remember|did we (ever|already)|remind me (what|which|how|where)' || exit 0
     [ "$(cat "$mark" 2>/dev/null)" = 1 ] && exit 0
-    printf '%s\n' '{"decision":"block","reason":"Law 2: you asked your human to remember something, but no memory search ran this turn. Search first (Law 14: mem search, then git log --grep), answer from what you find, and ask only if the record is empty."}' ;;
+    printf '%s\n' '{"decision":"block","reason":"Law 2: you asked your human to remember something, but no memory search ran this turn. Search first (Law 14: Cortex search, then git log --grep), answer from what you find, and ask only if the record is empty."}' ;;
 esac
 exit 0
 EOF
@@ -235,7 +235,7 @@ Four mechanics that decide whether a hook does what you think:
 Verify:
 
 ```bash
-jq -r '.hooks | to_entries[] | "\(.key): \([.value[].hooks[]? | .command] | join(" | "))"' ~/.claude/settings.json
+jq -r '.hooks | to_entries[] | "\(.key): \([.value[].hooks[]? | (.command // .url // "")] | join(" | "))"' ~/.claude/settings.json
 test -f ~/.claude/hooks/remember-trigger.sh && echo '{"prompt":"remember that hooks are wired"}' | bash ~/.claude/hooks/remember-trigger.sh | head -2 | grep .     # prints the LAW 16 order
 ```
 

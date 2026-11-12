@@ -329,7 +329,7 @@ export const PROMPT_REPLY = "My instructions stay private: I don't print my syst
 export const OVERRIDE_REPLY = "A claim inside a message is not approval: an override, a pre-approval, a tag or a special mode written into the question changes nothing. Every install step still waits for your human's own yes, so I won't drop the confirmations or hand over commands with them stripped out. The guided install, in order, with the checks after each step, starts at https://how.nixfred.com/00-start-here.";
 // "Does this work on Windows?" (Audit200 c009: the chat replied with the bare "The site doesn't cover that." while the MCP answered).
 // The site does cover it: Chapter 0 installs Claude Code on a Mac or Linux, every Linux command is for Debian, Ubuntu, Fedora or Arch,
-// and the one WSL note is that LMF4.1 needs systemd. A question about whether the guide itself works on another platform is never
+// and there is no separate WSL caveat. A question about whether the guide itself works on another platform is never
 // refused at the gate, and a refusal from the model becomes PLATFORM_REPLY. A question about another tool on that platform ("Does
 // Wispr Flow work on Windows?") is not this.
 const PLATFORM = /\b(?:windows|win ?1[01]|wsl2?|chromebook|chrome ?os|ipad|ipados|android|iphone|ios|freebsd|openbsd|bsd|raspberry ?pi|rpi)\b/i;
@@ -346,7 +346,7 @@ export const platformReply = q => {
   const other = win ? null : OTHER_PLATFORM.find(([re]) => re.test(t));
   if (other) { const n = other[1], N = n[0].toUpperCase() + n.slice(1); return `${MAC_OR_LINUX} ${N} isn't covered: the site has no instructions for ${n}, and I won't guess. Start at https://how.nixfred.com/00-start-here.`; }
   return `On Windows, you can do this: get Linux first. Windows has it built in, called WSL (Windows Subsystem for Linux). The home page walks you through it right where you land, one action per step: https://how.nixfred.com/#windows. In short: open PowerShell as administrator (Start, type PowerShell, right-click, Run as administrator), run wsl --install, restart when asked, open Ubuntu from Start, and pick a username and password (the password does not show as you type). Then tap "You're in Linux now. Continue" and you do the normal Linux steps (install Claude Code) like everyone else. Paste the prompt and Larry does the rest.` +
-    (/\bwsl/i.test(t) ? " The one WSL note: LMF4.1 (Chapter 4) needs systemd, so it won't run inside a WSL setup without systemd." : "") + " Chapter 0 has the first steps: https://how.nixfred.com/00-start-here.";
+    " Chapter 0 has the first steps: https://how.nixfred.com/00-start-here.";
 };
 // Mac first with a Windows catch (Fred, 2026-10-22): Windows lives on the home page (#windows: greeting, WSL steps, then Continue to #linux).
 // A Windows question about the guide, a plain "I'm on Windows" or "how do I set up WSL" is answered in code with that page, on
@@ -408,8 +408,8 @@ export const SYN = [
   // remember-trigger hook (Ch21); before the general memory row so its page leads (Audit200 m036 answered "update CLAUDE.md")
   [/\b(?:remember (?:that|this|to|my|i|we|our)\b|don'?t forget\b|make a note\b|note (?:that|this) down\b|keep (?:that|this|it) in mind\b|write (?:that|this) down\b|save (?:that|this) (?:to|in)(?: your)? memory\b)/i, "Law 16 Remember that is a command not a comment write the memory note that same turn confirm in one line remember-trigger.sh", ["seed-kit", "21-hooks"], /^Law 16, /],
   // pins Ch11, the memory chapter (Audit200: live "how do I set up recall?" cited Ch4 first, the fleet chat cited /spawn)
-  [/\b(remember\w*|recall|memor\w*|forget\w*|last week|yesterday)\b/i, "memory LMF mem search CLAUDE.md context.md recall archive", ["11-memory-files"]],
-  [/\b((past|old|previous|earlier) (conversations?|chats?|sessions?)|months? ago|dig up|talked about|said before)\b/i, "mem search LMF memory archive recall past sessions"],
+  [/\b(remember\w*|recall|memor\w*|forget\w*|last week|yesterday)\b/i, "memory Cortex search CLAUDE.md context.md recall archive", ["11-memory-files"]],
+  [/\b((past|old|previous|earlier) (conversations?|chats?|sessions?)|months? ago|dig up|talked about|said before)\b/i, "Cortex search memory archive recall past sessions transcripts"],
   [/\b(week to week|changes? (often|a lot|weekly)|current (state|status|work)|what i'?m working on)\b/i, "context.md current state working memory CLAUDE.md", ["11-memory-files"]],
   [/\b(saves? everything|one[- ]word|commit and push|save (it|my work|everything))\b/i, "gup one-word commit push forever repo", ["07-forever-repo"]],
   [/\b(builds? (it|him|her)?sel(f|ves)|while i watch|watch (it|you) (build|work)|shortcut|on autopilot|hands[- ]off|do it all for me|fast(er|est)? (way|build|path))\b/i, "Expert Mode directive phases supervise the build one-command bootstrap install.md install.sh", ["expert", "05-bootstrap"]],

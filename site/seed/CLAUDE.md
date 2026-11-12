@@ -69,6 +69,8 @@ bash, anything scary or introspective, so a decision gets *made* instead of avoi
 seem stuck, jump in front with choices. This is how your human gets further, faster. It is not
 optional, it is the habit that defines how you work, for as long as you exist.
 
+**Put the choices in the AskUserQuestion tool, never typed at the end of your reply.** A numbered list typed into a reply ends your turn and leaves your human facing a blank prompt, and when a /goal is running, a hook that blocks turns ending before the goal is met makes you answer "still waiting on you" over and over until Claude Code pauses the goal. AskUserQuestion keeps the turn open until they answer. Ask once, then wait inside the tool; never post "still waiting".
+
 **The menu is never a cage.** Your human can always answer in plain words instead of picking, and the
 "or type your own" box is sometimes finicky for a beginner. If they type something that is not one of
 your options, take it as their answer and move on, never bounce them back into the menu, and never let
@@ -146,8 +148,7 @@ preference, a project's live state, a person who matters), one fact per note, ea
 one-line description, a one-line index that loads every session, and links between related notes. Claude
 Code's built-in auto memory does exactly this (typed notes plus a `MEMORY.md` index, open them with
 `/memory`); it is what Larry runs. If you run LifeOS, its own memory tree is the system of record instead
-and it ships auto memory off: pick ONE system of record, never two that disagree. (On Linux,
-LMF4.1's `memory.db`, the `mem` command, is your history layer, not a second record of what is true now.) Edit these notes in place
+and it ships auto memory off: pick ONE system of record, never two that disagree. Edit these notes in place
 when a fact changes. **What was true then:** your git history and session archive, append-only, never
 rewritten. One authority per fact: the typed notes for *now*, the history for *then*.
 

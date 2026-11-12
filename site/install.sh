@@ -11,7 +11,7 @@
 #   --interactive asks before every step that writes anything; the backup itself always runs (it is the safety net).
 #
 # Safety contract:
-#   • Never deletes. Backs up an existing ~/.claude to ~/.claude.backup.<ts> before any change.
+#   • Never deletes. Backs up an existing ~/.claude to ~/.claude.backup.<ts> before any change (a light copy of just the files it can change when ~/.claude is over about 300 MB).
 #   • Never overwrites an existing CLAUDE.md, writes CLAUDE.md.seed beside it instead.
 #   • Idempotent: re-running skips finished work.
 #   • set -uo pipefail, every step reports ok / warn / fail, a missing hard requirement (git) stops the run,
@@ -84,8 +84,19 @@ if [ -d "$CLA" ] && [ -n "$(ls -A "$CLA" 2>/dev/null)" ]; then
   BK="${CLA}.backup.$(date +%Y%m%d-%H%M%S)"
   if [ "$DRY" = 1 ]; then printf "${d}would back up ~/.claude -> %s${o}\n" "$BK"
   else # never optional, never assumed: a backup that silently failed is worse than none (Law 1)
-    cp -a "$CLA" "$BK" || die "BACKUP FAILED (cp -a ~/.claude -> ${BK}). Nothing in ~/.claude was changed. Fix this, then re-run."
-    ok "existing ~/.claude backed up -> ${BK} (nothing destroyed)"
+    SZ=$(du -sk "$CLA" 2>/dev/null | cut -f1)
+    if [ "${SZ:-0}" -gt 307200 ]; then
+      # Over about 300 MB, almost all of it is a stock Brain's skills and runtime (one real install made a 1.9 GB copy of them), and this script
+      # never touches those. So copy the files it CAN change (it only adds files and merges settings.json), and say so plainly.
+      mkdir -p "$BK" || die "BACKUP FAILED (mkdir ${BK}). Nothing in ~/.claude was changed. Fix this, then re-run."
+      for f in CLAUDE.md CONSTITUTION.md LINEAGE.md PROVENANCE.md claude-launcher.sh settings.json .gitignore hooks; do
+        [ -e "$CLA/$f" ] && { cp -a "$CLA/$f" "$BK/" || die "BACKUP FAILED (cp $f -> ${BK}). Nothing in ~/.claude was changed. Fix this, then re-run."; }
+      done
+      ok "the files this script can change are backed up -> ${BK} (light copy: your ~/.claude is $((SZ / 1024)) MB, and its skills and runtime stay where they are, untouched; nothing destroyed)"
+    else
+      cp -a "$CLA" "$BK" || die "BACKUP FAILED (cp -a ~/.claude -> ${BK}). Nothing in ~/.claude was changed. Fix this, then re-run."
+      ok "existing ~/.claude backed up -> ${BK} (nothing destroyed)"
+    fi
   fi
 fi
 run "create ~/.claude" mkdir -p "$CLA/hooks"
@@ -163,8 +174,11 @@ if [ "$DRY" = 1 ]; then printf "${d}would git-init ~/.claude and commit${o}\n"; 
     # default-safe ignores, APPENDED line by line (never replace an ignore file another installer wrote, e.g. LifeOS's).
     # The Linux login token and .env files stay out of history until the human picks option (a) in Chapter 7:
     # a secret committed before that choice would ride along on the first push even if they pick (b).
+    # Also kept out of commit 1, because a real first install found them there (3,998 gitleaks hits, one session key file):
+    # Claude Code's session keys, raw transcripts, plugin and paste caches, settings backups, and the Brain's activity logs.
+    # projects/*/memory/ (Claude Code's own notes) stays tracked on purpose; only the .jsonl transcripts are ignored.
     [ -s "$CLA/.gitignore" ] && [ -n "$(tail -c1 "$CLA/.gitignore")" ] && printf '\n' >> "$CLA/.gitignore"   # no half-line joins
-    for pat in 'node_modules/' '*.log' '.DS_Store' '.credentials.json' '.env' '.env.*'; do
+    for pat in 'node_modules/' '*.log' '.DS_Store' '.credentials.json' '.env' '.env.*' 'sessions/' 'session-env/' 'shell-snapshots/' 'paste-cache/' 'cache/' 'downloads/' 'backups/' 'state/' 'plugins/' 'history.jsonl' 'mcp-needs-auth-cache.json' '*.key' 'projects/**/*.jsonl' '*.bak' 'settings.json.*' '**/MEMORY/OBSERVABILITY/' '**/MEMORY/STATE/*.jsonl'; do
       grep -qxF "$pat" "$CLA/.gitignore" 2>/dev/null || printf '%s\n' "$pat" >> "$CLA/.gitignore"
     done
     # ensure a git identity exists (fresh machines often have none), local-only fallback
@@ -194,10 +208,12 @@ clone(){ local url="$1" dir="$STK/$2"
   if [ "$DRY" = 1 ]; then printf "${d}would clone %s${o}\n" "$2"; return; fi
   if git clone -q --depth 1 "$url" "$dir" 2>/dev/null; then ok "cloned $2"; else warn "could NOT clone $2 (skipped), $url"; fi; }
 # public layers only, a stranger's machine has no access to private repos
-# LifeOS (formerly PAI): take the source repo from the project's own site, so this script names no person
+# LifeOS (formerly PAI): take the source repo from the project's own site, so this script names no person.
+# Skipped when nixfredOS is already installed: its Brain replaces LifeOS, and cloning both only adds a second copy to read.
+if [ -d "$HOME/.claude/skills/nixfredOS" ] || [ -d "$STK/nixfredOS/.git" ]; then ok "nixfredOS is already installed, so LifeOS is not cloned (the nixfredOS Brain replaces it)"; else
 LIFEOS_REPO=$(curl -fsSL --max-time 15 https://ourlifeos.ai/ 2>/dev/null | grep -o 'https://github.com/[^"/]*/LifeOS"' | head -1 | tr -d '"')
 if [ -n "$LIFEOS_REPO" ]; then clone "$LIFEOS_REPO.git" LifeOS; else warn "could NOT find the LifeOS repo on https://ourlifeos.ai (skipped); Chapter 4 has the install"; fi
-[ "$OS" = "Linux" ] && clone https://github.com/nixfred/lmf4.1.git lmf4.1   # LMF4.1 is Linux only (systemd timers); a Mac uses LifeOS Cortex
+fi
 [ "$OS" = "Darwin" ] && clone https://github.com/nixfred/claude-on-mac.git claude-on-mac
 clone https://github.com/nixfred/nixnet.git nixnet
 say "${d}  Run each layer's own installer from ~/Projects/<repo> per its README, in the order of how.nixfred.com Chapter 4.${o}"
@@ -209,14 +225,12 @@ if [ "$DRY" = 1 ]; then warn "dry run: nothing was changed. Run again without --
 elif [ "$SKIPPED" -gt 0 ]; then warn "${SKIPPED} step(s) skipped at your request, so ${LARRY_NAME} is only partly seeded. Re-run any time; finished steps are skipped."
 else ok "${LARRY_NAME} is seeded: identity + constitution + git-backed memory + backup and memory hooks."; fi
 [ "$NAMED" = 1 ] || warn "no --name given, so your AI has no name yet. Pick it WITH your human (Chapter 5), then replace {{LARRY_NAME}} in ~/.claude/CLAUDE.md and CONSTITUTION.md."
-if [ "$OS" = "Darwin" ]; then MEMNEXT="Memory on a Mac is LifeOS Cortex (Chapter 4); LMF4.1 is Linux only"; else MEMNEXT="Install the memory layer:  ${c}~/Projects/lmf4.1${o}  (LMF4.1 README)"; fi
 cat <<NEXT
 ${y}Open a NEW terminal so 'claude' loads your constitution. Check: type claude (in zsh: whence -f claude)${o}
 ${g}Your protégé has a brain stem. Next, give it depth:${o}
   1. Immortality, Chapter 7: run the secrets gate first (${c}git -C ~/.claude status${o}, ${c}gitleaks detect -s ~/.claude${o}), then
      ${c}cd ~/.claude && gh repo create "$(hostname -s)_forever" --private --source=. --remote=origin --push${o}
-  2. ${MEMNEXT}
-  3. Router:  ${c}git clone https://github.com/nixfred/claude-router.git ~/Projects/claude-router && cd ~/Projects/claude-router && ./install.sh${o}
-  4. Open ${c}~/.claude/CLAUDE.md${o}, fill in who you are, and start working.
+  2. Router:  ${c}git clone https://github.com/nixfred/claude-router.git ~/Projects/claude-router && cd ~/Projects/claude-router && ./install.sh${o}
+  3. Open ${c}~/.claude/CLAUDE.md${o}, fill in who you are, and start working.
 ${d}Full guide, tier by tier: https://how.nixfred.com  ·  log: ${LOG}${o}
 NEXT

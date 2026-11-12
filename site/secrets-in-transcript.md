@@ -113,7 +113,7 @@ Verify (the first line must say BLOCKED, the second ALLOWED, the third that the 
 ```bash
 echo '{"tool_input":{"command":"cat .env"}}'          | bash ~/.claude/hooks/secret-guard.sh 2>/dev/null; [ $? -eq 2 ] && echo "BLOCKED (good)" || echo "NOT BLOCKED (broken)"
 echo '{"tool_input":{"command":"cut -d= -f1 .env"}}'  | bash ~/.claude/hooks/secret-guard.sh 2>/dev/null; [ $? -eq 0 ] && echo "ALLOWED (good)" || echo "BLOCKED (too strict)"
-jq -e '[.hooks.PreToolUse[]? | select(.matcher=="Bash") | .hooks[]?.command] | any(test("secret-guard"))' ~/.claude/settings.json >/dev/null && echo "hook: registered"
+jq -e '[.hooks.PreToolUse[]? | select(.matcher=="Bash") | .hooks[]? | (.command // "")] | any(test("secret-guard"))' ~/.claude/settings.json >/dev/null && echo "hook: registered"
 ```
 
 Both directions matter. A guard you have only seen pass might be blocking nothing, and one you have only seen block might be blocking everything.

@@ -79,7 +79,7 @@ Tailscale isn't a standalone nicety, three earlier layers depend on it:
 - **`*_forever` sync** (Ch 4, Tier 2 / Ch 7): your continuity repos push and pull cleanly across hosts on the mesh.
 - **Remote & mobile control** (Ch 31): your human kicks off a heavy session at their desk, approves permissions from their phone, the control channel travels the mesh while the code stays on the machine.
 
-(Once the basics are solid, the mesh unlocks advanced fleet tricks, like hosting one shared memory that every machine tunnels into. That's a capability module, not core: see [Centralize Your Memory Across a Fleet](fleet-memory.html).)
+(Once the basics are solid, the mesh unlocks advanced fleet tricks. Those are capability modules, not core.)
 
 ---
 

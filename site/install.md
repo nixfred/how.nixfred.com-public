@@ -70,7 +70,7 @@ Snapshot `~/.claude/` per Rule 0 before any install. Then proceed.
   curl -sL https://raw.githubusercontent.com/nixfred/nixbash/main/install.sh | bash && source ~/.bashrc
   ```
 - **The small tools every later tier runs on: `jq` and `bun`** (`jq` reads and merges `settings.json`, and the checks
-  below fail with `jq: command not found` without it; `bun` 1.2 or newer runs LifeOS's and LMF4.1's tools). Mac:
+  below fail with `jq: command not found` without it; `bun` 1.2 or newer runs the Brain's tools). Mac:
   ```bash
   brew install jq && curl -fsSL https://bun.sh/install | bash
   ```
@@ -101,10 +101,15 @@ Snapshot `~/.claude/` per Rule 0 before any install. Then proceed.
   ```bash
   cd ~/.claude/skills/LifeOS
   bun Tools/DeployCore.ts --apply && bun Tools/ScaffoldUser.ts --apply && bun Tools/LinkUser.ts --apply
-  bun Tools/InstallHooks.ts --apply && bun Tools/ActivateImports.ts --apply
+  bun Tools/InstallHooks.ts --apply
   bun ~/.claude/LIFEOS/TOOLS/Doctor.ts
   ```
-  Stop its Interview after the name (TELOS waits for Chapter 14). Full treatment, with the read-only
+  `ActivateImports.ts --apply` needs `~/.claude/CLAUDE.md`, which Chapter 5 creates, so run it after Chapter 5
+  (before that it fails with "CLAUDE.md not found": the order, not a broken install). If Claude Code is in
+  auto mode, its safety check will refuse `InstallHooks` (it edits `settings.json`): do not work around it.
+  Ask the human to press Shift+Tab out of auto mode, or give them ONE line to paste into a separate plain
+  Terminal window (never starting with `!`: in a plain shell a leading `!` negates the first command, so
+  `! cd x && bun y` quietly does nothing), then check that it landed. Stop its Interview after the name (TELOS waits for Chapter 14). Full treatment, with the read-only
   previews and the `lifeos` launcher: https://how.nixfred.com/04-larry-stack (Step 4b)
   Optional: the user may pick nixfredOS, a fork of LifeOS, instead. Same steps under its own names
   (`~/.claude/skills/nixfredOS`, `~/.claude/NIXFREDOS/`, `nixfredos`), with its own bootstrap:
@@ -128,19 +133,13 @@ first (every one is plain text under https://how.nixfred.com/seed/), then pick o
 
 The scaffolder starts `~/.claude`'s git history with a default-safe ignore list: on Linux the Claude login
 token (`~/.claude/.credentials.json`) and `.env` files stay out until the human makes the Chapter 7 secrets
-choice. Verify before moving on (needs `jq`, Tier 0): open a new terminal, `type claude` prints the launcher
+choice, and session keys, raw transcripts and caches stay out for good. Verify before moving on (needs `jq`, Tier 0): open a new terminal, `type claude` prints the launcher
 function, `jq -r '.hooks | keys[]' ~/.claude/settings.json` lists SessionEnd, SessionStart and
 UserPromptSubmit, and `git -C ~/.claude check-ignore -v .credentials.json` names the ignore rule.
 
 ### Tier 2, Memory & Continuity
-- **LMF4.1** *(Linux with systemd only; on a Mac, LifeOS Cortex is the memory)*, persistent memory
-  (SQLite FTS5), standalone: https://github.com/nixfred/lmf4.1 . Follow its README's install section,
-  with three corrections from Chapter 4, Step 4e that win where they differ: pick the extraction model first
-  (no GPU: `LMF4_EXTRACT_MODEL=claude-haiku-4-5`; with one: install Ollama and `ollama pull llama3.1:8b`,
-  the code's default), register its memory server with
-  `claude mcp add --scope user lmf4-memory -- bun run "$HOME/.claude/hooks/mem-mcp-server.ts"` instead of an
-  `mcpServers` block in `settings.json` (Claude Code does not read MCP servers from there), and leave its
-  GitHub backup step for Chapter 7. Exact lines: https://how.nixfred.com/04-larry-stack (Step 4e)
+- **Memory is the Brain's Cortex**: nothing extra to install. It came with Tier 1 (`bun ~/.claude/NIXFREDOS/TOOLS/Cortex.ts status`;
+  upstream LifeOS: `~/.claude/LIFEOS/TOOLS/Cortex.ts`). It is empty on day one, which is correct.
 - **The `*_forever` pattern**, the immortality layer. The builder already makes `~/.claude/`
   a git repo with a SessionEnd auto-commit hook. Finish it: create a PRIVATE GitHub repo and
   add it as `origin` so every session pushes, secrets gate first. No GitHub account yet? Ask: make a free
@@ -178,4 +177,4 @@ configuration and deep context (TELOS) are next: https://how.nixfred.com
 
 When the chapters are walked, audit the result against the written spec of a full build,
 https://how.nixfred.com/seed/AUDIT.md (read-only checks, each with the command that proves it and
-the chapter that fixes it). Show your human each command and get a yes before running it.
+the chapter that fixes it). They are read-only: run them, unless your human told you to check in first.

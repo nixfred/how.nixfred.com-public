@@ -72,7 +72,7 @@ A nuance worth internalizing: you *can* build a more elaborate harness so a smal
 
 ## 18.6 Automate the switch: the Router (CR)
 
-Everything above is you making the model call by hand. The Router (CR, [Chapter 4](04-larry-stack.html), Step 4f) makes most of those calls for you, automatically, on every request.
+Everything above is you making the model call by hand. The Router (CR, [Chapter 4](04-larry-stack.html), Step 4e) makes most of those calls for you, automatically, on every request.
 
 **How it decides.** CR is a Claude Code mod, `tier-router`. Instant, free regex rules read each prompt and decide what kind of work it is, and then the mod itself sets the model on every request and every subagent it spawns. It does not ask the main model to hand work off; it routes:
 
@@ -110,7 +110,7 @@ Verify:
 
 ```bash
 jq -r '.statusLine.command // "no status line yet"' ~/.claude/settings.json
-test -f ~/.claude/settings.json && { claude plugin list 2>/dev/null | grep -i tier-router || echo "no router (fine if your human skipped Chapter 4, Step 4f)"; }
+test -f ~/.claude/settings.json && { claude plugin list 2>/dev/null | grep -i tier-router || echo "no router (fine if your human skipped Chapter 4, Step 4e)"; }
 ```
 
 ---

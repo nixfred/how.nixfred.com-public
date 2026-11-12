@@ -126,7 +126,7 @@ Verify:
 
 ```bash
 test -f .claude/commands/handoff.md && echo "command: ok"
-jq -e '[.hooks.SessionStart[]?.hooks[]?.command] | any(test("handoff-load"))' ~/.claude/settings.json >/dev/null && echo "hook: registered"
+jq -e '[.hooks.SessionStart[]?.hooks[]? | (.command // "")] | any(test("handoff-load"))' ~/.claude/settings.json >/dev/null && echo "hook: registered"
 CLAUDE_PROJECT_DIR=$PWD bash ~/.claude/hooks/handoff-load.sh | head -3      # the resume header, or the "no handoff" line
 ```
 

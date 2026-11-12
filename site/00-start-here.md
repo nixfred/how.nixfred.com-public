@@ -130,7 +130,7 @@ sudo pacman -S --needed jq git curl unzip
 
 `sudo` asks for your password, and the password does not show as you type. That is normal. You'll see the tools install, or a note that they already are.
 
-**Which Linux? Any of these.** nixbash and every Linux command on this site work on Debian, Ubuntu, Fedora and Arch; nothing assumes Arch. What differs: the package-manager line (each one is shown, like above), nixbash skips `fastfetch` where the distro doesn't package it (Ubuntu 24.04), gitleaks has no apt package so Chapter 7 gives a download line for it, nixbash's full provisioning script (Chapter 4) is apt-only, and LMF4.1 (Chapter 4) needs systemd, so it will not run inside a container or a WSL setup without systemd.
+**Which Linux? Any of these.** nixbash and every Linux command on this site work on Debian, Ubuntu, Fedora and Arch; nothing assumes Arch. What differs: the package-manager line (each one is shown, like above), nixbash skips `fastfetch` where the distro doesn't package it (Ubuntu 24.04), gitleaks has no apt package so Chapter 7 gives a download line for it, and nixbash's full provisioning script (Chapter 4) is apt-only.
 
 **Mac, 4a. Install Homebrew**, the Mac's app installer for the terminal (you'll track your dotfiles + a `Brewfile` later, Chapter 7):
 

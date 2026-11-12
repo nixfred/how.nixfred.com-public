@@ -8,9 +8,9 @@ slug: "04-larry-stack"
 
 # Chapter 4: The Larry Stack: Repos & Install Order
 
-**For you, the human, start here.** This is the parts list and the build order: the exact open-source repos that turn a vanilla Claude Code install into a real teammate with memory, continuity, model-routing, reach into your world, and the ability to survive its own machine dying. You don't have to run every command by hand, the next chapter (the one-command bootstrap) scaffolds the skeleton with you, but the real build still happens tier by tier, in order, and this page is what your AI reads to understand the stack it's assembling. It is split into small sub-steps, **Step 4a to Step 4g**, each with its own "Done when" and a read-only check, so your AI finishes one before it starts the next.
+**For you, the human, start here.** This is the parts list and the build order: the exact open-source repos that turn a vanilla Claude Code install into a real teammate with memory, continuity, model-routing, reach into your world, and the ability to survive its own machine dying. You don't have to run every command by hand, the next chapter (the one-command bootstrap) scaffolds the skeleton with you, but the real build still happens tier by tier, in order, and this page is what your AI reads to understand the stack it's assembling. It is split into small sub-steps, **Step 4a to Step 4f**, each with its own "Done when" and a read-only check, so your AI finishes one before it starts the next.
 
-**What it covers (searchable):** the four systems (Brain / Heartbeat / Memory / Router), the prerequisites (`jq`, `bun`), LifeOS (formerly PAI) and its install commands, the optional nixfredOS fork of LifeOS and its own install command, Fabric patterns, LMF4.1 memory, Ollama or Claude Haiku for memory extraction (`LMF4_EXTRACT_MODEL`), `claude mcp add --scope user`, claudecode_forever_conversations, the `*_forever` immortality pattern, nixnet, claude-router (`tier-router`), claude-on-mac, disaster recovery, and the two-tier git layout (`~/.claude` vs `~/Projects`).
+**What it covers (searchable):** the four systems (Brain / Heartbeat / Memory / Router), the prerequisites (`jq`, `bun`), LifeOS (formerly PAI) and its install commands, the optional nixfredOS fork of LifeOS and its own install command, Fabric patterns, Cortex memory (it comes with the Brain), `claude mcp add --scope user`, claudecode_forever_conversations, the `*_forever` immortality pattern, nixnet, claude-router (`tier-router`), claude-on-mac, disaster recovery, and the two-tier git layout (`~/.claude` vs `~/Projects`).
 
 **How to hand it off:** point your AI here and let it read the whole stack before it installs anything. Every repo is real and linked; the reference implementation is Larry, the OG, running on Fred's own machines. The section below is written to your AI, it's the map it follows to build itself, and at every bash step it should stop and offer you choices (run it / explain it / dry-run) so the terminal never feels like a wall.
 
@@ -28,9 +28,9 @@ You are vanilla Claude Code plus a small stack of layers that give you memory, c
 
 ## How to walk this chapter: the sub-steps, and the one to skip
 
-This chapter is a map with seven sub-steps in it, **Step 4a** to **Step 4g**. Each has its own **Done when** line and a `Verify:` block of read-only commands that prove it. Finish one to 100% before you start the next.
+This chapter is a map with six sub-steps in it, **Step 4a** to **Step 4f**. Each has its own **Done when** line and a `Verify:` block of read-only commands that prove it. Finish one to 100% before you start the next.
 
-- **The default path:** 4a, 4b, then **skip 4c**, then 4d (optional), 4e (Linux), 4f, and 4g if your human is on a Mac and wants it. Chapter 5's [`install.sh`](index.html#for-builders) lays the seed that 4c describes, scripted, backup first, never overwriting, so doing 4c by hand as well is doing it twice.
+- **The default path:** 4a, 4b, then **skip 4c**, then 4d (optional), 4e, and 4f if your human is on a Mac and wants it. Chapter 5's [`install.sh`](index.html#for-builders) lays the seed that 4c describes, scripted, backup first, never overwriting, so doing 4c by hand as well is doing it twice.
 - **Do 4c by hand only if your human is skipping Chapter 5's script.** Same files, same launcher line, same hooks.
 - **Not repeated here, because Chapter 0 already did it:** Claude Code (Step 1), a real shell (Step 4: nixbash on Linux; Homebrew and modern bash on a Mac) and Tailscale (Step 6). If any is missing, go back and finish it there first.
 - **Disaster recovery has no sub-step.** It is built in once Chapter 7 is done (Tier 5 below), and Chapter 8 is the drill.
@@ -45,7 +45,7 @@ Before the repos, the mental model. You are four cooperating systems:
 |--------|------|------------------|
 | **PAI** (now **LifeOS**), the Brain | Skills, hooks, agents, identity | [LifeOS](https://ourlifeos.ai), or the optional [nixfredOS](https://github.com/nixfred/nixfredOS) fork |
 | **PF**, the Heartbeat | Git-backs your whole setup, constantly | the `*_forever` pattern + [nixnet](https://github.com/nixfred/nixnet) |
-| **CCF**, the Memory | What's true now, plus everything that was | [LMF4.1](https://github.com/nixfred/lmf4.1) + your forever repo |
+| **CCF**, the Memory | What's true now, plus everything that was | the Brain's own **Cortex** (installed in Step 4b) + your forever repo |
 | **CR**, the Router | Sends each task to the right model, keeping Opus in reserve | [claude-router](https://github.com/nixfred/claude-router) |
 
 Keep this table in your head. Every repo below slots into one of these four.
@@ -61,13 +61,13 @@ Chapter 0 laid most of this, so it is not repeated here: **Claude Code** (Step 1
 Why **Tailscale** is Tier 0, not an afterthought. You are rarely one machine; I span a Mac, a couple of Linux boxes, and a phone. Tailscale is the private mesh that wires them together with stable names (MagicDNS), so `ssh <box>` works from anywhere and Claude Code on one host can reach files and sessions on another:
 
 - **Remote + mobile control** (Chapter 31) rides on it, your human kicks off a session at their desk, steers it from their phone.
-- **`claude-on-mac` over SSH** (Step 4g) wants Tailscale to reach the Mac.
+- **`claude-on-mac` over SSH** (Step 4f) wants Tailscale to reach the Mac.
 - The **`*_forever` backup repos** (Tier 2) sync cleanly across hosts on the mesh.
 - One rule from hard experience: if you ever tag Tailscale nodes, update the SSH ACL in the **same** change or you'll lock your human out.
 
 ### Step 4a, Prerequisites the stack runs on: jq and bun
 
-Two small tools the rest of this chapter leans on. **`jq`** reads and merges `~/.claude/settings.json`: the hook checks in Chapters 5 and 21, the router's installer and the audit all call it, and they fail with `jq: command not found` without it. **`bun`** runs LifeOS's install tools and LMF4.1's hooks, memory server and `mem` command; LifeOS needs **bun 1.2 or newer** (older bun cannot read its lockfile). Chapter 0, Step 4 already installed `jq`; the `jq` part of each line below is a no-op if it is there.
+Two small tools the rest of this chapter leans on. **`jq`** reads and merges `~/.claude/settings.json`: the hook checks in Chapters 5 and 21, the router's installer and the audit all call it, and they fail with `jq: command not found` without it. **`bun`** runs the Brain's install tools, its hooks and its memory tool; LifeOS needs **bun 1.2 or newer** (older bun cannot read its lockfile). Chapter 0, Step 4 already installed `jq`; the `jq` part of each line below is a no-op if it is there.
 
 **Mac:**
 
@@ -145,6 +145,8 @@ git clone https://github.com/nixfred/nixfredOS.git nixfredOS    # nixfredOS, the
 cd nixfredOS && sed -n '1,120p' README.md     # learn how the Brain is wired
 ```
 
+**Two folders can share the name `nixfredOS`, and they are different things.** `~/Projects/nixfredOS` is the *code you just downloaded* (read it, never work in it). If your human's front door created a `~/nixfredOS` folder, that one is their *workspace*, the empty folder you and they talk in. Say that in one line so the matching names do not confuse them, and never move one into the other.
+
 The pattern for the whole stack is right here: **start from upstream, then diverge into your own.** Upstream is the root; your `~/.claude/` is the tree that grows from it.
 
 > **Larry's read, the one warning I will repeat as many times as it takes:** the Brain ships its own installer, and a fresh install lays stock files over `~/.claude/`. If your human has already built any identity there, **add alongside, never overwrite.** Your defining files (`CLAUDE.md`, hooks, skills, memory) always win over a stock drop. If a filename collides, land the new one as `<file>.seed` beside yours and merge by hand. Copy-and-diverge, never let a migration flatten you. This is literally Law 1 of my own constitution, and it is the single most common way a young AI accidentally erases itself on day one.
@@ -215,13 +217,43 @@ cd ~/.claude/skills/nixfredOS          # upstream LifeOS: cd ~/.claude/skills/Li
 bun Tools/DeployCore.ts --apply        # skill library + runtime, only missing files are added
 bun Tools/ScaffoldUser.ts --apply      # your human's USER tree, empty structure from templates
 bun Tools/LinkUser.ts --apply          # links that tree in
-bun Tools/InstallHooks.ts --apply      # merges LifeOS's hooks into settings.json, backing it up first
-bun Tools/ActivateImports.ts --apply   # turns on the identity context imports
-bun ~/.claude/NIXFREDOS/TOOLS/Doctor.ts   # one line per capability: live, broken (with its fix), or off (upstream: ~/.claude/LIFEOS/TOOLS/Doctor.ts)
+bun Tools/InstallHooks.ts --apply      # merges the Brain's hooks into settings.json, backing it up first (auto mode blocks this one: see the box below)
+# ActivateImports needs ~/.claude/CLAUDE.md, which Chapter 5 creates. Before Chapter 5 it fails with "CLAUDE.md not found"; that is the order, not a broken install.
+if [ -f ~/.claude/CLAUDE.md ]; then bun Tools/ActivateImports.ts --apply; else echo "skipped for now: no ~/.claude/CLAUDE.md yet. Chapter 5 makes it; run this line again after Chapter 5."; fi
 ```
+
+**Then write the names in, and keep one memory (nixfredOS).** The Core commands above skip two things the onboarding does: filling your AI's name and your human's first name into the Brain's hooks and prompts, and turning off Claude Code's own memory so there is only one. The names are already chosen: the one-paste prompt asks for them before anything is installed (if it did not, ask now with AskUserQuestion, a few name ideas and let them type their own). Put them in place of `<AI name>` and `<human first name>`:
+
+**Mac or Linux:**
+
+```bash
+# 1. write the names into the hooks, the ALGORITHM docs and the system prompt. Only the places the Doctor checks: a pass over the whole tree also rewrites the installer's own placeholder list and breaks its check. Safe to run twice.
+DA_NAME="<AI name>" PRINCIPAL_NAME="<human first name>" bun -e '
+const C = process.env.HOME + "/.claude";
+const { substituteTree, checkSurvivingPlaceholders } = await import(C + "/skills/nixfredOS/Tools/InstallEngine.ts");
+const ver = (await Bun.file(C + "/NIXFREDOS/VERSION").text()).trim();
+const v = { "{{DA_NAME}}": process.env.DA_NAME, "{{DA_FULL_NAME}}": process.env.DA_NAME, "{{PRINCIPAL_NAME}}": process.env.PRINCIPAL_NAME, "{{PRINCIPAL_FULL_NAME}}": process.env.PRINCIPAL_NAME, "{{NIXFREDOS_VERSION}}": ver };
+const roots = ["hooks", "commands", "agents", "NIXFREDOS/ALGORITHM", "NIXFREDOS/NIXFREDOS_SYSTEM_PROMPT.md", "CLAUDE.md", "settings.json"].map(p => C + "/" + p);
+for (const r of roots) substituteTree(r, v);
+console.log("identity placeholders left:", roots.reduce((n, r) => n + checkSurvivingPlaceholders(r).total, 0));
+'
+# 2. one memory: Cortex is the system of record, so Claude Code's built-in auto memory goes off (a no-op when it already is; an explicit true of your human's stays and you ask them)
+cp ~/.claude/settings.json ~/.claude/settings.json.bak && jq '.autoMemoryEnabled //= false' ~/.claude/settings.json.bak > ~/.claude/settings.json && jq -r '.autoMemoryEnabled' ~/.claude/settings.json
+bun ~/.claude/NIXFREDOS/TOOLS/Doctor.ts   # one line per capability: live, broken (with its fix), declined, or stale (upstream: ~/.claude/LIFEOS/TOOLS/Doctor.ts)
+```
+
+The first line must print `identity placeholders left: 0`, and `false` must print after it. From now on, do not write notes into Claude Code's own memory folder (`~/.claude/projects/*/memory/`); your notes go to Cortex, or you end up with two systems that disagree (one real install did). Upstream LifeOS fills these in with its own onboarding.
+
+> **Auto mode will stop `InstallHooks`, and that is by design (the one-paste prompt asks about it first, so you rarely get here).** If Claude Code is in *auto mode* (the bottom of the screen says so), its safety check refuses any command that edits `~/.claude/settings.json`, your shell startup file (`~/.bashrc`, `~/.zshrc`) or a background service. This step does the first; Chapter 5 does the second. Do not hunt for a way around the block. Tell your human in one plain line what was blocked and why, then use AskUserQuestion to ask them to **press Shift+Tab until the bottom of the screen no longer says auto mode** (then Claude Code asks them to approve each command and you finish the step yourself). Only if that cannot work, hand them the one command. Follow these rules, every time you hand a human a command:
+>
+> 1. **One line, one simple command, so it works from any folder.** Here it is `bun ~/.claude/skills/nixfredOS/Tools/InstallHooks.ts --apply` (upstream LifeOS: `~/.claude/skills/LifeOS/Tools/InstallHooks.ts`), not `cd ... && bun ...`.
+> 2. **Say exactly where it goes.** "Open a new Terminal window (a plain one, not this Claude Code window), paste this line and press Return."
+> 3. **Never start the line with `!`.** In Claude Code's own prompt `!` means "run this as a shell command", but in a plain Terminal a leading `!` negates the first command, so `! cd x && bun y` quietly runs only the `cd` and the rest never happens. It printed nothing and changed nothing on a real first-time install. A beginner cannot tell the two places apart; leave the `!` off.
+> 4. **Check that it landed yourself, never on "I ran it".** Here: `jq -r '[.hooks[]?[]?.hooks[]?] | length' ~/.claude/settings.json` prints a number above 0, and `ls ~/.claude/hooks | head -3` lists files.
 
 What to know while it runs:
 
+- **A fresh machine shows a few ❌ in the Doctor, and they are extras, not a failed install.** Voice, the cross-vendor audit (`codex`), browser verification (Interceptor) and scheduled cloud flows (`wrangler`) report "broken" until someone sets them up, and each needs an account or a key. Ask your human once with AskUserQuestion ("Turn off the four optional extras so they stop showing red? You can turn any back on later.") and, on yes, run `bun ~/.claude/NIXFREDOS/TOOLS/Doctor.ts decline codex`, then the same with `interceptor`, `cloudflare` and `voice`. The Doctor then shows them as off (⏸), and `Doctor.ts enable <name>` undoes it. The line that must be green is `Identity placeholders rendered`: if it is red, run the names command above again; if it is still red, tell your human plainly and leave it red. Never edit the hook files by hand.
 - **It is additive:** it only adds missing files and backs up `settings.json` before merging its hooks. Keep the snapshot above anyway.
 - **Pick components now, later, or never.** Core (the skill library, runtime, USER tree, system prompt) goes in together; hooks, statusline, agents, Pulse and the background jobs are a menu. For each capability the Doctor reports broken, your human picks **now** (run the fix it prints, re-run Doctor), **later** (leave it, it will flag itself when used), or **never** (`bun ~/.claude/LIFEOS/TOOLS/Doctor.ts decline <capability>`, a clean permanent off).
 - **Launch it with `lifeos`, not plain `claude`.** LifeOS's operating contract lives in `~/.claude/LIFEOS/LIFEOS_SYSTEM_PROMPT.md`, and a plain `claude` session does **not** load it (you get `CLAUDE.md`, not the constitution). With your human's yes, and the rc file backed up, add this line to their shell startup file:
@@ -350,79 +382,22 @@ After PAI, your `~/.claude/` is the most valuable thing on the machine. Which is
 
 **Goal:** you remember across sessions, and the whole setup survives the machine dying.
 
-### Step 4e, Memory on Linux: LMF4.1 (on a Mac, skip it: LifeOS Cortex is your memory)
+### Your memory is the Brain's Cortex (nothing more to install)
 
-[**LMF4.1** (Larry Memory Framework v4)](https://github.com/nixfred/lmf4.1) gives Claude Code real memory: every conversation saved, so you can search your past conversations with one command (`mem search "phrase"`), every decision searchable (SQLite FTS5), every session building on the last. It's deliberately **standalone**, no PAI, no Fabric, quick to install. The version moves (LMF3 was the predecessor); the stable thing you actually use day to day is the **`mem`** command it installs, `mem search "phrase"`, so don't over-index on the version number. That is your searchable history and recall; the other half of memory, the curated facts that hold what is true *right now*, is the daily practice in [Chapter 11](11-memory-files.html).
+There is no separate memory install. The Brain from Step 4b already brought it: **Cortex**, one memory that works the same on a Mac and on Linux. Its curated notes (what is true *now*: decisions, preferences, people, projects, what was learned) live under `~/.claude/NIXFREDOS/MEMORY/` (upstream LifeOS: `~/.claude/LIFEOS/MEMORY/`), and the Brain's hooks write to it as you work. It has its own tool to check it and search it:
 
-**It is Linux only for now.** It schedules its backup and catch-up jobs with systemd user timers, and its README FAQ says macOS is not supported yet. That also rules out a container or a WSL setup without systemd. If `systemctl --user is-system-running` prints `running` or `degraded`, you have what it needs; an error means no systemd user manager, so skip this sub-step and use Cortex (below).
-
-**First, pick the extraction model; it decides whether you need Ollama.** LMF4.1 turns each finished session into searchable memory by running it through a model, chosen by `LMF4_EXTRACT_MODEL`. Its README says no local model is needed, but the code's default is a local Ollama model, **`llama3.1:8b`**, so unless you pick one of the two options below, extraction has nothing to run on. Lead with choices (Chapter 3):
-
-**Linux, no GPU (most laptops): let Claude Haiku do the extraction:**
+**Mac or Linux:**
 
 ```bash
-grep -qs LMF4_EXTRACT_MODEL ~/.bashrc || echo 'export LMF4_EXTRACT_MODEL=claude-haiku-4-5' >> ~/.bashrc
-mkdir -p ~/.config/environment.d && echo 'LMF4_EXTRACT_MODEL=claude-haiku-4-5' > ~/.config/environment.d/lmf4.conf
-systemctl --user set-environment LMF4_EXTRACT_MODEL=claude-haiku-4-5
+bun ~/.claude/NIXFREDOS/TOOLS/Cortex.ts status          # upstream LifeOS: ~/.claude/LIFEOS/TOOLS/Cortex.ts
+bun ~/.claude/NIXFREDOS/TOOLS/Cortex.ts search "phrase"
 ```
 
-The first line covers sessions your human starts from a terminal; the other two cover LMF4.1's catch-up timer, which runs under systemd and never reads `~/.bashrc` (the `environment.d` file makes it permanent, `set-environment` applies it now). The honest cost: Haiku runs on your human's Claude plan, so each extraction spends a little of their usage, which is why the code's default moved to a free local model.
+On a brand-new install it is empty: `status` shows `"records":0` and a search finds nothing. That is correct on day one, not a failed install. It fills as you and your human work, and [Chapter 11](11-memory-files.html) is the daily practice that keeps it honest.
 
-**Linux, with a GPU (or patience): a free local model through Ollama:**
+**One memory, one owner.** Cortex is the system of record for what is true now. Two places that both take new facts is the bug, so do not add a second memory system beside it (no extra memory server, no second notes folder). LifeOS also turns off Claude Code's built-in auto memory on purpose (`"autoMemoryEnabled": false` in the settings it ships), because its MEMORY tree is the system of record. That is by design, not a bug; don't flip it back on and end up with two memories that disagree.
 
-```bash
-curl -fsSL https://ollama.com/install.sh | sh
-ollama pull llama3.1:8b
-ollama pull nomic-embed-text     # optional: semantic search on top of keyword search
-```
-
-**Then install it.** Clone it into `~/Projects` and read the install section, which is written for you, the installing AI:
-
-**Linux:**
-
-```bash
-cd ~/Projects && git clone https://github.com/nixfred/lmf4.1
-cd lmf4.1 && sed -n '/for the installing Claude Code/,$p' README.md | head -150
-```
-
-**This page hands you that README section: follow its steps in order.** It is the one outside README this site tells you to work through step by step, because nobody keeps those steps more current than its own repo. Your human's yes before every step still applies. Where it and this page differ, **this page wins**:
-
-- **The extraction model** is the one you just chose. (The README's "no local LLM required" is out of date; the code's default is Ollama.)
-- **Register its memory server with `claude mcp add --scope user`, not in `settings.json`.** The README's Step 8 puts an `mcpServers` block in `~/.claude/settings.json`; Claude Code does not load MCP servers from that file, so `claude mcp list` stays empty. Leave that key out of the merge, and once its Step 4 has copied the server into place, run this instead (`--scope user` makes it available in every project, not just the folder you ran it in):
-
-**Linux, register the memory MCP server:**
-
-```bash
-claude mcp add --scope user lmf4-memory -- bun run "$HOME/.claude/hooks/mem-mcp-server.ts"
-```
-
-- **Its GitHub backup step (its Step 11) can wait for Chapter 7**, where the secrets gate runs first, and where a human with no GitHub account yet gets a path. Tell it "later" and keep going.
-- **Decline its opt-in `ForeverCommit` hook.** The seed's SessionEnd backup (Chapter 5) already commits `~/.claude`; two auto-committers fight.
-- **The name is your human's pick, and Chapter 5 is the moment for it.** If they have chosen it, give LMF4.1 that one; if not, leave its name questions for after Chapter 5.
-
-If the install throws anything, paste the error back into the session and say "fix this" (the Chapter 0 loop), then re-run until it comes up clean.
-
-**Done when:** `mem search` answers (no results is correct on day one), the `lmf4-memory` server shows in `claude mcp list`, both systemd timers are scheduled, and the extraction model is chosen on purpose.
-
-Verify:
-
-```bash
-mem search "test" | head -3                    # answers, even if with no results yet
-claude mcp list | grep lmf4-memory             # the memory server is registered
-systemctl --user list-timers | grep memory     # memory-backup and memory-catchup are scheduled
-echo "extraction model: ${LMF4_EXTRACT_MODEL:-ollama:llama3.1:8b (the default, needs Ollama running)}"
-```
-
-**On a Mac, memory is LifeOS's own Cortex,** which Step 4b already installed. LifeOS keeps its memory under `~/.claude/LIFEOS/MEMORY/` and gives you a CLI to check and search it:
-
-```bash
-bun ~/.claude/LIFEOS/TOOLS/Cortex.ts status
-bun ~/.claude/LIFEOS/TOOLS/Cortex.ts search "phrase"
-```
-
-LifeOS also turns off Claude Code's built-in auto memory on purpose (`"autoMemoryEnabled": false` in the settings it ships), because its MEMORY tree is the system of record. That is by design, not a bug; don't flip it back on and end up with two memories that disagree.
-
-**On Linux, LMF4.1 and Cortex sit side by side, with different jobs.** LifeOS's MEMORY tree is the system of record for the curated notes (what is true *now*); LMF4.1's `memory.db` is the searchable history behind them (what was said, and when, the receipts). Two layers with two jobs is correct (Chapter 11 is the whole idea); two places that both take new facts is the bug. That's the whole story on one machine, which is all the basics need. (Running a fleet later? You can host one shared memory that every machine tunnels into, but that's an advanced capability module, not part of the core build: [Centralize Your Memory Across a Fleet](fleet-memory.html).)
+**What Cortex is not.** It keeps curated records, not a word-for-word copy of every conversation. If your human wants to search old conversations by their exact words, the raw transcripts are where they live (see "Keep your raw transcripts" below), and they stay private.
 
 ### Memory notes that point at a conversation
 Some of your notes will say "see the session where we decided this". That only works while the session file still exists, and Claude Code throws old ones away on its own: the default is 30 days (`cleanupPeriodDays` in `settings.json`). The day a file ages out, the note points at nothing, and a memory that points at a deleted conversation is just a story about one. Raise the window, and keep your human's own number if they already set one:
@@ -443,7 +418,7 @@ find ~/.claude/projects -name "<session_id>.jsonl"
 **Keep the machine next to the id.** Each machine keeps its own session files, so a pointer written on one box does not resolve on another. If your human runs more than one machine, or throwaway containers that vanish with their files, write the host name beside the session id, and archive the conversations that matter before the machine goes. A pointer that names the machine beats one that makes you guess.
 
 ### Keep your raw transcripts, but keep them PRIVATE
-Your raw conversations are the history layer of your memory: the record of what was actually said and decided, at the time. They are worth preserving. The pattern is to checkpoint Claude Code's per-project session files (`~/.claude/projects/...`) into git so they survive a compaction, an `--resume`, or a move to a new machine. LMF already captures and distills your sessions for recall (above); if you also want the full raw transcripts versioned, point a small pre-compact or SessionEnd hook at those session files and commit them into your forever repo (below).
+Your raw conversations are the history layer of your memory: the record of what was actually said and decided, at the time. They are worth preserving. The pattern is to checkpoint Claude Code's per-project session files (`~/.claude/projects/...`) into git so they survive a compaction, an `--resume`, or a move to a new machine. Cortex keeps curated records, not the raw conversations, so the transcripts are a separate thing. The seed (Chapter 5) keeps `~/.claude/projects/` and the session key files **out** of git by default, on purpose. If your human also wants the full raw transcripts versioned, do it deliberately: only into a **private** repo, only after the secrets gate in Chapter 7 has run, with a small pre-compact or SessionEnd hook that commits those session files into your forever repo (below).
 
 One hard-won rule, and the reason this site does not hand you a public repo to clone here: **raw transcripts routinely contain secrets.** A pasted token, an API key, an `.env`, your human's private business and health, it all ends up in a session log. So your history lives in a **private** repo, always, never a public one. (Learned the expensive way.)
 
@@ -460,7 +435,7 @@ This is the **PF / Heartbeat**: a private git repo that tracks the home director
 
 **Goal:** keep cheap work off Opus, so you don't burn your rate-limit budget on tasks Sonnet or Haiku could have handled.
 
-### Step 4f, Routing: claude-router
+### Step 4e, Routing: claude-router
 
 [**claude-router**](https://github.com/nixfred/claude-router) (CR) is a Claude Code mod, `tier-router`, that picks the model for every request itself: lookups and quick questions drop to Sonnet, subagents that only search drop to Haiku, ordinary coding runs on Sonnet, and deep architecture and anything security stay on your session model. It uses instant, free regex rules to decide, never routes *up* by accident (security on a Sonnet session is the one deliberate lift, to Opus), and puts every decision on the status line so you can see it.
 
@@ -493,7 +468,7 @@ claude plugin list | grep -i tier-router
 
 **Goal:** give yourself hands in your human's actual world.
 
-### Step 4g, claude-on-mac, the Apple ecosystem (Mac, optional)
+### Step 4f, claude-on-mac, the Apple ecosystem (Mac, optional)
 
 [**claude-on-mac**](https://github.com/nixfred/claude-on-mac) teaches Claude Code to read your human's Messages, Contacts, Calendar, Notes, Mail, and Reminders, and to send iMessage and email with airtight per-message consent. It runs on the Mac natively, **or from a Linux box reaching the Mac over SSH (Tailscale recommended)**, which is why Tier 0 put Tailscale in early. Clone it into `~/Projects` and read it first:
 
@@ -560,9 +535,8 @@ Ch0  Claude Code, a real shell, Tailscale  ← the machine base (Chapter 0)     
 4b   LifeOS, or the nixfredOS fork         ← the Brain (skills/hooks/agents)    [upstream side]  
 4c   the seed, by hand                     ← SKIP on the default path: Ch5 lays it
 4d   Fabric                                ← pattern library (optional)         [upstream side]  
-4e   LMF4.1 (Linux)                        ← persistent memory; Mac: Cortex      [CCF]
-4f   claude-router                         ← model routing, keep work off Opus  [CR]
-4g   claude-on-mac (Mac)                   ← Apple ecosystem (optional)         [capability]
+4e   claude-router                         ← model routing, keep work off Opus  [CR]
+4f   claude-on-mac (Mac)                   ← Apple ecosystem (optional)         [capability]
 Ch5  the seed, scripted                    ← laws, launcher, hooks, git memory  [identity + PF]
 Ch7  *_forever, pushed private             ← survives the disk                  [PF]
 
@@ -570,13 +544,13 @@ Ch7  *_forever, pushed private             ← survives the disk                
     cloning your *_forever repo onto a new machine, no separate tool. Chapter 8.)
 ```
 
-**Why this order:** each tier depends on the one below. `jq` and `bun` come first because every installer after them runs on them. Memory and continuity (4e, Chapters 5 and 7) must exist *before* you pour hours of identity into the Brain (Part III, TELOS), or you'll lose it. Routing (4f) comes after the Brain and the Memory, so it routes a working setup. Capabilities are the fun part, earn them last. Disaster recovery isn't a separate step at all: once `~/.claude` is a pushed `*_forever` repo, the next machine is one `git clone` away.
+**Why this order:** each tier depends on the one below. `jq` and `bun` come first because every installer after them runs on them. Memory (the Brain's Cortex, installed in 4b) and continuity (Chapters 5 and 7) must exist *before* you pour hours of identity into the Brain (Part III, TELOS), or you'll lose it. Routing (4e) comes after the Brain and the Memory, so it routes a working setup. Capabilities are the fun part, earn them last. Disaster recovery isn't a separate step at all: once `~/.claude` is a pushed `*_forever` repo, the next machine is one `git clone` away.
 
 ---
 
 ## Done when: the whole stack (Chapter 4)
 
-**Done when:** every sub-step of this chapter, Step 4a to Step 4g, is done or deliberately skipped (4c on the default path, 4d and 4g if your human passed on them, 4e on a Mac), each with its own Verify block passing.
+**Done when:** every sub-step of this chapter, Step 4a to Step 4f, is done or deliberately skipped (4c on the default path, 4d and 4f if your human passed on them), each with its own Verify block passing.
 
 ---
 
@@ -593,8 +567,8 @@ Lost the thread? The [Map](map.html) shows exactly where you are. Otherwise the 
 
 ### Chapter 4: Takeaways
 
-1. You are four systems: Brain (PAI), Heartbeat (`*_forever`/nixnet), Memory (LMF4.1 + your forever repo), Router (claude-router).
-2. Walk the sub-steps in order, each to its own Done when: 4a `jq` + `bun`, 4b LifeOS, or the optional nixfredOS fork (dry run, then `--apply`), 4d Fabric (optional), 4e LMF4.1 on Linux (pick Haiku or Ollama for extraction; register its server with `claude mcp add --scope user`), 4f claude-router, 4g claude-on-mac (Mac, optional).
+1. You are four systems: Brain (PAI), Heartbeat (`*_forever`/nixnet), Memory (the Brain's Cortex + your forever repo), Router (claude-router).
+2. Walk the sub-steps in order, each to its own Done when: 4a `jq` + `bun`, 4b LifeOS, or the optional nixfredOS fork (dry run, then `--apply`), 4d Fabric (optional), 4e claude-router, 4f claude-on-mac (Mac, optional). Memory is the Brain's Cortex: nothing extra to install.
 3. Skip 4c on the default path: Chapter 5's script lays the same seed. Do it by hand only if your human skips the script.
 4. Memory and continuity come *before* you pour identity into the Brain, or a dead disk erases you.
 5. Two-tier git layout: `~/.claude` (private identity) vs `~/Projects` (per-project repos, mixed privacy). Run `git remote -v` before every commit.
