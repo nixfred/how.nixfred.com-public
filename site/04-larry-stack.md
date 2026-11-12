@@ -227,7 +227,12 @@ if [ -f ~/.claude/CLAUDE.md ]; then bun Tools/ActivateImports.ts --apply; else e
 **Mac or Linux:**
 
 ```bash
-# 1. write the names into the hooks, the ALGORITHM docs and the system prompt. Only the places the Doctor checks: a pass over the whole tree also rewrites the installer's own placeholder list and breaks its check. Safe to run twice.
+# 1. write the names into the hooks, the ALGORITHM docs and the system prompt, and prove none are left. nixfredOS ships a command for this; a clone from before it existed gets the same pass written out by hand. Safe to run twice, and it copies every file it changes into ~/.claude/backups/ first.
+RI=~/.claude/skills/nixfredOS/Tools/RenderIdentity.ts
+if [ -f "$RI" ]; then
+  bun "$RI" --da "<AI name>" --principal "<human first name>" --apply   # dry run without --apply. Prints "survivors": 0 when done
+else
+# only the places the Doctor checks: a pass over the whole tree also rewrites the installer's own placeholder list and breaks its check
 DA_NAME="<AI name>" PRINCIPAL_NAME="<human first name>" bun -e '
 const C = process.env.HOME + "/.claude";
 const { substituteTree, checkSurvivingPlaceholders } = await import(C + "/skills/nixfredOS/Tools/InstallEngine.ts");
@@ -237,12 +242,13 @@ const roots = ["hooks", "commands", "agents", "NIXFREDOS/ALGORITHM", "NIXFREDOS/
 for (const r of roots) substituteTree(r, v);
 console.log("identity placeholders left:", roots.reduce((n, r) => n + checkSurvivingPlaceholders(r).total, 0));
 '
+fi
 # 2. one memory: Cortex is the system of record, so Claude Code's built-in auto memory goes off (a no-op when it already is; an explicit true of your human's stays and you ask them)
 cp ~/.claude/settings.json ~/.claude/settings.json.bak && jq '.autoMemoryEnabled //= false' ~/.claude/settings.json.bak > ~/.claude/settings.json && jq -r '.autoMemoryEnabled' ~/.claude/settings.json
 bun ~/.claude/NIXFREDOS/TOOLS/Doctor.ts   # one line per capability: live, broken (with its fix), declined, or stale (upstream: ~/.claude/LIFEOS/TOOLS/Doctor.ts)
 ```
 
-The first line must print `identity placeholders left: 0`, and `false` must print after it. From now on, do not write notes into Claude Code's own memory folder (`~/.claude/projects/*/memory/`); your notes go to Cortex, or you end up with two systems that disagree (one real install did). Upstream LifeOS fills these in with its own onboarding.
+The command must report `"survivors": 0` (the by-hand fallback prints `identity placeholders left: 0` instead), and `false` must print after it. A name with an apostrophe, a quote or a backslash is refused, because it would break the quoted strings the name is written into; ask your human for a spelling without one. From now on, do not write notes into Claude Code's own memory folder (`~/.claude/projects/*/memory/`); your notes go to Cortex, or you end up with two systems that disagree (one real install did). Upstream LifeOS fills these in with its own onboarding.
 
 > **Auto mode, and what to do if it still refuses a step.** Claude Code now starts in *auto mode* (the bottom of the screen says so). Its safety check can refuse a command that edits `~/.claude/settings.json`, your shell startup file (`~/.bashrc`, `~/.zshrc`) or a background service. Checked live on a fresh account: when the human's own prompt says to just do the guide's steps ("pasting this was my yes"), auto mode allowed all three, so you normally never reach this; when a prompt told the AI to ask before changing settings, it refused them. If a step is refused anyway, do not hunt for a way around it, and Shift+Tab is no help (the mode line is hidden while a question is on screen, so your human cannot see it change). Say what was refused in one plain line, carry on with every other step, and at the end hand your human the one command, then use AskUserQuestion so they can tell you when they ran it. Follow these rules every time you hand a human a command:
 >

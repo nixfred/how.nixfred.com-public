@@ -239,7 +239,12 @@ if [ -f ~/.claude/CLAUDE.md ]; then bun Tools/ActivateImports.ts --apply; else e
 </code></pre>
 <p><strong>Then write the names in, and keep one memory (nixfredOS).</strong> The Core commands above skip two things the onboarding does: filling your AI&#39;s name and your human&#39;s first name into the Brain&#39;s hooks and prompts, and turning off Claude Code&#39;s own memory so there is only one. The names are already chosen: the one-paste prompt asks for them before anything is installed (if it did not, ask now with AskUserQuestion, a few name ideas and let them type their own). Put them in place of <code>&lt;AI name&gt;</code> and <code>&lt;human first name&gt;</code>:</p>
 <p><strong>Mac or Linux:</strong></p>
-<pre><code class="language-bash"># 1. write the names into the hooks, the ALGORITHM docs and the system prompt. Only the places the Doctor checks: a pass over the whole tree also rewrites the installer&#39;s own placeholder list and breaks its check. Safe to run twice.
+<pre><code class="language-bash"># 1. write the names into the hooks, the ALGORITHM docs and the system prompt, and prove none are left. nixfredOS ships a command for this; a clone from before it existed gets the same pass written out by hand. Safe to run twice, and it copies every file it changes into ~/.claude/backups/ first.
+RI=~/.claude/skills/nixfredOS/Tools/RenderIdentity.ts
+if [ -f &quot;$RI&quot; ]; then
+  bun &quot;$RI&quot; --da &quot;&lt;AI name&gt;&quot; --principal &quot;&lt;human first name&gt;&quot; --apply   # dry run without --apply. Prints &quot;survivors&quot;: 0 when done
+else
+# only the places the Doctor checks: a pass over the whole tree also rewrites the installer&#39;s own placeholder list and breaks its check
 DA_NAME=&quot;&lt;AI name&gt;&quot; PRINCIPAL_NAME=&quot;&lt;human first name&gt;&quot; bun -e &#39;
 const C = process.env.HOME + &quot;/.claude&quot;;
 const { substituteTree, checkSurvivingPlaceholders } = await import(C + &quot;/skills/nixfredOS/Tools/InstallEngine.ts&quot;);
@@ -249,11 +254,12 @@ const roots = [&quot;hooks&quot;, &quot;commands&quot;, &quot;agents&quot;, &quo
 for (const r of roots) substituteTree(r, v);
 console.log(&quot;identity placeholders left:&quot;, roots.reduce((n, r) =&gt; n + checkSurvivingPlaceholders(r).total, 0));
 &#39;
+fi
 # 2. one memory: Cortex is the system of record, so Claude Code&#39;s built-in auto memory goes off (a no-op when it already is; an explicit true of your human&#39;s stays and you ask them)
 cp ~/.claude/settings.json ~/.claude/settings.json.bak &amp;&amp; jq &#39;.autoMemoryEnabled //= false&#39; ~/.claude/settings.json.bak &gt; ~/.claude/settings.json &amp;&amp; jq -r &#39;.autoMemoryEnabled&#39; ~/.claude/settings.json
 bun ~/.claude/NIXFREDOS/TOOLS/Doctor.ts   # one line per capability: live, broken (with its fix), declined, or stale (upstream: ~/.claude/LIFEOS/TOOLS/Doctor.ts)
 </code></pre>
-<p>The first line must print <code>identity placeholders left: 0</code>, and <code>false</code> must print after it. From now on, do not write notes into Claude Code&#39;s own memory folder (<code>~/.claude/projects/*/memory/</code>); your notes go to Cortex, or you end up with two systems that disagree (one real install did). Upstream LifeOS fills these in with its own onboarding.</p>
+<p>The command must report <code>&quot;survivors&quot;: 0</code> (the by-hand fallback prints <code>identity placeholders left: 0</code> instead), and <code>false</code> must print after it. A name with an apostrophe, a quote or a backslash is refused, because it would break the quoted strings the name is written into; ask your human for a spelling without one. From now on, do not write notes into Claude Code&#39;s own memory folder (<code>~/.claude/projects/*/memory/</code>); your notes go to Cortex, or you end up with two systems that disagree (one real install did). Upstream LifeOS fills these in with its own onboarding.</p>
 <blockquote>
 <p><strong>Auto mode, and what to do if it still refuses a step.</strong> Claude Code now starts in <em>auto mode</em> (the bottom of the screen says so). Its safety check can refuse a command that edits <code>~/.claude/settings.json</code>, your shell startup file (<code>~/.bashrc</code>, <code>~/.zshrc</code>) or a background service. Checked live on a fresh account: when the human&#39;s own prompt says to just do the guide&#39;s steps (&quot;pasting this was my yes&quot;), auto mode allowed all three, so you normally never reach this; when a prompt told the AI to ask before changing settings, it refused them. If a step is refused anyway, do not hunt for a way around it, and Shift+Tab is no help (the mode line is hidden while a question is on screen, so your human cannot see it change). Say what was refused in one plain line, carry on with every other step, and at the end hand your human the one command, then use AskUserQuestion so they can tell you when they ran it. Follow these rules every time you hand a human a command:</p>
 <ol>
