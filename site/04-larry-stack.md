@@ -251,6 +251,14 @@ The first line must print `identity placeholders left: 0`, and `false` must prin
 > 3. **Never start the line with `!`.** In Claude Code's own prompt `!` means "run this as a shell command", but in a plain Terminal a leading `!` negates the first command, so `! cd x && bun y` quietly runs only the `cd` and the rest never happens. It printed nothing and changed nothing on a real first-time install. A beginner cannot tell the two places apart; leave the `!` off.
 > 4. **Check that it landed yourself, never on "I ran it".** Here: `jq -r '[.hooks[]?[]?.hooks[]?] | length' ~/.claude/settings.json` prints a number above 0, and `ls ~/.claude/hooks | head -3` lists files.
 
+**One more thing to put to your human, in the same AskUserQuestion as the extras: the Brain's background behaviour check.** A hook (`ConfigEvalFire`) runs after any edit to `CLAUDE.md`, the system prompt or a hook file: it starts a detached test run on your human's own plan, a few model calls, at most one every five minutes, and tells them nothing. It did fire in one real first install (a headless `claude --print --model sonnet --effort high` after each `CLAUDE.md` edit) and did not in another, where the AI edited with shell commands. Say that in one plain line ("it spends a little of your plan to double-check me after I edit my own rules; turn it off?"). Only if they say yes, remove just those hook entries (the Brain's hook install adds them back if they ever want it; checked on a copy of a real install: exactly the three entries go, every other setting is identical):
+
+**Mac or Linux, only if your human says yes:**
+
+```bash
+cp ~/.claude/settings.json ~/.claude/settings.json.bak && jq '.hooks |= with_entries(.value |= (map(.hooks |= map(select((.command // "") | test("ConfigEvalFire") | not))) | map(select((.hooks | length) > 0))))' ~/.claude/settings.json.bak > ~/.claude/settings.json && jq -r '[.hooks[]?[]?.hooks[]? | (.command // "")] | map(select(test("ConfigEvalFire"))) | length' ~/.claude/settings.json   # prints 0
+```
+
 What to know while it runs:
 
 - **A fresh machine shows a few ❌ in the Doctor, and they are extras, not a failed install.** Voice, the cross-vendor audit (`codex`), browser verification (Interceptor) and scheduled cloud flows (`wrangler`) report "broken" until someone sets them up, and each needs an account or a key. Ask your human once with AskUserQuestion ("Turn off the four optional extras so they stop showing red? You can turn any back on later.") and, on yes, run `bun ~/.claude/NIXFREDOS/TOOLS/Doctor.ts decline codex`, then the same with `interceptor`, `cloudflare` and `voice`. The Doctor then shows them as off (⏸), and `Doctor.ts enable <name>` undoes it. The line that must be green is `Identity placeholders rendered`: if it is red, run the names command above again; if it is still red, tell your human plainly and leave it red. Never edit the hook files by hand.

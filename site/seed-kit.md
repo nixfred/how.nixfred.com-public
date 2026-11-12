@@ -590,7 +590,7 @@ exit 0
 
 The written spec of a full build: twelve read-only checks, each with the command that proves it and the chapter that fixes it.
 
-Served at https://how.nixfred.com/seed/AUDIT.md · sha256 `de8b740f9e0a5bd842d37a470cc6c2b154d82511af482829e7c62f9b1b4d3680`
+Served at https://how.nixfred.com/seed/AUDIT.md · sha256 `6c585c95769e643c05c449e9a000af412649fa88a1c7223e36912388bce457ff`
 
 ````markdown
 # AUDIT, is this AI a full build?
@@ -647,8 +647,10 @@ git -C ~/.claude remote -v
 git -C ~/.claude log -1 --format='last commit: %cr, %s'
 git -C ~/.claude status -sb | head -1
 (cd ~/.claude && gh repo view --json visibility -q .visibility)
+git -C ~/.claude fsck --connectivity-only 2>&1 | tail -2
+git -C ~/.claude archive HEAD CLAUDE.md CONSTITUTION.md settings.json hooks | tar -t | head -6
 ```
-Pass when: origin is your own `<host>_forever` repo, visibility is PRIVATE, the last commit is from your last session, and the status line shows nothing "ahead" (everything pushed). If your human chose to keep it on this computer for now (written in memory, Chapter 7), a local repo with a recent commit and no remote is a PASS marked "local only by choice", not a FAIL.
+Pass when: origin is your own `<host>_forever` repo, visibility is PRIVATE, the last commit is from your last session, and the status line shows nothing "ahead" (everything pushed). If your human chose to keep it on this computer for now (written in memory, Chapter 7), a local repo with a recent commit and no remote is a PASS marked "local only by choice", not a FAIL. Either way the backup must be restorable: `fsck` prints nothing (no corruption) and the archive lists `CLAUDE.md`, `CONSTITUTION.md`, `settings.json` and the `hooks/` files (the quick proof that needs no second machine; the full drill is A11).
 Page: https://how.nixfred.com/07-forever-repo.html
 
 ## A5. The must-always-happen hooks are wired, and they fire
