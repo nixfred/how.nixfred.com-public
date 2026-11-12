@@ -106,10 +106,11 @@ Snapshot `~/.claude/` per Rule 0 before any install. Then proceed.
   ```
   `ActivateImports.ts --apply` needs `~/.claude/CLAUDE.md`, which Chapter 5 creates, so run it after Chapter 5
   (before that it fails with "CLAUDE.md not found": the order, not a broken install). If Claude Code is in
-  auto mode, its safety check will refuse `InstallHooks` (it edits `settings.json`): do not work around it.
-  Ask the human to press Shift+Tab out of auto mode, or give them ONE line to paste into a separate plain
-  Terminal window (never starting with `!`: in a plain shell a leading `!` negates the first command, so
-  `! cd x && bun y` quietly does nothing), then check that it landed. Stop its Interview after the name (TELOS waits for Chapter 14). Full treatment, with the read-only
+  auto mode (the default now), its safety check can refuse `InstallHooks` (it edits `settings.json`), though it
+  allowed it on a fresh account when the human's prompt said to just do the steps. If it is refused, do not work around
+  it and Shift+Tab is no help (the mode line is hidden while a question is on screen): finish the rest, then hand
+  the human ONE line for a separate plain Terminal window (never starting with `!`: in a plain shell a leading `!`
+  negates the first command, so `! cd x && bun y` quietly does nothing), and check that it landed. Stop its Interview after the name (TELOS waits for Chapter 14). Full treatment, with the read-only
   previews and the `lifeos` launcher: https://how.nixfred.com/04-larry-stack (Step 4b)
   Optional: the user may pick nixfredOS, a fork of LifeOS, instead. Same steps under its own names
   (`~/.claude/skills/nixfredOS`, `~/.claude/NIXFREDOS/`, `nixfredos`), with its own bootstrap:

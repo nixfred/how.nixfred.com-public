@@ -55,14 +55,13 @@
 <pre><code>claude mcp add --scope user --transport http how-nixfred https://how.nixfred.com/mcp ; claude</code></pre></li>
 <li><b>Paste this one prompt into Claude Code.</b>
 <div class="byo-out onepaste-out">
-<div class="byo-out-head"><b>The one prompt.</b> Read it, then paste it into Claude Code. It starts with /goal, which keeps your AI working until the build is done.<button type="button" class="spine-copy" data-copy-from="recipe-prompt-text">copy the prompt</button></div>
+<div class="byo-out-head"><b>The one prompt.</b> Read it, then paste it into Claude Code.<button type="button" class="spine-copy" data-copy-from="recipe-prompt-text">copy the prompt</button></div>
 <code class="byo-prompt" id="recipe-prompt-text" data-fill-from="recipe-prompt-text-src"></code>
-<script type="text/plain" id="recipe-prompt-text-src">/goal I want to build the Recipe Box (https://github.com/nixfred/path-recipe-box) with you, in my own private copy on GitHub. First set up my own AI the way how.nixfred.com teaches, then make my copy and build it together with me. Work in this order and do not skip ahead.
+<script type="text/plain" id="recipe-prompt-text-src">I want to build the Recipe Box (https://github.com/nixfred/path-recipe-box) with you, in my own private copy on GitHub. First set up my own AI the way how.nixfred.com teaches, then make my copy and build it together with me. Work in this order and do not skip ahead.
 
-Step 0. This is the very first thing you do, before you read anything or run anything. Use ONE AskUserQuestion call with three questions:
+Step 0. This is the very first thing you do, before you read anything or run anything. Use ONE AskUserQuestion call with two questions:
 1. What should my AI be called? Offer three or four short, friendly name ideas, and I can type my own. I pick the name, not you.
 2. What first name should my AI call me? Offer the name my computer account suggests (look at git config user.name or the account name) and let me type another.
-3. Does the bottom of my Claude Code screen say auto mode? Several steps below edit my settings and shell files, and auto mode refuses those. If I say yes, ask me to press Shift+Tab until it no longer says auto mode, and wait for my answer.
 Use those two names for everything from here on. Whenever the guide asks for a name, give it these. Never ask me for them again.
 
 Rules for the whole job:
@@ -70,11 +69,11 @@ Rules for the whole job:
 - Just do the guide's steps, one after another, and tell me in one plain line what each one does as you go. Don't ask me first. That includes installing what the guide needs, with sudo or brew. Pasting this was my yes.
 - Only ask me for what you can't do yourself: my password, a sign-in, or a choice only I can make.
 - One hard stop: never delete or overwrite my existing files or configs without asking me.
-- Figure out my computer yourself. Talk to me in plain words, like a friend. If something breaks, fix it and tell me what you did.
-- I should never have to type a command. You run every command. For a sign-in, start the command yourself in the background, read me the code and the address it prints, and use AskUserQuestion so I can tell you when I have finished in the browser.
+- Figure out my computer yourself. Plain words, like a friend. If something breaks, fix it and tell me what you did.
+- I should never have to type a command. You run every command. For a sign-in, start the command yourself in the background, read me the code and the address, and use AskUserQuestion so I can tell you when I have finished in the browser.
 - I will not type any commands. You run them. The only thing I do myself is the sign-in click in the browser.
-- This is a /goal, so a hook blocks you from ending your turn until the goal is met. Never end a turn with a question, a typed menu or "still waiting". Whenever you need an answer or a click from me, use the AskUserQuestion tool: it waits without ending your turn. Ask one thing at a time, give 2 to 4 clear options, put your pick first, and carry on as soon as I answer.
-- If Claude Code refuses a step because it is in auto mode (it will not let you edit my settings.json, my shell startup file or a background service), do not work around it. Use AskUserQuestion to ask me to press Shift+Tab until the screen no longer says auto mode, then carry on. Only if that cannot work, give me ONE command for a separate plain Terminal window (written so it works from any folder, never starting with !) and check yourself that it worked.
+- Never end a turn with a question, a typed menu or "still waiting". Whenever you need an answer or a click from me, use the AskUserQuestion tool: it waits without ending your turn. Ask one thing at a time, give 2 to 4 clear options, put your pick first, and carry on as soon as I answer.
+- Claude Code may be in auto mode. That is fine: pasting this was my yes. If a step is still refused, tell me in one line, carry on with the rest, and at the end give me ONE command for a separate plain Terminal window (written so it works from any folder, never starting with !). Use AskUserQuestion to ask me to tell you when I ran it, and check yourself that it worked.
 
 Step 1. Connect the guide.
 First check whether the how-nixfred guide's tools (get_install_plan, next_step, check_step) are already available to you. If they are, say so in one line and skip to the last line of this step.
@@ -82,7 +81,7 @@ If the how-nixfred tools do not show up:
 Install the how-nixfred guide right away. Run this exact command now:
 claude mcp add --scope user --transport http how-nixfred https://how.nixfred.com/mcp
 Then tell me in one short line what you just did (you added this guide to Claude Code so its tools work in every project). If it says how-nixfred is already there, that is fine: keep going.
-The tools only load when Claude Code starts, so after adding it use AskUserQuestion to ask me to type /exit, start again with claude --continue, and paste this same /goal prompt again. When I do, pick up here: the names from Step 0 are in the conversation.
+The tools only load when Claude Code starts, so after adding it use AskUserQuestion to ask me to type /exit, start again with claude --continue, and paste this same prompt again. When I do, pick up here: the names from Step 0 are in the conversation.
 Then go straight to get_install_plan and start on the guide's first step.
 
 Step 2. Build my own AI's foundation first: its identity, memory, rules and the core setup from the guide, before we touch any repo.
@@ -120,11 +119,11 @@ DONE WHEN (this is the whole goal; the later chapters are an optional next step,
 5. The health check has run on the finished system, hooks included (get_install_plan with starting_point "built", the core checks A1, A2, A3, A4, A5, A6, A8, A9, A13 and A14), and you showed me one table: PASS, or a plain reason for each one that is not.
 6. My private Recipe Box copy is built, and I have seen it work.
 When all of that is true, tell me in one line how to start my AI by name, and use AskUserQuestion to ask what small useful thing we should do first. Offer to keep going with the later chapters, and let me say not now.
-WAY OUT: if you are blocked on something only I can do that AskUserQuestion cannot carry, say exactly what it is in one line, once, and end your turn. That counts as the goal being met for now, and I will start it again. Never repeat "still waiting".
+WAY OUT: if only I can unblock the next step and AskUserQuestion cannot carry it, say exactly what in one line, once, and end your turn. That counts as the goal being met for now, and I will start it again. Never repeat "still waiting".
 
 If you get stuck, use search_site or ask_larry from the guide, and tell me straight when you do not know.</script>
 <noscript><p class="byo-error">This box needs JavaScript. The same prompt as plain text: <a href="recipe-box-prompt.txt">recipe-box-prompt.txt</a></p></noscript>
-<p class="if">Claude Code says <code>/goal</code> is an unknown command? Your Claude Code is out of date. Quit it, type <code>claude update</code> in the terminal, start <code>claude</code> again and paste the prompt.</p>
+
 </div></li>
 </ol>
 <h2>What the prompt tells your agent</h2>
@@ -151,5 +150,5 @@ If you get stuck, use search_site or ask_larry from the guide, and tell me strai
   <p class="al-foot">Grounded in how.nixfred.com, 500 characters max. <a href="/ask-larry">Let your AI install this with you →</a></p>
 </aside>
 </div>
-<script src="assets/app.js?v=8dwtah" defer></script>
+<script src="assets/app.js?v=md1w5g" defer></script>
 </body></html>

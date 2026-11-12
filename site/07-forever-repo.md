@@ -116,6 +116,26 @@ gh auth status             # signed in to github.com (local-only path: skip this
 
 ### Create the private remote, secrets gate first
 
+**On a nixfredOS Brain, gitleaks flags 8 example strings, and that is expected.** The Brain ships documentation and test fixtures that contain sample keys (an `Authorization` header in a doc, a fake token in a security-filter test). They live only under `skills/` and `NIXFREDOS/`. Before you call the gate clean, prove none is yours, then tell gitleaks to skip those two folders so a real hit would stand out. Checked live: with this file the whole-history scan prints `no leaks found`, and gitleaks reads it from the repo root by itself.
+
+**Mac or Linux:**
+
+```bash
+# any hit OUTSIDE the Brain's own folders is yours: stop and look at it with your human. Nothing printed below means all of them are the Brain's examples.
+gitleaks detect -s ~/.claude --no-banner --redact -f json -r /tmp/gl-hits.json >/dev/null 2>&1; jq -r '.[]? | select(.File | test("^(skills|NIXFREDOS)/") | not) | "\(.File):\(.StartLine) \(.RuleID)"' /tmp/gl-hits.json
+# then, only if nothing printed above: allow the Brain's own folders (an existing .gitleaks.toml of your human's is never overwritten)
+[ -f ~/.claude/.gitleaks.toml ] || cat > ~/.claude/.gitleaks.toml <<'EOF'
+title = "the Brain's own example strings"
+[extend]
+useDefault = true
+[allowlist]
+description = "files the Brain ships (docs and test fixtures with sample keys), not your data"
+paths = ['''^skills/''', '''^NIXFREDOS/''']
+EOF
+gitleaks detect -s ~/.claude --no-banner --redact 2>&1 | tail -1
+```
+
+
 ```bash
 # 1. ~/.claude should already be a git repo (the bootstrap, Chapter 5, did this).
 #    Installed by hand and it is NOT a repo yet? Initialize it first, with the bootstrap's

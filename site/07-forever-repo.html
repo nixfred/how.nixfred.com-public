@@ -115,6 +115,21 @@ gitleaks version           # the secrets scanner answers: a version number, no e
 gh auth status             # signed in to github.com (local-only path: skip this line)
 </code></pre>
 <h3>Create the private remote, secrets gate first</h3>
+<p><strong>On a nixfredOS Brain, gitleaks flags 8 example strings, and that is expected.</strong> The Brain ships documentation and test fixtures that contain sample keys (an <code>Authorization</code> header in a doc, a fake token in a security-filter test). They live only under <code>skills/</code> and <code>NIXFREDOS/</code>. Before you call the gate clean, prove none is yours, then tell gitleaks to skip those two folders so a real hit would stand out. Checked live: with this file the whole-history scan prints <code>no leaks found</code>, and gitleaks reads it from the repo root by itself.</p>
+<p><strong>Mac or Linux:</strong></p>
+<pre><code class="language-bash"># any hit OUTSIDE the Brain&#39;s own folders is yours: stop and look at it with your human. Nothing printed below means all of them are the Brain&#39;s examples.
+gitleaks detect -s ~/.claude --no-banner --redact -f json -r /tmp/gl-hits.json &gt;/dev/null 2&gt;&amp;1; jq -r &#39;.[]? | select(.File | test(&quot;^(skills|NIXFREDOS)/&quot;) | not) | &quot;\(.File):\(.StartLine) \(.RuleID)&quot;&#39; /tmp/gl-hits.json
+# then, only if nothing printed above: allow the Brain&#39;s own folders (an existing .gitleaks.toml of your human&#39;s is never overwritten)
+[ -f ~/.claude/.gitleaks.toml ] || cat &gt; ~/.claude/.gitleaks.toml &lt;&lt;&#39;EOF&#39;
+title = &quot;the Brain&#39;s own example strings&quot;
+[extend]
+useDefault = true
+[allowlist]
+description = &quot;files the Brain ships (docs and test fixtures with sample keys), not your data&quot;
+paths = [&#39;&#39;&#39;^skills/&#39;&#39;&#39;, &#39;&#39;&#39;^NIXFREDOS/&#39;&#39;&#39;]
+EOF
+gitleaks detect -s ~/.claude --no-banner --redact 2&gt;&amp;1 | tail -1
+</code></pre>
 <pre><code class="language-bash"># 1. ~/.claude should already be a git repo (the bootstrap, Chapter 5, did this).
 #    Installed by hand and it is NOT a repo yet? Initialize it first, with the bootstrap&#39;s
 #    default-safe ignores (the Linux login token and .env files stay out until your human picks (a) below):
@@ -370,5 +385,5 @@ command -v gup &amp;&amp; command -v gitleaks                               # bo
   <p class="al-foot">Grounded in how.nixfred.com, 500 characters max. <a href="/ask-larry">Let your AI install this with you →</a></p>
 </aside>
 </div>
-<script src="assets/app.js?v=8dwtah" defer></script>
+<script src="assets/app.js?v=md1w5g" defer></script>
 </body></html>
