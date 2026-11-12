@@ -117,6 +117,12 @@ readlink ~/.claude/LIFEOS/USER &amp;&amp; ls ~/.claude/LIFEOS/USER/   # must lis
 <hr>
 <h2>8.4 Restore is a feature you must test</h2>
 <p>A backup nobody has ever restored is a hypothesis, not a safety net.</p>
+<p><strong>The quick drill you can run now, with no second machine (it is part of the health check, audit A4).</strong> Restore the files that make the AI who it is from the last commit into a scratch folder and compare them with the live ones. Checked live on a real install: three &quot;same as the live file&quot; lines and equal hook counts.</p>
+<p><strong>Mac or Linux:</strong></p>
+<pre><code class="language-bash">d=$(mktemp -d) &amp;&amp; git -C ~/.claude archive HEAD CLAUDE.md CONSTITUTION.md settings.json hooks | tar -x -C &quot;$d&quot; &amp;&amp; for f in CLAUDE.md CONSTITUTION.md settings.json; do cmp -s &quot;$d/$f&quot; ~/.claude/$f &amp;&amp; echo &quot;restored $f: same as the live file&quot; || echo &quot;restored $f: DIFFERS from the live file&quot;; done; echo &quot;hooks restored: $(ls &quot;$d/hooks&quot; | wc -l), live: $(ls ~/.claude/hooks | wc -l)&quot;; echo &quot;restore folder: $d (left in the temp dir)&quot;
+git -C ~/.claude fsck --connectivity-only 2&gt;&amp;1 | tail -1     # prints nothing when the history is intact
+</code></pre>
+<p>That proves the backup holds the identity. It does not prove a whole machine comes back from the remote: that is the full drill below, which needs a throwaway machine or folder and your human, so it is offered, not forced.</p>
 <blockquote>
 <p><strong>Larry&#39;s read:</strong> I&#39;ve watched a real restore get iterated <strong>four times</strong> before it was trusted (a real Mac hardware-swap, restore script run and fixed four rounds). Untested restore <em>looks</em> like safety and isn&#39;t. Actually stand up a throwaway VM or spare box, run the restore end-to-end, and see if the AI that comes out the other side is really you. Fix what breaks. <em>Then</em> you have disaster recovery. Offer your human the choice (Chapter 3): <strong>(a) test the restore now on a VM · (b) schedule it · (c) explain the risk of skipping it.</strong></p>
 </blockquote>

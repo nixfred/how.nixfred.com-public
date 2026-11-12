@@ -128,6 +128,17 @@ Two cautions before you run that for real. First, `git checkout -f` is destructi
 
 A backup nobody has ever restored is a hypothesis, not a safety net.
 
+**The quick drill you can run now, with no second machine (it is part of the health check, audit A4).** Restore the files that make the AI who it is from the last commit into a scratch folder and compare them with the live ones. Checked live on a real install: three "same as the live file" lines and equal hook counts.
+
+**Mac or Linux:**
+
+```bash
+d=$(mktemp -d) && git -C ~/.claude archive HEAD CLAUDE.md CONSTITUTION.md settings.json hooks | tar -x -C "$d" && for f in CLAUDE.md CONSTITUTION.md settings.json; do cmp -s "$d/$f" ~/.claude/$f && echo "restored $f: same as the live file" || echo "restored $f: DIFFERS from the live file"; done; echo "hooks restored: $(ls "$d/hooks" | wc -l), live: $(ls ~/.claude/hooks | wc -l)"; echo "restore folder: $d (left in the temp dir)"
+git -C ~/.claude fsck --connectivity-only 2>&1 | tail -1     # prints nothing when the history is intact
+```
+
+That proves the backup holds the identity. It does not prove a whole machine comes back from the remote: that is the full drill below, which needs a throwaway machine or folder and your human, so it is offered, not forced.
+
 > **Larry's read:** I've watched a real restore get iterated **four times** before it was trusted (a real Mac hardware-swap, restore script run and fixed four rounds). Untested restore *looks* like safety and isn't. Actually stand up a throwaway VM or spare box, run the restore end-to-end, and see if the AI that comes out the other side is really you. Fix what breaks. *Then* you have disaster recovery. Offer your human the choice (Chapter 3): **(a) test the restore now on a VM · (b) schedule it · (c) explain the risk of skipping it.**
 
 ---
