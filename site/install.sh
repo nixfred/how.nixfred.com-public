@@ -178,7 +178,7 @@ if [ "$DRY" = 1 ]; then printf "${d}would git-init ~/.claude and commit${o}\n"; 
     # Claude Code's session keys, raw transcripts, plugin and paste caches, settings backups, and the Brain's activity logs.
     # projects/*/memory/ (Claude Code's own notes) stays tracked on purpose; only the .jsonl transcripts are ignored.
     [ -s "$CLA/.gitignore" ] && [ -n "$(tail -c1 "$CLA/.gitignore")" ] && printf '\n' >> "$CLA/.gitignore"   # no half-line joins
-    for pat in 'node_modules/' '*.log' '.DS_Store' '.credentials.json' '.env' '.env.*' 'sessions/' 'session-env/' 'shell-snapshots/' 'paste-cache/' 'cache/' 'downloads/' 'backups/' 'state/' 'plugins/' 'history.jsonl' 'mcp-needs-auth-cache.json' '*.key' 'projects/**/*.jsonl' '*.bak' 'settings.json.*' '**/MEMORY/OBSERVABILITY/' '**/MEMORY/STATE/*.jsonl'; do
+    for pat in 'node_modules/' '*.log' '.DS_Store' '.credentials.json' '.env' '.env.*' 'sessions/' 'session-env/' 'shell-snapshots/' 'paste-cache/' 'file-history/' 'cache/' 'downloads/' 'backups/' 'state/' 'plugins/' 'history.jsonl' 'mcp-needs-auth-cache.json' '*.key' 'projects/**/*.jsonl' '*.bak' 'settings.json.*' '**/MEMORY/OBSERVABILITY/' '**/MEMORY/STATE/*.jsonl'; do
       grep -qxF "$pat" "$CLA/.gitignore" 2>/dev/null || printf '%s\n' "$pat" >> "$CLA/.gitignore"
     done
     # ensure a git identity exists (fresh machines often have none), local-only fallback

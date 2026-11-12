@@ -140,7 +140,7 @@ gitleaks detect -s ~/.claude --no-banner --redact 2>&1 | tail -1
 # 1. ~/.claude should already be a git repo (the bootstrap, Chapter 5, did this).
 #    Installed by hand and it is NOT a repo yet? Initialize it first, with the bootstrap's
 #    default-safe ignores (the Linux login token and .env files stay out until your human picks (a) below):
-git -C ~/.claude rev-parse --is-inside-work-tree >/dev/null 2>&1 || { git -C ~/.claude init && printf '%s\n' node_modules/ '*.log' .DS_Store .credentials.json .env '.env.*' sessions/ session-env/ shell-snapshots/ paste-cache/ cache/ downloads/ backups/ state/ plugins/ history.jsonl mcp-needs-auth-cache.json '*.key' 'projects/**/*.jsonl' '*.bak' 'settings.json.*' '**/MEMORY/OBSERVABILITY/' '**/MEMORY/STATE/*.jsonl' >> ~/.claude/.gitignore; }
+git -C ~/.claude rev-parse --is-inside-work-tree >/dev/null 2>&1 || { git -C ~/.claude init && printf '%s\n' node_modules/ '*.log' .DS_Store .credentials.json .env '.env.*' sessions/ session-env/ shell-snapshots/ paste-cache/ file-history/ cache/ downloads/ backups/ state/ plugins/ history.jsonl mcp-needs-auth-cache.json '*.key' 'projects/**/*.jsonl' '*.bak' 'settings.json.*' '**/MEMORY/OBSERVABILITY/' '**/MEMORY/STATE/*.jsonl' >> ~/.claude/.gitignore; }
 git -C ~/.claude log --oneline | head    # may be empty right after init, that is fine
 
 # 2. THE SECRETS GATE, look before anything leaves the machine. Know exactly
@@ -170,9 +170,11 @@ git remote -v
 
 ```bash
 mv ~/.claude/.git ~/.claude.git-with-token.$(date +%s)    # the old history, set aside (it still holds the token: delete it once your human is sure)
-git -C ~/.claude init && printf '%s\n' .credentials.json .env '.env.*' >> ~/.claude/.gitignore
+git -C ~/.claude init && printf '%s\n' .credentials.json .env '.env.*' sessions/ session-env/ shell-snapshots/ paste-cache/ file-history/ cache/ downloads/ backups/ state/ plugins/ history.jsonl mcp-needs-auth-cache.json '*.key' 'projects/**/*.jsonl' '*.bak' 'settings.json.*' >> ~/.claude/.gitignore
 git -C ~/.claude add -A && git -C ~/.claude commit -m "fresh history: the login token was never in it"
 ```
+
+**Found a session key, transcript or any other secret in the history before the first push? Same move, never a rewrite.** A real first install committed `history.jsonl`, `mcp-needs-auth-cache.json` and Claude Code's `file-history/` snapshots in its first commits, and the gate caught them. Do not try to scrub old commits in place (`git filter-repo`, `filter-branch`, an interactive rebase): Claude Code's auto mode refuses history rewrites, and the AI that tried got stuck with the key still in a commit. Nothing has been pushed yet, so the history exists on this machine only, and the safe fix is the one above: set the old `.git` aside, restore the full default-safe ignore list, commit fresh, and run `gitleaks detect -s ~/.claude` again to prove it is clean before step 3. The set-aside folder is deleted only when your human says so.
 
 That's it. Your brain now lives in a private repo. If you ran the bootstrap, the SessionEnd hook it installed commits **and pushes** when a session ends. Claude Code only gives SessionEnd hooks 1.5 seconds by default, so confirm the hook entry carries `"timeout": 60` in `~/.claude/settings.json` (add it if an older bootstrap left it out), then check `git -C ~/.claude log -1` after your next exit to prove it ran. (Installed by hand? Chapter 21 wires that hook; until then, `gup` below is your one-word backup.)
 
